@@ -1,0 +1,6 @@
+{
+"cmd" : "gcc -o ${file_base_name} $file_name interpreter/fileReader/fileReader.c interpreter/filePatterns/patternReader.c interpreter/header/findHeader.c interpreter/interpreter.c" ,
+"selector" : "source.c",
+"shell": true,
+"working_dir" : "$file_path"
+}
