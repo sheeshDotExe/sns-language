@@ -2,11 +2,10 @@
 #define INTERPRETER_H
 
 #include <stdio.h>
-#include <cstdlib>
+#include <stdlib.h>
+#include "fileReader/fileReader.h"
+#include "header/findHeader.h"
 
-struct settings {
-};
-
-int interpret(FILE*file);
+int interpret(FILE *file);
 
 #endif
