@@ -1,0 +1,186 @@
+SnS - sNs
+
+programming language for deplaying web apps
+
+can bundle apis from multiple programming languages
+just in time compiler
+easy syntax
+works with frameworks
+easy debugging
+
+features:
+routing
+c-compile (fast runtime)
+server-settings
+modules
+typed
+dynamic types
+use functioncalls from different languages
+
+structure:
+main.sns{
+IP-config - ip, ssl
+User-cap
+main route(/)
+}
+
+- modules{
+route(local)
+calculations
+can use different languages
+retval(json or html)
+}
+
+types:
+string
+int16
+int32
+int64
+float
+bool
+char
+user
+function
+html
+json
+empty
+any
+signed
+unsigned
+typedef
+
+Syntax:
+to import modules:
+Import Name from "path"
+
+application header:
+***
+typedef route : html ? json
+info
+***
+
+c style comments
+
+---------------
+
+declare var:
+
+var_name : float ? char ? bool
+var_name = 5
+var_name += 2 
+
+// type(var_name) = float
+
+var_name += "p" // error
+
+var_name : string
+
+// type(var_name) = float
+
+var_name += "p" // type(var_name) = string
+
+// contains "7p"
+
+----------------------------
+
+declare function:
+
+// if there is only one value then it is the return type and all params are ignored
+func : function[input, return] -> {
+	do something
+	return something
+}
+
+----------------------------
+
+for loop:
+
+		     // can be functions like function[i:int32, int32] -> {return i+1}
+new::for(i: int32 = 0, i<20, i+=1) -> {
+	do something
+	break
+}
+
+----------------------------
+
+get function from file:
+
+func : function[input, return] -> new::function(lang, path, fname)
+
+----------------------------
+
+route:
+
+Route : function[route] -> new::route(path) -> {
+	do something
+	return new::html("ok")
+}
+
+----------------------------
+
+f-string:
+
+"{var}, {new_var: string ? int32}"
+
+----------------------------
+
+demo:
+
+***
+DEBUG_MODE(True)
+FORCE_SSL(True)
+USE_SSL(path_to_certificate)
+
+MAX_CONNECTIONS(10)
+HTML_PATH("/static/html")
+JS_PATH("/static/javascript")
+
+typedef route : html ? json
+***
+
+main: function[bool] -> {
+	Route : function[route] -> new::route("/") -> {
+		extend HomePage
+		extend Api
+	}
+}
+
+add: function[input: float, float] -> {
+	return input + 1
+}
+
+Api: function[route] -> new::route("/api/{number: int64 ? float}") -> {
+	new_number : float = number
+	new_number *= 2
+	new_number = add(new_number)
+	return new::json(new_number)
+}
+
+HomePage: function[route] -> new::route("/") -> {
+	return new::html("./index.html")
+}
+
+
+./static/html/index.html:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+	<script type="module" src="/main.js">
+</body>
+</html>
+
+./static/javascript/main.js:
+
+async main = () => {
+	const val = await fetch("/api/10");
+	console.log(val);
+}
+
+main();
+-----------------------------
