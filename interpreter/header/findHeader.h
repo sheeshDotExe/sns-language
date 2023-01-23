@@ -37,9 +37,14 @@ struct HeaderOptions{
 	struct resourcePath* staticFormattedFiles;
 };
 
+struct HeaderLines{
+	char**lines;
+	unsigned int numberOfLines;
+};
+
 
 // get the options of the file between *** ***
-int readHeaderData(struct File file, unsigned long int start, unsigned long int end);
+struct HeaderLines readHeaderData(struct File file, unsigned long int start, unsigned long int end);
 struct HeaderOptions getHeaderOptions(struct File file);
 
 #endif
