@@ -11,6 +11,7 @@ void addFunction(struct FunctionMap* functionMap, int index, char*name, int(*fun
 }
 
 int _UseLocalHost(struct HeaderOptions* headerOptions, char**args, int argc){
+	headerOptions->tcpOptions.localHost = 1;
 	return 0;
 }
 
@@ -52,6 +53,13 @@ struct HeaderAtlas getFunctionMap(){
 	}
 
 	addFunction(headerAtlas.functions, 0, "USE_LOCAL_HOST", &_UseLocalHost);
+	addFunction(headerAtlas.functions, 1, "USE_PORT", &_UsePort);
+	addFunction(headerAtlas.functions, 2, "DEBUG_MODE", &_DebugMode);
+	addFunction(headerAtlas.functions, 3, "FORCE_SSL", &_ForceSSL);
+	addFunction(headerAtlas.functions, 4, "USE_SSL", &_UseSSL);
+	addFunction(headerAtlas.functions, 5, "MAX_CONNECTIONS", &_MaxConnections);
+	addFunction(headerAtlas.functions, 6, "HTML_PATH", &_HTMLPath);
+	addFunction(headerAtlas.functions, 7, "JS_PATH", &_JSPath);
 
 	return headerAtlas;
 }

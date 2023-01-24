@@ -10,7 +10,7 @@ struct SSLOptions{
 
 struct TcpOptions{
 	int localHost;
-	char* hostAdress;
+	char* hostAddress;
 	unsigned int port;
 	int releaseMode;
 	unsigned long int connectionQueue;
@@ -32,6 +32,7 @@ struct HeaderOptions{
 	struct TcpOptions tcpOptions;
 	struct resourcePath staticFiles;
 	struct resourcePath* staticFormattedFiles;
+	unsigned int formattedFiles;
 };
 
 #endif

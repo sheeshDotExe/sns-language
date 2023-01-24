@@ -56,21 +56,41 @@ void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtla
 	if (contains(command, '(', length)){
 		unsigned long int keywordEnd = findNextChar(command, " (", length, 2);
 		if (keywordEnd){
-			char*keyword = (char*)malloc(keywordEnd*sizeof(char));
+			char*keyword = (char*)malloc((keywordEnd+1)*sizeof(char));
+			
 			for (int i = 0; i < keywordEnd; i++){
 				keyword[i] = command[i];
 			}
-			keyword[keywordEnd]='\0';
 
-			// get arguments
+			keyword[keywordEnd]='\0';
 
 			interpreteHeaderFunction(headerOptions, headerAtlas, keyword, (char**)NULL, keywordEnd, 0);
 		}
 	} //....
 }
 
+void setDefaultHeaderOptions(struct HeaderOptions* headerOptions){
+	headerOptions->headerStart = 0;
+	headerOptions->headerEnd = 0;
+	headerOptions->formattedFiles = 0;
+
+	headerOptions->tcpOptions.localHost = 1; // use localhost by default
+	headerOptions->tcpOptions.hostAddress = (char*)malloc(10*sizeof(char));
+	memcpy(headerOptions->tcpOptions.hostAddress, (char*)"127.0.0.1", 10); // copy nullterminator
+	headerOptions->tcpOptions.port = 8080;
+	headerOptions->tcpOptions.releaseMode = 0;
+	headerOptions->tcpOptions.connectionQueue = 10;
+	headerOptions->tcpOptions.connectionTimeoutWait = 5000;
+
+	headerOptions->tcpOptions.sslOptions.forceSSL = 0;
+	headerOptions->tcpOptions.sslOptions.useSSL = 0;
+	headerOptions->tcpOptions.sslOptions.hasCertificate = 0;
+}
+
 struct HeaderOptions getHeaderOptions(struct File file){
 	struct HeaderOptions headerOptions;
+
+	setDefaultHeaderOptions(&headerOptions);
 
 	struct PatternRange headerLocation = getPatternByKey(file, 0, "***");
 
