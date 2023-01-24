@@ -9,6 +9,8 @@ struct PatternRange{
 	unsigned long int end;
 };
 
+unsigned int findNextChar(char*string, char* keys, unsigned int length, unsigned int keyLength);
+int contains(char*string, char key, unsigned int length);
 unsigned int findNextLine(struct File file, unsigned long int start);
 unsigned long int findNext(char*data, unsigned long int end, char*key, unsigned int keyLength);
 struct PatternRange getPatternByKey(struct File file, unsigned long int start, char*key);

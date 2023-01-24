@@ -3,39 +3,8 @@
 
 #include "../fileReader/fileReader.h"
 #include "../filePatterns/patternReader.h"
-
-struct SSLOptions{
-	int forceSSL;
-	int useSSL;
-	int hasCertificate;
-	char* sslCertificate;
-};
-
-struct TcpOptions{
-	int localHost;
-	char* hostAdress;
-	unsigned int port;
-	int releaseMode;
-	unsigned long int connectionQueue;
-	float connectionTimeoutWait;
-
-	struct SSLOptions sslOptions;
-};
-
-struct resourcePath{
-	char*format;
-	char*path;
-};
-
-struct HeaderOptions{
-	long unsigned int headerStart;
-	long unsigned int headerEnd;
-	char* rawHeaderData;
-
-	struct TcpOptions tcpOptions;
-	struct resourcePath staticFiles;
-	struct resourcePath* staticFormattedFiles;
-};
+#include "./headerFunctions.h"
+#include "headerStructs.h"
 
 struct HeaderLines{
 	char**lines;
@@ -44,6 +13,7 @@ struct HeaderLines{
 
 
 // get the options of the file between *** ***
+void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtlas* headerAtlas, char*command, unsigned int length);
 struct HeaderLines readHeaderData(struct File file, unsigned long int start, unsigned long int end);
 struct HeaderOptions getHeaderOptions(struct File file);
 

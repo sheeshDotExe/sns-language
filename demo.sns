@@ -1,13 +1,13 @@
 ***
-USE_LOCAL_HOST(True)
-USE_PORT(4040)
-DEBUG_MODE(True)
-FORCE_SSL(True)
-USE_SSL(path_to_certificate)
+USE_LOCAL_HOST (True)
+USE_PORT       (4040)
+DEBUG_MODE     (True)
+FORCE_SSL      (True)
+USE_SSL        (path_to_certificate)
 
 MAX_CONNECTIONS(10)
-HTML_PATH("/static/html")
-JS_PATH("/static/javascript")
+HTML_PATH      ("/static/html")
+JS_PATH        ("/static/javascript")
 
 typedef route : html ? json
 ***

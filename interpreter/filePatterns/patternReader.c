@@ -18,6 +18,26 @@ unsigned long int findNext(char*data, unsigned long int end, char*key, unsigned 
 	return 0;
 }
 
+int contains(char*string, char key, unsigned int length){
+	for (int i = 0; i < length; i++){
+		if (string[i] == key){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+unsigned int findNextChar(char*string, char* keys, unsigned int length, unsigned int keyLength){
+	for (unsigned int i = 0; i < length; i++){
+		for (int j = 0; j < keyLength; j++){
+			if (string[i] == keys[j]){
+				return i;
+			}
+		}
+	}
+	return 0;
+}
+
 struct PatternRange getPatternByKey(struct File file, unsigned long int start, char*key){
 	struct PatternRange patternRange;
 

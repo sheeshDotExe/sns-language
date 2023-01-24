@@ -50,6 +50,25 @@ struct HeaderLines readHeaderData(struct File file, unsigned long int start, uns
 	return headerLines;
 }
 
+
+void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtlas* headerAtlas, char*command, unsigned int length){
+	// get type
+	if (contains(command, '(', length)){
+		unsigned long int keywordEnd = findNextChar(command, " (", length, 2);
+		if (keywordEnd){
+			char*keyword = (char*)malloc(keywordEnd*sizeof(char));
+			for (int i = 0; i < keywordEnd; i++){
+				keyword[i] = command[i];
+			}
+			keyword[keywordEnd]='\0';
+
+			// get arguments
+
+			interpreteHeaderFunction(headerOptions, headerAtlas, keyword, (char**)NULL, keywordEnd, 0);
+		}
+	} //....
+}
+
 struct HeaderOptions getHeaderOptions(struct File file){
 	struct HeaderOptions headerOptions;
 
@@ -59,6 +78,13 @@ struct HeaderOptions getHeaderOptions(struct File file){
 	headerOptions.headerEnd = headerLocation.end;
 
 	struct HeaderLines headerLines = readHeaderData(file, headerLocation.start + 3, headerLocation.end - 3);
+
+	struct HeaderAtlas headerAtlas = getFunctionMap();
+
+	for (int i = 0; i < headerLines.numberOfLines; i++){
+		unsigned int length = strlen(headerLines.lines[i]);
+		interpreteHeaderLine(&headerOptions, &headerAtlas, headerLines.lines[i], length);
+	}
 
 	return headerOptions;
 };
