@@ -18,6 +18,16 @@ unsigned long int findNext(char*data, unsigned long int end, char*key, unsigned 
 	return 0;
 }
 
+unsigned long int countCharInRange(char*string, unsigned int start, unsigned int stop, char key){
+	unsigned long int count = 0;
+	for (unsigned int i = start; i < stop; i++){
+		if (string[i] == key){
+			count++;
+		}
+	}
+	return count;
+}
+
 int contains(char*string, char key, unsigned int length){
 	for (int i = 0; i < length; i++){
 		if (string[i] == key){

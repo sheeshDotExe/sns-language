@@ -12,6 +12,12 @@ struct HeaderLines{
 };
 
 
+struct Arguments {
+	char**argv;
+	unsigned int argc;
+};
+
+
 // get the options of the file between *** ***
 void setDefaultHeaderOptions(struct HeaderOptions* headerOptions);
 void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtlas* headerAtlas, char*command, unsigned int length);

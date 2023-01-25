@@ -9,6 +9,7 @@ struct PatternRange{
 	unsigned long int end;
 };
 
+unsigned long int countCharInRange(char*string, unsigned int start, unsigned int stop, char key);
 unsigned int findNextChar(char*string, char* keys, unsigned int length, unsigned int keyLength);
 int contains(char*string, char key, unsigned int length);
 unsigned int findNextLine(struct File file, unsigned long int start);

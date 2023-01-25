@@ -12,14 +12,14 @@
 struct FunctionMap{
 	char * name;
 	unsigned int nameLength;
-	int(*function)(struct HeaderOptions* headerOptions, char**args, int argc);
+	int(*function)(struct HeaderOptions* headerOptions, char*name, char**args, int argc);
 };
 
 struct HeaderAtlas{
 	struct FunctionMap* functions;
 };
 
-void addFunction(struct FunctionMap* functionMap, int index, char*name, int(*function)(struct HeaderOptions* headerOptions, char**args, int argc));
+void addFunction(struct FunctionMap* functionMap, int index, char*name, int(*function)(struct HeaderOptions* headerOptions, char*name, char**args, int argc));
 void interpreteHeaderFunction(struct HeaderOptions* headerOptions, struct HeaderAtlas* headerAtlas, char*keyword, char**arguments, unsigned int kwLength, unsigned int argc);
 struct HeaderAtlas getFunctionMap();
 

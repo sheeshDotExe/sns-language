@@ -50,22 +50,81 @@ struct HeaderLines readHeaderData(struct File file, unsigned long int start, uns
 	return headerLines;
 }
 
+struct Arguments getArgs(char*string, unsigned long int start, unsigned long int stop){
+	struct Arguments arguments;
+
+	unsigned long int whiteSpace = countCharInRange(string, start, stop, ' ');
+	unsigned long int numberOfArguments = countCharInRange(string, start, stop, ',') + 1;
+
+	arguments.argc = numberOfArguments;
+	arguments.argv = (char**)malloc(numberOfArguments*sizeof(char*));
+
+	char*newString = (char*)malloc((stop-start-whiteSpace)*sizeof(char));
+
+	unsigned int count = 0;
+	for (int i = start; i < stop; i++){
+		if (string[i] != ' '){
+			newString[count] = string[i];
+			count++;
+		}
+	}
+	newString[stop-start-whiteSpace] = '\0';
+
+	string = newString;
+
+	unsigned long int lastArgStart = 1;
+	unsigned long int newStop = stop-start-whiteSpace;
+
+	for (int i=0; i < numberOfArguments; i++){
+		unsigned long int newArgStart = lastArgStart + findNextChar(string + lastArgStart, ",", newStop, 1);
+
+		unsigned long int length = 0;
+
+		if (newArgStart == lastArgStart){
+			length = newStop - lastArgStart;
+		} else {
+			length = newArgStart - lastArgStart;
+		}
+		
+		arguments.argv[i] = (char*)malloc((length+1)*sizeof(char));
+
+		int count = 0;
+		for (int j=lastArgStart; j < lastArgStart+length; j++){
+			arguments.argv[i][count] = string[j];
+			count++;
+		}
+		arguments.argv[i][length] = '\0';
+
+		lastArgStart = newArgStart+1;
+	}
+
+	return arguments;
+}
 
 void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtlas* headerAtlas, char*command, unsigned int length){
 	// get type
 	if (contains(command, '(', length)){
 		unsigned long int keywordEnd = findNextChar(command, " (", length, 2);
-		if (keywordEnd){
-			char*keyword = (char*)malloc((keywordEnd+1)*sizeof(char));
-			
-			for (int i = 0; i < keywordEnd; i++){
-				keyword[i] = command[i];
-			}
-
-			keyword[keywordEnd]='\0';
-
-			interpreteHeaderFunction(headerOptions, headerAtlas, keyword, (char**)NULL, keywordEnd, 0);
+		char*keyword = (char*)malloc((keywordEnd+1)*sizeof(char));
+		
+		for (int i = 0; i < keywordEnd; i++){
+			keyword[i] = command[i];
 		}
+
+		keyword[keywordEnd]='\0';
+
+		unsigned long int argumentStart = findNextChar(command, "(", length, 1);
+		unsigned long int agrumentEnd = findNextChar(command, ")", length, 1);
+
+		printf("%s\n", keyword);
+		struct Arguments args = getArgs(command, argumentStart, agrumentEnd);
+
+		interpreteHeaderFunction(headerOptions, headerAtlas, keyword, args.argv, keywordEnd, args.argc);
+
+		for (int i=0; i < args.argc; i++){
+			free(args.argv[i]);
+		}
+		free(keyword);
 	} //....
 }
 
@@ -104,7 +163,11 @@ struct HeaderOptions getHeaderOptions(struct File file){
 	for (int i = 0; i < headerLines.numberOfLines; i++){
 		unsigned int length = strlen(headerLines.lines[i]);
 		interpreteHeaderLine(&headerOptions, &headerAtlas, headerLines.lines[i], length);
+
+		free(headerLines.lines[i]);
 	}
+
+	free(headerLines.lines);
 
 	return headerOptions;
 };

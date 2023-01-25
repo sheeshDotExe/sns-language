@@ -1,19 +1,19 @@
 ***
-USE_LOCAL_HOST (True)
-USE_PORT       (4040)
-DEBUG_MODE     (True)
-FORCE_SSL      (True)
-USE_SSL        (path_to_certificate)
+USE_LOCAL_HOST   (True)
+USE_PORT         (4040)
+DEBUG_MODE       (True)
+FORCE_SSL        (True)
+USE_SSL          (path_to_certificate)
 
-MAX_CONNECTIONS(10)
-HTML_PATH      ("/static/html")
-JS_PATH        ("/static/javascript")
+MAX_CONNECTIONS  (10)
+HTML_PATH        ("/static/html")
+JS_PATH          ("/static/javascript")
 
 typedef route : html ? json
 ***
 
 main: function[bool] -> {
-	Route : function[route] -> new::route("/") -> {
+	Route : function[route] -> new::route("/", "GET", "POST") -> {
 		extend HomePage
 		extend Api
 	}
@@ -23,10 +23,16 @@ add: function[input: float, float] -> {
 	return input + 1
 }
 
-Api: function[route] -> new::route("/api/{number: int64 ? float}") -> {
+Api: function[route] -> new::route("/api/{number: int64 ? float}", "GET") -> {
 	new_number : float = number
 	new_number *= 2
 	new_number = add(new_number)
+
+	numbers : array[int ? float] = [2, 2.4, 6]
+
+	new::for(i:float, numbers) -> {
+		new_number += i
+	}
 	return new::json(new_number)
 }
 

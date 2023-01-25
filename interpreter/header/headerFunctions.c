@@ -1,45 +1,165 @@
 #include "headerFunctions.h"
 
-void addFunction(struct FunctionMap* functionMap, int index, char*name, int(*function)(struct HeaderOptions* headerOptions, char**args, int argc)){
+#define NUMBERS "0123456789"
+
+void addFunction(struct FunctionMap* functionMap, int index, char*name, int(*function)(struct HeaderOptions* headerOptions, char*name, char**args, int argc)){
 	unsigned int nameLength = strlen(name);
-	functionMap[index].name = (char*)malloc(nameLength*sizeof(char));
+	functionMap[index].name = (char*)malloc((nameLength+1)*sizeof(char));
 	functionMap[index].nameLength = nameLength;
 	for (int i = 0; i < nameLength; i++){
 		functionMap[index].name[i] = name[i];
 	}
+	functionMap[index].name[nameLength] = '\0';
 	functionMap[index].function = function;
 }
 
-int _UseLocalHost(struct HeaderOptions* headerOptions, char**args, int argc){
-	headerOptions->tcpOptions.localHost = 1;
+int checkArgsCount(char*name, int expected, int given){
+	if (given != expected){
+		printf("Function %s expected %d arguments, but %d were given!\n", name, expected, given);
+		return 1;
+	}
 	return 0;
 }
 
-int _UsePort(struct HeaderOptions* headerOptions, char**args, int argc){
+int stringToBool(char*string){
+	if (!strcmp(string, "True")){
+		return 1;
+	} else if (!strcmp(string, "False")){
+		return 0;
+	}
+	return -1;
+}
+
+int isNum(char*string, unsigned int length){
+	for (int i = 0; i < length; i++){
+		int isNumber = 0;
+		for (int j = 0; j < 10; j++){
+			if (string[i] == NUMBERS[j]){
+				isNumber = 1;
+			}
+		}
+		if (!isNumber){
+			return 1;
+		}
+	}
 	return 0;
 }
 
-int _DebugMode(struct HeaderOptions* headerOptions, char**args, int argc){
+int _UseLocalHost(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
+	if (checkArgsCount(name, 1, argc)){
+		return 1;
+	}
+
+	int Bool = stringToBool(args[0]);
+	if (Bool == -1){
+		printf("invalid parameter\n");
+	}
+	else if (Bool){
+		headerOptions->tcpOptions.localHost = 1;
+	} else {
+		headerOptions->tcpOptions.localHost = 0;
+	}
+
 	return 0;
 }
 
-int _ForceSSL(struct HeaderOptions* headerOptions, char**args, int argc){
+int _UsePort(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
+	if (checkArgsCount(name, 1, argc)){
+		return 1;
+	}
+
+	if (isNum(args[0], strlen(args[0]))){
+		printf("argument must be number\n");
+		return 1;
+	}
+
+	int port = atoi(args[0]);
+	headerOptions->tcpOptions.port = port;
 	return 0;
 }
 
-int _UseSSL(struct HeaderOptions* headerOptions, char**args, int argc){
+int _DebugMode(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
+	if (checkArgsCount(name, 1, argc)){
+		return 1;
+	}
+
+	int Bool = stringToBool(args[0]);
+	if (Bool == -1){
+		printf("invalid parameter\n");
+	}
+	else if (Bool){
+		headerOptions->tcpOptions.releaseMode = 0;
+	} else {
+		headerOptions->tcpOptions.releaseMode = 1;
+	}
+
 	return 0;
 }
 
-int _MaxConnections(struct HeaderOptions* headerOptions, char**args, int argc){
+int _ForceSSL(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
+	if (checkArgsCount(name, 1, argc)){
+		return 1;
+	}
+
+	int Bool = stringToBool(args[0]);
+	if (Bool == -1){
+		printf("invalid parameter\n");
+	}
+	else if (Bool){
+		headerOptions->tcpOptions.sslOptions.forceSSL = 1;
+		headerOptions->tcpOptions.sslOptions.useSSL = 1;
+	} else {
+		headerOptions->tcpOptions.sslOptions.forceSSL = 0;
+	}
+
 	return 0;
 }
 
-int _HTMLPath(struct HeaderOptions* headerOptions, char**args, int argc){
+int _UseSSL(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
+	if (checkArgsCount(name, 1, argc)){
+		return 1;
+	}
+
+	int Bool = stringToBool(args[0]);
+	if (Bool == -1){
+		printf("invalid parameter\n");
+	}
+	else if (Bool){
+		headerOptions->tcpOptions.sslOptions.useSSL = 1;
+	} else {
+		headerOptions->tcpOptions.sslOptions.useSSL = 0;
+	}
+
 	return 0;
 }
 
-int _JSPath(struct HeaderOptions* headerOptions, char**args, int argc){
+int _MaxConnections(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
+	if (checkArgsCount(name, 1, argc)){
+		return 1;
+	}
+
+	if (isNum(args[0], strlen(args[0]))){
+		printf("argument must be number\n");
+		return 1;
+	}
+
+	int connections = atoi(args[0]);
+	headerOptions->tcpOptions.connectionQueue = connections;
+
+	return 0;
+}
+
+int _HTMLPath(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
+	if (checkArgsCount(name, 1, argc)){
+		return 1;
+	}
+	return 0;
+}
+
+int _JSPath(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
+	if (checkArgsCount(name, 1, argc)){
+		return 1;
+	}
 	return 0;
 }
 
@@ -76,7 +196,7 @@ void interpreteHeaderFunction(struct HeaderOptions* headerOptions, struct Header
 				}
 			}
 			if (shouldCall){
-				headerAtlas->functions[i].function(headerOptions, arguments, argc);
+				headerAtlas->functions[i].function(headerOptions, headerAtlas->functions[i].name, arguments, argc);
 				return;
 			}
 		}
