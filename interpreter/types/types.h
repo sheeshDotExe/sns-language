@@ -15,10 +15,9 @@ enum typeCodes{
 	Any
 };
 
-union 
-
 struct Var{
 	typeCodes type;
+	void*
 }
 
 struct String{
