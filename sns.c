@@ -16,7 +16,10 @@ int main(int argc, char **argv)
 
 	FILE* file = getFile((char*)"demo.sns");
 
-	if (interpret(file))
+	if (interpret(file)){
+		printf("error error\n");
+		return 1;
+	}
 
 	return 0;
 }

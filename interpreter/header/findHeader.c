@@ -115,8 +115,7 @@ void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtla
 
 		unsigned long int argumentStart = findNextChar(command, "(", length, 1);
 		unsigned long int agrumentEnd = findNextChar(command, ")", length, 1);
-
-		printf("%s\n", keyword);
+		
 		struct Arguments args = getArgs(command, argumentStart, agrumentEnd);
 
 		interpreteHeaderFunction(headerOptions, headerAtlas, keyword, args.argv, keywordEnd, args.argc);

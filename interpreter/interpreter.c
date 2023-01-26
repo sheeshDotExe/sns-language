@@ -9,6 +9,7 @@ int interpret(FILE*file){
 	struct HeaderOptions headerOptions = getHeaderOptions(data);
 
 	//printf("%s", data);
+	testVar();
 
 	printf("compiled\n");
 

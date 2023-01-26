@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "fileReader/fileReader.h"
 #include "header/findHeader.h"
+#include "types/types.h"
 
 int interpret(FILE *file);
 
