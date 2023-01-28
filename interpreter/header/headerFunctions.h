@@ -4,6 +4,7 @@
 #define NUMBER_OF_FUNCTIONS 8
 
 #include "headerStructs.h"
+#include "../types/types.h"
 
 #include <stdio.h>
 #include <stdlib.h>

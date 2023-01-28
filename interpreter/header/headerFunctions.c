@@ -1,6 +1,6 @@
 #include "headerFunctions.h"
 
-#define NUMBERS "0123456789"
+
 
 void addFunction(struct FunctionMap* functionMap, int index, char*name, int(*function)(struct HeaderOptions* headerOptions, char*name, char**args, int argc)){
 	unsigned int nameLength = strlen(name);
@@ -21,29 +21,7 @@ int checkArgsCount(char*name, int expected, int given){
 	return 0;
 }
 
-int stringToBool(char*string){
-	if (!strcmp(string, "True")){
-		return 1;
-	} else if (!strcmp(string, "False")){
-		return 0;
-	}
-	return -1;
-}
 
-int isNum(char*string, unsigned int length){
-	for (int i = 0; i < length; i++){
-		int isNumber = 0;
-		for (int j = 0; j < 10; j++){
-			if (string[i] == NUMBERS[j]){
-				isNumber = 1;
-			}
-		}
-		if (!isNumber){
-			return 1;
-		}
-	}
-	return 0;
-}
 
 int _UseLocalHost(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
 	if (checkArgsCount(name, 1, argc)){

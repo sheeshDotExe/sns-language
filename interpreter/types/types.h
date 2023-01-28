@@ -11,6 +11,7 @@ enum TypeCodes {
 	Float_c,
 	Bool_c,
 	Char_c,
+	Array_c,
 	User_c,
 	Function_c,
 	Empty_c,
@@ -18,6 +19,7 @@ enum TypeCodes {
 };
 
 #define NUMBER_OF_TYPES 7
+#define NUMBERS "0123456789."
 
 struct CustomType {
 	char* name;
@@ -27,7 +29,6 @@ struct CustomType {
 struct String {
 	char* cString;
 	unsigned int size;
-	unsigned int length;
 };
 
 struct Int {
@@ -66,14 +67,15 @@ struct Type {
 	int code;
 	void* type;
 };
-struct Type generateType(int code);
+struct Type generateType(int code, char* value, unsigned int length);
 
 struct Var {
 	char* name;
 	char* value;
+	unsigned int numberOfTypes;
 	struct Type* types;
 };
-struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name);
+struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value);
 
 struct Array {
 	struct Var* vars;
@@ -85,7 +87,19 @@ void addToArray(struct Array* array, struct Var* var);
 
 struct CustomType generateCustomType(char*name, int* codes);
 
+struct CommonTypes {
+	unsigned int length;
+	int* codes;
+};
+
 void testVar();
+
+void assignString(struct String* string, char* value, unsigned int length);
+void assignInt(struct Int* int_s, char* value, unsigned int length);
+void assignFloat(struct Float* float_s, char* value, unsigned int length);
+void assignBool(struct Bool* bool, char* value, unsigned int length);
+
+struct CommonTypes getCommonTypes(struct Var* first, struct Var* second);
 
 void assignValue(struct Var* var, struct Var*other); // assign others value to var
 struct Var addVars(struct Var* first, struct Var* second); // add vars and return new var with merged types
@@ -96,5 +110,7 @@ struct Var lessThan(struct Var* first, struct Var* second);
 struct Var greaterThan(struct Var* first, struct Var* second);
 struct Var equalTo(struct Var* first, struct Var* second);
 
+int stringToBool(char*string);
+int isNum(char*string, unsigned int length);
 
 #endif
