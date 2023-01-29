@@ -5,12 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../errorHandler/errorHandler.h"
+
 enum TypeCodes {
 	String_c,
+	Char_c,
 	Int_c,
 	Float_c,
-	Bool_c,
-	Char_c,
 	Array_c,
 	User_c,
 	Function_c,
@@ -18,7 +19,7 @@ enum TypeCodes {
 	Any_c
 };
 
-#define NUMBER_OF_TYPES 7
+#define NUMBER_OF_TYPES 9
 #define NUMBERS "0123456789."
 
 struct CustomType {
@@ -37,10 +38,6 @@ struct Int {
 
 struct Float {
 	float value;
-};
-
-struct Bool{
-	short int value;
 };
 
 struct Char {
@@ -97,11 +94,12 @@ void testVar();
 void assignString(struct String* string, char* value, unsigned int length);
 void assignInt(struct Int* int_s, char* value, unsigned int length);
 void assignFloat(struct Float* float_s, char* value, unsigned int length);
-void assignBool(struct Bool* bool, char* value, unsigned int length);
 
+struct Type* getType(int code, struct Var* var);
+int getSignificantType(struct CommonTypes* commonTypes);
 struct CommonTypes getCommonTypes(struct Var* first, struct Var* second);
 
-void assignValue(struct Var* var, struct Var*other); // assign others value to var
+void assignValue(struct Var* var, struct Var* other); // assign others value to var
 struct Var addVars(struct Var* first, struct Var* second); // add vars and return new var with merged types
 struct Var subVars(struct Var* first, struct Var* second);
 struct Var divVars(struct Var* first, struct Var* second);

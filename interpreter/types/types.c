@@ -29,30 +29,22 @@ void assignString(struct String* string, char* value, unsigned int length){
 		free(string->cString);
 	}
 	string->size = length;
-	string->cString = (char*)malloc(length*sizeof(char));
-	memcpy(string->cString, value, length);
+	string->cString = (char*)malloc((length+1)*sizeof(char));
+	memcpy(string->cString, value, length+1);
 }
 
 void assignInt(struct Int* int_s, char* value, unsigned int length){
 	if (isNum(value, length)){
-		printf("assignment to type int must be a number!\n");
+		raiseError("assignment to type int must be a number!\n", 1);
 	}
 	int_s->value = atoi(value);
 }
 
 void assignFloat(struct Float* float_s, char* value, unsigned int length){
 	if (isNum(value, length)){
-		printf("assignment to type int must be a number!\n");
+		raiseError("assignment to type float must be a number!\n", 1);
 	}
 	float_s->value = atof(value);
-}
-
-void assignBool(struct Bool* bool, char* value, unsigned int length){
-	int bVal = stringToBool(value);
-	if (bVal == -1){
-		printf("assignment to type bool must be a bool!\n");
-	}
-	bool->value = bVal;
 }
 
 struct Type generateType(int code, char* value, unsigned int length){
@@ -78,6 +70,7 @@ struct Type generateType(int code, char* value, unsigned int length){
 	return type;
 }
 
+
 struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value){
 	struct Var var;
 
@@ -100,6 +93,16 @@ struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name, char*
 	return var;
 }
 
+int getSignificantType(struct CommonTypes* commonTypes){
+	int significant = -1;
+	for (int i = 0; i < commonTypes->length; i++){
+		if(commonTypes->codes[i] > significant){
+			significant = commonTypes->codes[i];
+		}
+	}
+	return significant;
+}
+
 struct CommonTypes getCommonTypes(struct Var* first, struct Var* second){
 	struct CommonTypes commonTypes;
 
@@ -119,17 +122,394 @@ struct CommonTypes getCommonTypes(struct Var* first, struct Var* second){
 	commonTypes.length = numberOfTypes;
 	commonTypes.codes = (int*)malloc(numberOfTypes*sizeof(int));
 
-	memcpy(commonTypes.codes, &types, numberOfTypes);
+	for (int i = 0; i < numberOfTypes; i++){
+		commonTypes.codes[i] = types[i];
+	}
 
 	return commonTypes;
+}
+
+struct Type* getType(int code, struct Var* var){
+	for (int i = 0; i < var->numberOfTypes; i++){
+		if (var->types[i].code == code){
+			return &var->types[i];
+		}
+	}
+	return NULL;
+}
+
+void freeTypes(struct Type* types, unsigned int length, struct Var* var){
+	for (int i = 0; i < length; i++){
+		int code = types[i].code;
+		switch (code){
+			case String_c : {
+				struct String* string1 = (struct String*)types[i].type;
+				free(string1->cString);
+			} break;
+
+			case Int_c : {
+			} break;
+
+			case Float_c : {
+			}
+		}
+		free(var->types[i].type);
+	}
+	free(var->types);
+}
+
+void assignValue(struct Var* var, struct Var*other){
+	struct CommonTypes commonTypes = getCommonTypes(var, other);
+
+	if (commonTypes.length == 0){
+		printf("cannot assign variable %s to variable %s\n", var->value, other->value);
+		raiseError("", 1);
+	}
+
+	char* value = other->value;
+	unsigned int valueLength = strlen(value);
+
+	freeTypes(var->types, var->numberOfTypes, var);
+
+	var->numberOfTypes = commonTypes.length;
+	var->types = (struct Type*)malloc(commonTypes.length*sizeof(struct Type));
+
+	for (int i = 0; i < commonTypes.length; i++){
+		var->types[i] = generateType(commonTypes.codes[i], value, valueLength);
+	}
+
+	free(var->value);
+	var->value = (char*)malloc((valueLength+1)*sizeof(char));
+	memcpy(var->value, value, valueLength+1);
+
+}
+
+struct Var addVars(struct Var* first, struct Var* second){
+	struct CommonTypes commonTypes = getCommonTypes(first, second);
+
+	if (commonTypes.length == 0){
+		printf("cannot add variable %s to variable %s\n", first->value, second->value);
+		raiseError("", 1);
+	}
+
+	int code = getSignificantType(&commonTypes);
+
+	char* newValue;
+
+	switch (code){
+		case String_c : {
+			struct String* string1 = (struct String*)getType(String_c, first)->type;
+			struct String* string2 = (struct String*)getType(String_c, second)->type;
+
+			unsigned int length = string1->size + string2->size + 1;
+			newValue = (char*)malloc(length*sizeof(char));
+			memcpy(newValue, string1->cString, string1->size);
+			memcpy(newValue+string1->size, string2->cString, string2->size+1); // copy null terminator
+		} break;
+
+		case Int_c : {
+			struct Int* int1 = (struct Int*)getType(Int_c, first)->type;
+			struct Int* int2 = (struct Int*)getType(Int_c, second)->type;
+
+			long long new = int1->value + int2->value;
+			newValue = (char*)malloc(20*sizeof(char)); // largest 64 bit signed integer
+			itoa(new, newValue, 10);
+		} break;
+
+		case Float_c : {
+			struct Float* float1 = (struct Float*)getType(Float_c, first)->type;
+			struct Float* float2 = (struct Float*)getType(Float_c, second)->type;
+
+			float new = float1->value + float2->value;
+			newValue = (char*)malloc(100*sizeof(char));
+			gcvt(new, 100, newValue);
+		}
+	}
+
+	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
+
+	return var;
+}
+
+struct Var subVars(struct Var* first, struct Var* second){
+	struct CommonTypes commonTypes = getCommonTypes(first, second);
+
+	if (commonTypes.length == 0){
+		printf("cannot sub variable %s to variable %s\n", first->value, second->value);
+		raiseError("", 1);
+	}
+
+	int code = getSignificantType(&commonTypes);
+
+	char* newValue;
+
+	switch (code){
+		case String_c : {
+			raiseError("string has no operator -\n", 1);
+		} break;
+
+		case Int_c : {
+			struct Int* int1 = (struct Int*)getType(Int_c, first)->type;
+			struct Int* int2 = (struct Int*)getType(Int_c, second)->type;
+
+			long long new = int1->value - int2->value;
+			newValue = (char*)malloc(20*sizeof(char)); // largest 64 bit signed integer
+			itoa(new, newValue, 10);
+		} break;
+
+		case Float_c : {
+			struct Float* float1 = (struct Float*)getType(Float_c, first)->type;
+			struct Float* float2 = (struct Float*)getType(Float_c, second)->type;
+
+			float new = float1->value - float2->value;
+			newValue = (char*)malloc(100*sizeof(char));
+			gcvt(new, 100, newValue);
+		}
+	}
+
+	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
+
+	return var;
+}
+
+struct Var divVars(struct Var* first, struct Var* second){
+	struct CommonTypes commonTypes = getCommonTypes(first, second);
+
+	if (commonTypes.length == 0){
+		printf("cannot divide variable %s to variable %s\n", first->value, second->value);
+		raiseError("", 1);
+	}
+
+	int code = getSignificantType(&commonTypes);
+
+	char* newValue;
+
+	switch (code){
+		case String_c : {
+			raiseError("string has no operator /\n", 1);
+		} break;
+
+		case Int_c : {
+			struct Int* int1 = (struct Int*)getType(Int_c, first)->type;
+			struct Int* int2 = (struct Int*)getType(Int_c, second)->type;
+
+			long long new = int1->value / int2->value;
+			newValue = (char*)malloc(20*sizeof(char)); // largest 64 bit signed integer
+			itoa(new, newValue, 10);
+		} break;
+
+		case Float_c : {
+			struct Float* float1 = (struct Float*)getType(Float_c, first)->type;
+			struct Float* float2 = (struct Float*)getType(Float_c, second)->type;
+
+			float new = float1->value / float2->value;
+			newValue = (char*)malloc(100*sizeof(char));
+			gcvt(new, 100, newValue);
+		}
+	}
+
+	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
+
+	return var;
+}
+
+struct Var mulVars(struct Var* first, struct Var* second){
+	struct CommonTypes commonTypes = getCommonTypes(first, second);
+
+	if (commonTypes.length == 0){
+		printf("cannot multiply variable %s to variable %s\n", first->value, second->value);
+		raiseError("", 1);
+	}
+
+	int code = getSignificantType(&commonTypes);
+
+	char* newValue;
+
+	switch (code){
+		case String_c : {
+			raiseError("string has no operator *\n", 1);
+		} break;
+
+		case Int_c : {
+			struct Int* int1 = (struct Int*)getType(Int_c, first)->type;
+			struct Int* int2 = (struct Int*)getType(Int_c, second)->type;
+
+			long long new = int1->value * int2->value;
+			newValue = (char*)malloc(20*sizeof(char)); // largest 64 bit signed integer
+			itoa(new, newValue, 10);
+		} break;
+
+		case Float_c : {
+			struct Float* float1 = (struct Float*)getType(Float_c, first)->type;
+			struct Float* float2 = (struct Float*)getType(Float_c, second)->type;
+
+			float new = float1->value * float2->value;
+			newValue = (char*)malloc(100*sizeof(char));
+			gcvt(new, 100, newValue);
+		}
+	}
+
+	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
+
+	return var;
+}
+
+struct Var lessThan(struct Var* first, struct Var* second){
+	struct CommonTypes commonTypes = getCommonTypes(first, second);
+
+	if (commonTypes.length == 0){
+		printf("cannot compare variable %s to variable %s\n", first->value, second->value);
+		raiseError("", 1);
+	}
+
+	int code = getSignificantType(&commonTypes);
+
+	char* newValue;
+
+	switch (code){
+		case String_c : {
+			struct String* string1 = (struct String*)getType(String_c, first)->type;
+			struct String* string2 = (struct String*)getType(String_c, second)->type;
+
+			unsigned int result = string1->size < string2->size;
+			newValue = (char*)malloc(1*sizeof(char));
+			itoa(result, newValue, 10);
+		} break;
+
+		case Int_c : {
+			struct Int* int1 = (struct Int*)getType(Int_c, first)->type;
+			struct Int* int2 = (struct Int*)getType(Int_c, second)->type;
+
+			long long new = int1->value < int2->value;
+			newValue = (char*)malloc(1*sizeof(char)); // largest 64 bit signed integer
+			itoa(new, newValue, 10);
+		} break;
+
+		case Float_c : {
+			struct Float* float1 = (struct Float*)getType(Float_c, first)->type;
+			struct Float* float2 = (struct Float*)getType(Float_c, second)->type;
+
+			float new = float1->value < float2->value;
+			newValue = (char*)malloc(1*sizeof(char));
+			gcvt(new, 1, newValue);
+		}
+	}
+
+	int codes[4] = {Int_c, Float_c, String_c, Char_c};
+
+	struct Var var = generateVar((int*)codes, 5, "unnamed", newValue);
+
+	return var;
+}
+
+struct Var greaterThan(struct Var* first, struct Var* second){
+	struct CommonTypes commonTypes = getCommonTypes(first, second);
+
+	if (commonTypes.length == 0){
+		printf("cannot compare variable %s to variable %s\n", first->value, second->value);
+		raiseError("", 1);
+	}
+
+	int code = getSignificantType(&commonTypes);
+
+	char* newValue;
+
+	switch (code){
+		case String_c : {
+			struct String* string1 = (struct String*)getType(String_c, first)->type;
+			struct String* string2 = (struct String*)getType(String_c, second)->type;
+
+			unsigned int result = string1->size > string2->size;
+			newValue = (char*)malloc(1*sizeof(char));
+			itoa(result, newValue, 10);
+		} break;
+
+		case Int_c : {
+			struct Int* int1 = (struct Int*)getType(Int_c, first)->type;
+			struct Int* int2 = (struct Int*)getType(Int_c, second)->type;
+
+			long long new = int1->value > int2->value;
+			newValue = (char*)malloc(1*sizeof(char)); // largest 64 bit signed integer
+			itoa(new, newValue, 10);
+		} break;
+
+		case Float_c : {
+			struct Float* float1 = (struct Float*)getType(Float_c, first)->type;
+			struct Float* float2 = (struct Float*)getType(Float_c, second)->type;
+
+			float new = float1->value > float2->value;
+			newValue = (char*)malloc(1*sizeof(char));
+			gcvt(new, 1, newValue);
+		}
+	}
+
+	int codes[4] = {Int_c, Float_c, String_c, Char_c};
+
+	struct Var var = generateVar((int*)codes, 5, "unnamed", newValue);
+
+	return var;
+}
+
+struct Var equalTo(struct Var* first, struct Var* second){
+	struct CommonTypes commonTypes = getCommonTypes(first, second);
+
+	if (commonTypes.length == 0){
+		printf("cannot compare variable %s to variable %s\n", first->value, second->value);
+		raiseError("", 1);
+	}
+
+	int code = getSignificantType(&commonTypes);
+
+	char* newValue;
+
+	switch (code){
+		case String_c : {
+			struct String* string1 = (struct String*)getType(String_c, first)->type;
+			struct String* string2 = (struct String*)getType(String_c, second)->type;
+
+			unsigned int result = 0;
+			if (!strcmp(string1->cString, string2->cString)){
+				result = 1;
+			}
+			newValue = (char*)malloc(1*sizeof(char));
+			itoa(result, newValue, 10);
+		} break;
+
+		case Int_c : {
+			struct Int* int1 = (struct Int*)getType(Int_c, first)->type;
+			struct Int* int2 = (struct Int*)getType(Int_c, second)->type;
+
+			long long new = int1->value == int2->value;
+			newValue = (char*)malloc(1*sizeof(char)); // largest 64 bit signed integer
+			itoa(new, newValue, 10);
+		} break;
+
+		case Float_c : {
+			struct Float* float1 = (struct Float*)getType(Float_c, first)->type;
+			struct Float* float2 = (struct Float*)getType(Float_c, second)->type;
+
+			float new = float1->value == float2->value;
+			newValue = (char*)malloc(1*sizeof(char));
+			gcvt(new, 1, newValue);
+		}
+	}
+
+	int codes[4] = {Int_c, Float_c, String_c, Char_c};
+
+	struct Var var = generateVar((int*)codes, 4, "unnamed", newValue);
+
+	return var;
 }
 
 void testVar(){
 
 	int codes[3] = {String_c, Int_c, Float_c};
-	struct Var var = generateVar((int*)codes, 3, "HelloWorld", "3.4");
-	struct Var var2 = generateVar((int*)codes, 3, "HelloWorld2", "3.4");
+	struct Var var = generateVar((int*)codes, 3, "HelloWorld", "1");
 
-	struct CommonTypes commonTypes = getCommonTypes(&var, &var2);
-	printf("%d\n",commonTypes.length);
+	int ccodes[2] = {String_c, Float_c};
+	struct Var var1 = generateVar((int*)ccodes, 2, "HelloWorld2", "3.5");
+
+	struct Var sum = greaterThan(&var, &var1);
+
+	printf("%s\n", sum.value);
 }
