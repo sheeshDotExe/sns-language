@@ -9,10 +9,25 @@ int stringToBool(char*string){
 	return -1;
 }
 
-int isNum(char*string, unsigned int length){
+int isFloat(char*string, unsigned int length){
 	for (int i = 0; i < length; i++){
 		int isNumber = 0;
 		for (int j = 0; j < 11; j++){
+			if (string[i] == NUMBERS_WITH_DOT[j]){
+				isNumber = 1;
+			}
+		}
+		if (!isNumber){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+int isNum(char*string, unsigned int length){
+	for (int i = 0; i < length; i++){
+		int isNumber = 0;
+		for (int j = 0; j < 10; j++){
 			if (string[i] == NUMBERS[j]){
 				isNumber = 1;
 			}
@@ -158,6 +173,12 @@ void freeTypes(struct Type* types, unsigned int length, struct Var* var){
 	free(var->types);
 }
 
+void freeVar(struct Var* var){
+	freeTypes(var->types, var->numberOfTypes, var);
+	free(var->name);
+	free(var->value);
+}
+
 void assignValue(struct Var* var, struct Var*other){
 	struct CommonTypes commonTypes = getCommonTypes(var, other);
 
@@ -181,6 +202,8 @@ void assignValue(struct Var* var, struct Var*other){
 	free(var->value);
 	var->value = (char*)malloc((valueLength+1)*sizeof(char));
 	memcpy(var->value, value, valueLength+1);
+
+	free(commonTypes.codes);
 
 }
 
@@ -228,6 +251,8 @@ struct Var addVars(struct Var* first, struct Var* second){
 
 	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
 
+	free(commonTypes.codes);
+
 	return var;
 }
 
@@ -268,6 +293,8 @@ struct Var subVars(struct Var* first, struct Var* second){
 	}
 
 	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
+
+	free(commonTypes.codes);
 
 	return var;
 }
@@ -310,6 +337,8 @@ struct Var divVars(struct Var* first, struct Var* second){
 
 	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
 
+	free(commonTypes.codes);
+
 	return var;
 }
 
@@ -350,6 +379,8 @@ struct Var mulVars(struct Var* first, struct Var* second){
 	}
 
 	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
+
+	free(commonTypes.codes);
 
 	return var;
 }
@@ -399,6 +430,8 @@ struct Var lessThan(struct Var* first, struct Var* second){
 
 	struct Var var = generateVar((int*)codes, 5, "unnamed", newValue);
 
+	free(commonTypes.codes);
+
 	return var;
 }
 
@@ -446,6 +479,8 @@ struct Var greaterThan(struct Var* first, struct Var* second){
 	int codes[4] = {Int_c, Float_c, String_c, Char_c};
 
 	struct Var var = generateVar((int*)codes, 5, "unnamed", newValue);
+
+	free(commonTypes.codes);
 
 	return var;
 }
@@ -498,6 +533,8 @@ struct Var equalTo(struct Var* first, struct Var* second){
 
 	struct Var var = generateVar((int*)codes, 4, "unnamed", newValue);
 
+	free(commonTypes.codes);
+
 	return var;
 }
 
@@ -509,7 +546,8 @@ void testVar(){
 	int ccodes[2] = {String_c, Float_c};
 	struct Var var1 = generateVar((int*)ccodes, 2, "HelloWorld2", "3.5");
 
-	struct Var sum = greaterThan(&var, &var1);
+	while (1){
+		assignValue(&var, &var1);
+	}
 
-	printf("%s\n", sum.value);
 }

@@ -10,6 +10,7 @@
 enum TypeCodes {
 	String_c,
 	Char_c,
+	Bool_c,
 	Int_c,
 	Float_c,
 	Array_c,
@@ -20,7 +21,8 @@ enum TypeCodes {
 };
 
 #define NUMBER_OF_TYPES 9
-#define NUMBERS "0123456789."
+#define NUMBERS "0123456789"
+#define NUMBERS_WITH_DOT "0123456789."
 
 struct CustomType {
 	char* name;
@@ -91,6 +93,7 @@ struct CommonTypes {
 
 void testVar();
 
+void freeVar(struct Var* var);
 void assignString(struct String* string, char* value, unsigned int length);
 void assignInt(struct Int* int_s, char* value, unsigned int length);
 void assignFloat(struct Float* float_s, char* value, unsigned int length);
@@ -109,6 +112,7 @@ struct Var greaterThan(struct Var* first, struct Var* second);
 struct Var equalTo(struct Var* first, struct Var* second);
 
 int stringToBool(char*string);
+int isFloat(char*string, unsigned int length);
 int isNum(char*string, unsigned int length);
 
 #endif

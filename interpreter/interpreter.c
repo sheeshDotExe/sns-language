@@ -9,7 +9,12 @@ int interpret(FILE*file){
 	struct HeaderOptions headerOptions = getHeaderOptions(data);
 
 	//printf("%s", data);
-	testVar();
+	//testVar();
+	struct Var var = generateVarFromString("\"100\"", 5);
+
+	printf("%d\n", var.numberOfTypes);
+
+	freeVar(&var);
 
 	printf("compiled\n");
 
