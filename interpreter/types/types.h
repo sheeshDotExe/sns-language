@@ -50,10 +50,6 @@ struct User {
 
 };
 
-struct Function {
-
-};
-
 struct Empty {
 
 };
@@ -75,6 +71,30 @@ struct Var {
 	struct Type* types;
 };
 struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value);
+
+struct Instruction {
+	void* function;
+	void** args;
+	int* argType;
+	unsigned int argc;
+};
+
+struct Function {
+	struct VarScope* varScope;
+	struct Instruction* instructions;
+	unsigned int numberOfInstructions;
+
+	char* name;
+	unsigned int id;
+};
+
+struct VarScope{
+	unsigned int numberOfVars;
+	struct Var* vars;
+
+	unsigned int numberOfFunctions;
+	struct Function* functions;
+};
 
 struct Array {
 	struct Var* vars;

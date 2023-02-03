@@ -1,5 +1,5 @@
 {
-"cmd" : "gcc -o ${file_base_name} $file_name interpreter/errorHandler/errorHandler.c interpreter/fileReader/fileReader.c interpreter/types/types.c interpreter/filePatterns/patternReader.c interpreter/header/headerFunctions.c interpreter/header/findHeader.c interpreter/interpreter.c" ,
+"cmd" : "gcc -o ${file_base_name} $file_name interpreter/errorHandler/errorHandler.c interpreter/fileReader/fileReader.c interpreter/types/types.c interpreter/filePatterns/patternReader.c interpreter/body/interpretBody.c interpreter/types/interpretType.c interpreter/header/headerFunctions.c interpreter/header/findHeader.c interpreter/interpreter.c" ,
 "selector" : "source.c",
 "shell": true,
 "working_dir" : "$file_path"

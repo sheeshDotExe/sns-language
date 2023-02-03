@@ -8,13 +8,17 @@ int interpret(FILE*file){
 
 	struct HeaderOptions headerOptions = getHeaderOptions(data);
 
+	struct Body body = interpretBody(data, headerOptions.headerEnd, data.length);
+	
 	//printf("%s", data);
 	//testVar();
+	/*
 	struct Var var = generateVarFromString("\"100\"", 5);
 
 	printf("%d\n", var.numberOfTypes);
 
 	freeVar(&var);
+	*/
 
 	printf("compiled\n");
 
