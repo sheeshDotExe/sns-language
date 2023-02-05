@@ -30,7 +30,7 @@ struct File readFile(FILE*fileHandle){
 	fileData[readBytes] = '\0';
 
 	file.mem = fileData;
-	file.length = length;
+	file.length = readBytes;
 
 	return file;
 };

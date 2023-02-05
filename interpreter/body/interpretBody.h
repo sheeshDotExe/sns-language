@@ -11,6 +11,10 @@ struct Body {
 	int hasMain;
 };
 
+struct LineInfo {
+	unsigned int declare;
+};
+
 struct DefinitionLine {
 	char* value;
 	unsigned int length;
