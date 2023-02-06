@@ -20,9 +20,48 @@ enum TypeCodes {
 	Any_c
 };
 
+enum KeyCodes {
+	NewVar_k, // :
+	Type_k, // ?
+	Assign_k, // =
+
+	Function_k, // ->
+	FuncStart_k, // {
+	FuncEnd_k, // }
+	FuncTypeStart_k, // [
+	FuncTypeEnd_k, // ]
+	FuncCallStart, // (
+	FuncCallEnd, // )
+
+	Subtract_k, // -
+	Addition_k, // +
+	Division_k, // /
+	Multiplication_k, // *
+
+	SubtractAssign_k, // -=
+	AdditionAssign_k, // +=
+	DivisionAssign_k, // /=
+	MultiplicationAssign_k, // *=
+};
+
 #define NUMBER_OF_TYPES 9
 #define NUMBERS "0123456789"
 #define NUMBERS_WITH_DOT "0123456789."
+
+#define NUMBER_OF_KEYS 18
+
+struct Key {
+	char* name;
+	unsigned int length;
+	int key;
+};
+
+struct KeyChars {
+	struct Key* keys;
+	unsigned int length;
+};
+void addKey(struct Key* keyP, char* name, unsigned int length, int key);
+struct KeyChars createKeyChars();
 
 struct CustomType {
 	char* name;
@@ -110,8 +149,6 @@ struct CommonTypes {
 	unsigned int length;
 	int* codes;
 };
-
-void testVar();
 
 void freeVar(struct Var* var);
 void assignString(struct String* string, char* value, unsigned int length);

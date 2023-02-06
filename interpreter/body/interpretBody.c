@@ -68,18 +68,89 @@ struct DefinitionLines getLines(struct File file, unsigned long int start, unsig
 	return lines;
 }
 
-struct LineInfo getLineInfo(char* line, unsigned int length){
-	
+struct KeyPos getNextKey(struct KeyChars keyChars, char* line, unsigned int length, unsigned int start){
+
+	struct KeyPos keyPos;
+
+	for (int index = start; index < length; index++){
+		for (int i = 0; i < NUMBER_OF_KEYS; i++){
+			struct Key* key = &keyChars.keys[i];
+			int isValid = 1;
+			for (int j = 0; j < key->length-1; j++){ // -1 to get rid of '\0'
+				if (index + j < length){
+					if (line[index+j] != key->name[j]){
+						isValid = 0; // 6 indentations:>)
+					}
+				} else {
+						isValid = 0;
+				}
+			}
+
+			if (isValid) {
+				keyPos.pos = index;
+				keyPos.endPos = index + (key->length-1);
+				keyPos.key = key->key;
+				return keyPos;
+			}
+		}
+	}
+
+	keyPos.pos = start;
+	keyPos.endPos = start;
+	keyPos.key = -1;
+	return keyPos;
 }
 
-struct Body interpretBody(struct File file, unsigned long int start, unsigned long int end){
+struct KeyWord getKeyword(char* line, unsigned int start, unsigned int stop){
+
+}
+
+int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsigned int length){
+
+	// find keys
+
+	unsigned int keysCount = 0;
+	int start = 0;
+	while (start < length){
+		struct KeyPos keyPos = getNextKey(keyChars, line, length, start);
+		if (keyPos.key == -1){
+			break;
+		}
+
+		keysCount++;
+		start = keyPos.endPos;
+	}
+	
+	struct KeyPos* keyPositions = (struct KeyPos*)malloc(keysCount*sizeof(struct KeyPos));
+
+	start = 0;
+	int currentKey = 0;
+	while (start < length){
+		struct KeyPos keyPos = getNextKey(keyChars, line, length, start);
+		if (keyPos.key == -1){
+			break;
+		}
+		keyPositions[currentKey] = keyPos;
+		currentKey++;
+		start = keyPos.endPos;
+	}
+
+
+	// find keywords
+
+
+	printf("%s\n", line);
+	return 0;
+}
+
+struct Body interpretBody(struct KeyChars keyChars, struct File file, unsigned long int start, unsigned long int end){
 
 	struct Body body;
 
 	struct DefinitionLines lines = getLines(file, start, end);
 
 	for (int i = 0; i < lines.length; i++){
-		printf("%s\n", lines.lines[i]);
+		interpretLine(keyChars, &body, lines.lines[i].value, lines.lines[i].length);
 	}
 
 	return body;

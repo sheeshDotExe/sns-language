@@ -538,16 +538,27 @@ struct Var equalTo(struct Var* first, struct Var* second){
 	return var;
 }
 
-void testVar(){
+void addKey(struct Key* keyP, char* name, unsigned int length, int key){
 
-	int codes[3] = {String_c, Int_c, Float_c};
-	struct Var var = generateVar((int*)codes, 3, "HelloWorld", "1");
+	keyP->name = (char*)malloc(length*sizeof(char));
+	memcpy(keyP->name, name, length);
 
-	int ccodes[2] = {String_c, Float_c};
-	struct Var var1 = generateVar((int*)ccodes, 2, "HelloWorld2", "3.5");
+	keyP->key = key;
+	keyP->length = length;
+}
 
-	while (1){
-		assignValue(&var, &var1);
+struct KeyChars createKeyChars(){
+	struct KeyChars keyChars;
+
+	keyChars.length = NUMBER_OF_KEYS;
+	keyChars.keys = (struct Key*)malloc(NUMBER_OF_KEYS*sizeof(struct Key));
+
+	char* keys[] = {":", "?", "=", "->", "{", "}", "[", "]", "(", ")", "-", "+", "/", "*",
+					"-=", "+=", "/=", "*="};
+
+	for (int i = 0; i < NUMBER_OF_KEYS; i++){
+		addKey(&keyChars.keys[i], keys[i], strlen(keys[i])+1, i);
 	}
 
+	return keyChars;
 }

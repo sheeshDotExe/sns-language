@@ -11,10 +11,6 @@ struct Body {
 	int hasMain;
 };
 
-struct LineInfo {
-	unsigned int declare;
-};
-
 struct DefinitionLine {
 	char* value;
 	unsigned int length;
@@ -25,8 +21,19 @@ struct DefinitionLines {
 	unsigned int length;
 };
 
+struct KeyPos {
+	unsigned int pos;
+	unsigned int endPos;
+	int key;
+};
+
+struct KeyWord {
+	char* value;
+	unsigned int length;
+};
+
 struct DefinitionLines getLines(struct File file, unsigned long int start, unsigned long int end);
 
-struct Body interpretBody(struct File file, unsigned long int start, unsigned long int end);
+struct Body interpretBody(struct KeyChars keyChars, struct File file, unsigned long int start, unsigned long int end);
 
 #endif

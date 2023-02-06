@@ -8,7 +8,9 @@ int interpret(FILE*file){
 
 	struct HeaderOptions headerOptions = getHeaderOptions(data);
 
-	struct Body body = interpretBody(data, headerOptions.headerEnd, data.length);
+	struct KeyChars keyChars = createKeyChars();
+
+	struct Body body = interpretBody(keyChars, data, headerOptions.headerEnd, data.length);
 	
 	//printf("%s", data);
 	//testVar();
