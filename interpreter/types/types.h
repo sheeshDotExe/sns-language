@@ -21,6 +21,13 @@ enum TypeCodes {
 };
 
 enum KeyCodes {
+	SubtractAssign_k, // -=
+	AdditionAssign_k, // +=
+	DivisionAssign_k, // /=
+	MultiplicationAssign_k, // *=
+
+	NameSpace_k, // ::
+
 	NewVar_k, // :
 	Type_k, // ?
 	Param_k, // ,
@@ -39,10 +46,7 @@ enum KeyCodes {
 	Division_k, // /
 	Multiplication_k, // *
 
-	SubtractAssign_k, // -=
-	AdditionAssign_k, // +=
-	DivisionAssign_k, // /=
-	MultiplicationAssign_k, // *=
+
 };
 
 #define NUMBER_OF_TYPES 9
@@ -131,6 +135,9 @@ struct Function {
 struct VarScope{
 	unsigned int numberOfVars;
 	struct Var* vars;
+
+	struct Var* currentVar;
+	int hasCurrentVar;
 
 	unsigned int numberOfFunctions;
 	struct Function* functions;

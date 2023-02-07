@@ -12,7 +12,7 @@ JS_PATH          ("/static/javascript")
 typedef route : html ? json
 ***
 
-VALUE: float ? int = 45
+VALUE: float ? int ? string = 45
 
 main: function[bool] -> {
 	Route : function[route] -> new::route("/", "GET", "POST") -> {

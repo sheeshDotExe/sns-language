@@ -100,6 +100,7 @@ struct KeyPos getNextKey(struct KeyChars keyChars, char* line, unsigned int leng
 				return keyPos;
 			}
 		}
+		
 	}
 
 	keyPos.pos = start;
@@ -113,7 +114,7 @@ struct KeyWord getKeyword(char* line, unsigned int start, unsigned int stop){
 
 	unsigned int charCount = 0;
 	for (int i = start; i < stop; i++){
-		if (line[i] != ' ' && line[i] != '\t'){
+		if (line[i] != ' ' && line[i] != '\t' && line[i] != '\n'){
 			charCount++;
 		}
 	}
@@ -122,7 +123,7 @@ struct KeyWord getKeyword(char* line, unsigned int start, unsigned int stop){
 
 	unsigned int count = 0;
 	for (int i = start; i < stop; i++){
-		if (line[i] != ' ' && line[i] != '\t'){
+		if (line[i] != ' ' && line[i] != '\t' && line[i] != '\n'){
 			keyWord.value[count] = line[i];
 			count++;
 		}
@@ -132,6 +133,56 @@ struct KeyWord getKeyword(char* line, unsigned int start, unsigned int stop){
 	keyWord.length = charCount;
 
 	return keyWord;
+}
+
+int typeFromString(char* value, unsigned int length){
+	if (!strcmp(value, "float")){
+		return Float_c;
+	} else if (!strcmp(value, "int")){
+		return Int_c;
+	} else if (!strcmp(value, "string")){
+		return String_c;
+	} else if (!strcmp(value, "function")){
+		return Function_c;
+	} else if (!strcmp(value, "array")){
+		return Array_c;
+	}
+	printf("no type named %s\n", value);
+	raiseError("", 1);
+	return -1;
+}
+
+int* getVarTypes(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int length, unsigned int index){
+	int count = 0;
+
+	unsigned int newIndex = index+1;
+	while (newIndex < length){ // itterate keys
+		struct KeyPos* keyPos = &keyPosition[newIndex];
+		struct KeyWord* keyWord = &keyWords[newIndex];
+		count++;
+		if (keyPos->key != Type_k){
+			break;
+		}
+		newIndex++;
+	}
+
+	int* codes = (int*)malloc((count+1)*sizeof(int));
+	codes[0] = count;
+
+	unsigned int i = 1;
+	newIndex = index+1;
+	while (newIndex < length){ // itterate keys
+		struct KeyPos* keyPos = &keyPosition[newIndex];
+		struct KeyWord* keyWord = &keyWords[newIndex];
+		codes[i] = typeFromString(keyWord->value, keyWord->length);
+		i++;
+		if (keyPos->key != Type_k){
+			break;
+		}
+		newIndex++;
+	}
+
+	return codes;
 }
 
 int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsigned int length){
@@ -156,8 +207,6 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 	int currentKey = 0;
 	while (start < length){
 		struct KeyPos keyPos = getNextKey(keyChars, line, length, start);
-		keyPos.before = (struct KeyWord*)malloc(sizeof(struct KeyWord));
-		keyPos.after = (struct KeyWord*)malloc(sizeof(struct KeyWord));
 		if (keyPos.key == -1){
 			break;
 		}
@@ -185,31 +234,55 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 	// now parse the keywords with the keys
 	for (int i = 0; i < keysCount; i++){
 		struct KeyPos* key = &keyPositions[i];
-		key->before = &keyWords[i];
-		key->after = &keyWords[i+1];
+		struct KeyWord* keyWord = &keyWords[i];
+		//printf("%d, %s\n",key->key, keyWord->value);
 
-		printf("%d %s %s\n", key->key, key->before->value, key->after->value);
+		switch (key->key){
+			case (NewVar_k):{
+				//allocate new var in the scope
+				int* codeValues = getVarTypes(keyPositions, keyWords, keysCount, i);
+
+				int numberOfTypes = codeValues[0]; // first value of int array is length :()
+				int* codes = codeValues+1;
+				char* varName = keyWord->value;
+
+				struct Var var = generateVar(codes, numberOfTypes, varName, (char*)"");
+
+				if (body->globalScope.hasCurrentVar){
+					free(body->globalScope.currentVar);
+				}
+				body->globalScope.currentVar = (struct Var*)malloc(sizeof(struct Var));
+				body->globalScope.currentVar = &var;
+				body->globalScope.hasCurrentVar = 1;
+			}break;
+
+			case (Assign_k): {
+				if (!body->globalScope.currentVar){
+					raiseError("cannot assign to NULL", 1);
+				}
+				//assign value to current variable
+			}break;
+		}
 	}
 
+	printf("%s\n", body->globalScope.currentVar->name);
 
 	for (int i = 0; i < currentKeyWord; i++){
 		free(keyWords[i].value);
 	}
 	free(keyWords);
 
-	for (int i = 0; i < keysCount; i++){
-		free(keyPositions[i].before);
-		free(keyPositions[i].after);
-	}
 	free(keyPositions);
 
-	printf("%s\n", line);
+	//printf("%s\n", line);
 	return 0;
 }
 
 struct Body interpretBody(struct KeyChars keyChars, struct File file, unsigned long int start, unsigned long int end){
 
 	struct Body body;
+
+	body.globalScope.hasCurrentVar = 0;
 
 	struct DefinitionLines lines = getLines(file, start, end);
 

@@ -25,8 +25,6 @@ struct KeyPos {
 	unsigned int pos;
 	unsigned int endPos;
 	int key;
-	struct KeyWord* before;
-	struct KeyWord* after;
 };
 
 struct KeyWord {
