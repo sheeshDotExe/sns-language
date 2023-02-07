@@ -553,7 +553,7 @@ struct KeyChars createKeyChars(){
 	keyChars.length = NUMBER_OF_KEYS;
 	keyChars.keys = (struct Key*)malloc(NUMBER_OF_KEYS*sizeof(struct Key));
 
-	char* keys[] = {":", "?", "=", "->", "{", "}", "[", "]", "(", ")", "-", "+", "/", "*",
+	char* keys[] = {":", "?",",", "=", "->", "{", "}", "[", "]", "(", ")", "-", "+", "/", "*",
 					"-=", "+=", "/=", "*="};
 
 	for (int i = 0; i < NUMBER_OF_KEYS; i++){

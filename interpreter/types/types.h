@@ -23,6 +23,7 @@ enum TypeCodes {
 enum KeyCodes {
 	NewVar_k, // :
 	Type_k, // ?
+	Param_k, // ,
 	Assign_k, // =
 
 	Function_k, // ->
@@ -48,7 +49,7 @@ enum KeyCodes {
 #define NUMBERS "0123456789"
 #define NUMBERS_WITH_DOT "0123456789."
 
-#define NUMBER_OF_KEYS 18
+#define NUMBER_OF_KEYS 19
 
 struct Key {
 	char* name;

@@ -72,7 +72,14 @@ struct KeyPos getNextKey(struct KeyChars keyChars, char* line, unsigned int leng
 
 	struct KeyPos keyPos;
 
+	int isString = 0;
+
 	for (int index = start; index < length; index++){
+
+		if (line[index] == '"'){
+			isString = !isString;
+		}
+
 		for (int i = 0; i < NUMBER_OF_KEYS; i++){
 			struct Key* key = &keyChars.keys[i];
 			int isValid = 1;
@@ -86,7 +93,7 @@ struct KeyPos getNextKey(struct KeyChars keyChars, char* line, unsigned int leng
 				}
 			}
 
-			if (isValid) {
+			if (isValid && !isString) {
 				keyPos.pos = index;
 				keyPos.endPos = index + (key->length-1);
 				keyPos.key = key->key;
@@ -102,7 +109,29 @@ struct KeyPos getNextKey(struct KeyChars keyChars, char* line, unsigned int leng
 }
 
 struct KeyWord getKeyword(char* line, unsigned int start, unsigned int stop){
+	struct KeyWord keyWord;
 
+	unsigned int charCount = 0;
+	for (int i = start; i < stop; i++){
+		if (line[i] != ' ' && line[i] != '\t'){
+			charCount++;
+		}
+	}
+
+	keyWord.value = (char*)malloc((charCount+1)*sizeof(char));
+
+	unsigned int count = 0;
+	for (int i = start; i < stop; i++){
+		if (line[i] != ' ' && line[i] != '\t'){
+			keyWord.value[count] = line[i];
+			count++;
+		}
+	}
+
+	keyWord.value[charCount] = '\0';
+	keyWord.length = charCount;
+
+	return keyWord;
 }
 
 int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsigned int length){
@@ -127,6 +156,8 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 	int currentKey = 0;
 	while (start < length){
 		struct KeyPos keyPos = getNextKey(keyChars, line, length, start);
+		keyPos.before = (struct KeyWord*)malloc(sizeof(struct KeyWord));
+		keyPos.after = (struct KeyWord*)malloc(sizeof(struct KeyWord));
 		if (keyPos.key == -1){
 			break;
 		}
@@ -135,9 +166,42 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 		start = keyPos.endPos;
 	}
 
-
 	// find keywords
 
+	struct KeyWord* keyWords = (struct KeyWord*)malloc((keysCount+1)*sizeof(struct KeyWord));
+
+	unsigned int currentKeyWord = 0;
+	unsigned int lastPosition = 0;
+	for (int i = 0; i < keysCount; i++){
+		struct KeyPos* position = &keyPositions[i];
+		struct KeyWord keyWord = getKeyword(line, lastPosition, position->pos);
+		keyWords[currentKeyWord] = keyWord;
+		currentKeyWord++;
+		lastPosition = position->endPos;
+	}
+	struct KeyWord keyWord = getKeyword(line, lastPosition, length);
+	keyWords[currentKeyWord] = keyWord;
+
+	// now parse the keywords with the keys
+	for (int i = 0; i < keysCount; i++){
+		struct KeyPos* key = &keyPositions[i];
+		key->before = &keyWords[i];
+		key->after = &keyWords[i+1];
+
+		printf("%d %s %s\n", key->key, key->before->value, key->after->value);
+	}
+
+
+	for (int i = 0; i < currentKeyWord; i++){
+		free(keyWords[i].value);
+	}
+	free(keyWords);
+
+	for (int i = 0; i < keysCount; i++){
+		free(keyPositions[i].before);
+		free(keyPositions[i].after);
+	}
+	free(keyPositions);
 
 	printf("%s\n", line);
 	return 0;
@@ -151,7 +215,10 @@ struct Body interpretBody(struct KeyChars keyChars, struct File file, unsigned l
 
 	for (int i = 0; i < lines.length; i++){
 		interpretLine(keyChars, &body, lines.lines[i].value, lines.lines[i].length);
+		free(lines.lines[i].value);
 	}
+
+	free(lines.lines);
 
 	return body;
 }
