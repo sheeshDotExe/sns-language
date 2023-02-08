@@ -75,7 +75,7 @@ struct Var generateVarFromString(char*value, unsigned int length){
 
 	struct CommonTypes types = getValidTypes(valueP, &length);
 
-	struct Var var = generateVar(types.codes, types.length, "unnamed", *valueP);
+	struct Var var = generateVar(types.codes, types.length, "unnamed", *valueP, (struct Param*)NULL);
 
 	free(types.codes);
 	free(*valueP);

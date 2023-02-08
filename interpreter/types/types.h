@@ -38,8 +38,8 @@ enum KeyCodes {
 	FuncEnd_k, // }
 	FuncTypeStart_k, // [
 	FuncTypeEnd_k, // ]
-	FuncCallStart, // (
-	FuncCallEnd, // )
+	FuncCallStart_k, // (
+	FuncCallEnd_k, // )
 
 	Subtract_k, // -
 	Addition_k, // +
@@ -114,7 +114,12 @@ struct Var {
 	unsigned int numberOfTypes;
 	struct Type* types;
 };
-struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value);
+struct Param {
+	struct Var* inputVars;
+	unsigned int inputCount;
+	struct Var* returnValue;
+};
+struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* params);
 
 struct Instruction {
 	void* function;
@@ -127,6 +132,9 @@ struct Function {
 	struct VarScope* varScope;
 	struct Instruction* instructions;
 	unsigned int numberOfInstructions;
+
+	struct Var* inputValues;
+	struct Var returnValue;
 
 	char* name;
 	unsigned int id;
@@ -142,6 +150,8 @@ struct VarScope{
 	unsigned int numberOfFunctions;
 	struct Function* functions;
 };
+struct Var* getVarFromScope(struct VarScope* scope, char* varName);
+void addVarToScope(struct VarScope* scope, struct Var* var);
 
 struct Array {
 	struct Var* vars;
@@ -162,6 +172,7 @@ void freeVar(struct Var* var);
 void assignString(struct String* string, char* value, unsigned int length);
 void assignInt(struct Int* int_s, char* value, unsigned int length);
 void assignFloat(struct Float* float_s, char* value, unsigned int length);
+void assignFunction(struct Function* function, char* value, unsigned int length);
 
 struct Type* getType(int code, struct Var* var);
 int getSignificantType(struct CommonTypes* commonTypes);

@@ -152,7 +152,7 @@ int typeFromString(char* value, unsigned int length){
 	return -1;
 }
 
-int* getVarTypes(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int length, unsigned int index){
+struct Var getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int length, unsigned int index){
 	int count = 0;
 
 	unsigned int newIndex = index+1;
@@ -166,10 +166,11 @@ int* getVarTypes(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned 
 		newIndex++;
 	}
 
-	int* codes = (int*)malloc((count+1)*sizeof(int));
-	codes[0] = count;
+	int* codes = (int*)malloc((count)*sizeof(int));
 
-	unsigned int i = 1;
+	char* param;
+
+	unsigned int i = 0;
 	newIndex = index+1;
 	while (newIndex < length){ // itterate keys
 		struct KeyPos* keyPos = &keyPosition[newIndex];
@@ -231,41 +232,48 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 	struct KeyWord keyWord = getKeyword(line, lastPosition, length);
 	keyWords[currentKeyWord] = keyWord;
 
+	unsigned int keyLoc = 0;
+	unsigned int wordLoc = 0;
+
+	unsigned int newVar = 0;
+
 	// now parse the keywords with the keys
 	for (int i = 0; i < keysCount; i++){
-		struct KeyPos* key = &keyPositions[i];
-		struct KeyWord* keyWord = &keyWords[i];
-		//printf("%d, %s\n",key->key, keyWord->value);
+		struct KeyPos* key = &keyPositions[keyLoc];
+		struct KeyWord* keyWord = &keyWords[wordLoc];
+		printf("%d, %s\n", key->key, keyWord->value);
 
 		switch (key->key){
 			case (NewVar_k):{
 				//allocate new var in the scope
-				int* codeValues = getVarTypes(keyPositions, keyWords, keysCount, i);
 
-				int numberOfTypes = codeValues[0]; // first value of int array is length :()
-				int* codes = codeValues+1;
 				char* varName = keyWord->value;
+				struct Var var = getVarTypes(varName, keyPositions, keyWords, keysCount, i);
 
-				struct Var var = generateVar(codes, numberOfTypes, varName, (char*)"");
+				unsigned int newVar = 1;
+				
+				addVarToScope(&body->globalScope, &var);
 
-				if (body->globalScope.hasCurrentVar){
-					free(body->globalScope.currentVar);
-				}
-				body->globalScope.currentVar = (struct Var*)malloc(sizeof(struct Var));
-				body->globalScope.currentVar = &var;
-				body->globalScope.hasCurrentVar = 1;
+				wordLoc++;
 			}break;
 
 			case (Assign_k): {
-				if (!body->globalScope.currentVar){
-					raiseError("cannot assign to NULL", 1);
-				}
 				//assign value to current variable
 			}break;
+
+			case (FuncCallEnd_k): {
+			}
+
+			case (FuncTypeEnd_k): {
+				wordLoc--;
+			}
 		}
+
+		keyLoc++;
+		wordLoc++;
 	}
 
-	printf("%s\n", body->globalScope.currentVar->name);
+	//printf("%s\n", body->globalScope.currentVar->name);
 
 	for (int i = 0; i < currentKeyWord; i++){
 		free(keyWords[i].value);
@@ -274,7 +282,7 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 
 	free(keyPositions);
 
-	//printf("%s\n", line);
+	printf("%s\n", line);
 	return 0;
 }
 
@@ -283,6 +291,7 @@ struct Body interpretBody(struct KeyChars keyChars, struct File file, unsigned l
 	struct Body body;
 
 	body.globalScope.hasCurrentVar = 0;
+	body.globalScope.vars = (struct Var*)malloc(sizeof(struct Var));
 
 	struct DefinitionLines lines = getLines(file, start, end);
 

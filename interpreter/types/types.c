@@ -86,7 +86,7 @@ struct Type generateType(int code, char* value, unsigned int length){
 }
 
 
-struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value){
+struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param){
 	struct Var var;
 
 	unsigned int nameLength = strlen(name);
@@ -249,7 +249,7 @@ struct Var addVars(struct Var* first, struct Var* second){
 		}
 	}
 
-	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
+	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
 
@@ -292,7 +292,7 @@ struct Var subVars(struct Var* first, struct Var* second){
 		}
 	}
 
-	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
+	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
 
@@ -335,7 +335,7 @@ struct Var divVars(struct Var* first, struct Var* second){
 		}
 	}
 
-	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
+	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
 
@@ -378,7 +378,7 @@ struct Var mulVars(struct Var* first, struct Var* second){
 		}
 	}
 
-	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue);
+	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
 
@@ -428,7 +428,7 @@ struct Var lessThan(struct Var* first, struct Var* second){
 
 	int codes[4] = {Int_c, Float_c, String_c, Char_c};
 
-	struct Var var = generateVar((int*)codes, 5, "unnamed", newValue);
+	struct Var var = generateVar((int*)codes, 5, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
 
@@ -478,7 +478,7 @@ struct Var greaterThan(struct Var* first, struct Var* second){
 
 	int codes[4] = {Int_c, Float_c, String_c, Char_c};
 
-	struct Var var = generateVar((int*)codes, 5, "unnamed", newValue);
+	struct Var var = generateVar((int*)codes, 5, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
 
@@ -531,7 +531,7 @@ struct Var equalTo(struct Var* first, struct Var* second){
 
 	int codes[4] = {Int_c, Float_c, String_c, Char_c};
 
-	struct Var var = generateVar((int*)codes, 4, "unnamed", newValue);
+	struct Var var = generateVar((int*)codes, 4, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
 
@@ -562,4 +562,27 @@ struct KeyChars createKeyChars(){
 	}
 
 	return keyChars;
+}
+
+struct Var* getVarFromScope(struct VarScope* scope, char* varName){
+	for (int i = 0; i < scope->numberOfVars; i++){
+		struct Var* var = &scope->vars[i];
+		if (!strcmp(varName, var->name)){
+			return var;
+		}
+	}
+	printf("no variable named %s", varName);
+	raiseError("", 1);
+	return (struct Var*)NULL;
+}
+
+void addVarToScope(struct VarScope* scope, struct Var* var){
+	scope->numberOfVars++;
+	struct Var* newVars = (struct Var*)realloc(scope->vars, scope->numberOfVars*sizeof(struct Var));
+	if (newVars == NULL){
+		raiseError("memory error", 1);
+	} else {
+		scope->vars = newVars;
+		scope->vars[scope->numberOfVars-1] = *var;
+	}
 }

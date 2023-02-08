@@ -14,6 +14,8 @@ typedef route : html ? json
 
 VALUE: float ? int ? string = 45
 
+VALUE = 1
+
 main: function[bool] -> {
 	Route : function[route] -> new::route("/", "GET", "POST") -> {
 		extend HomePage
@@ -30,11 +32,6 @@ Api: function[route] -> new::route("/api/{number: int64 ? float}", "GET") -> {
 	new_number *= 2
 	new_number = add(new_number)
 
-	numbers : array[int ? float] = [2, 2.4, 6]
-
-	new::for(i:float, numbers) -> {
-		new_number += i
-	}
 	return new::json(new_number)
 }
 
