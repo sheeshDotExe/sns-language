@@ -152,15 +152,17 @@ int typeFromString(char* value, unsigned int length){
 	return -1;
 }
 
-struct Var getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int length, unsigned int index){
+struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int length, unsigned int index){
 	int count = 0;
+
+	struct Var* var = (struct Var*)malloc(sizeof(struct Var));
 
 	unsigned int newIndex = index+1;
 	while (newIndex < length){ // itterate keys
 		struct KeyPos* keyPos = &keyPosition[newIndex];
 		struct KeyWord* keyWord = &keyWords[newIndex];
 		count++;
-		if (keyPos->key != Type_k){
+		if (keyPos->key != Type_k && keyPos->key != FuncTypeStart_k && keyPos->key != FuncTypeEnd_k){
 			break;
 		}
 		newIndex++;
@@ -176,6 +178,13 @@ struct Var getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWord
 		struct KeyPos* keyPos = &keyPosition[newIndex];
 		struct KeyWord* keyWord = &keyWords[newIndex];
 		codes[i] = typeFromString(keyWord->value, keyWord->length);
+
+		printf("%d %d types\n", keyPos->key, codes[i]);
+
+		if (codes[i] == Function_k){
+			
+		}
+
 		i++;
 		if (keyPos->key != Type_k){
 			break;
@@ -183,7 +192,7 @@ struct Var getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWord
 		newIndex++;
 	}
 
-	return codes;
+	return var;
 }
 
 int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsigned int length){
@@ -241,20 +250,17 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 	for (int i = 0; i < keysCount; i++){
 		struct KeyPos* key = &keyPositions[keyLoc];
 		struct KeyWord* keyWord = &keyWords[wordLoc];
-		printf("%d, %s\n", key->key, keyWord->value);
 
 		switch (key->key){
 			case (NewVar_k):{
 				//allocate new var in the scope
 
 				char* varName = keyWord->value;
-				struct Var var = getVarTypes(varName, keyPositions, keyWords, keysCount, i);
+				struct Var* var = getVarTypes(varName, keyPositions, keyWords, keysCount, i);
 
 				unsigned int newVar = 1;
 				
-				addVarToScope(&body->globalScope, &var);
-
-				wordLoc++;
+				addVarToScope(&body->globalScope, var); 
 			}break;
 
 			case (Assign_k): {
