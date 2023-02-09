@@ -170,7 +170,7 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 
 	int* codes = (int*)malloc((count)*sizeof(int));
 
-	char* param;
+	struct Param* param;
 
 	unsigned int i = 0;
 	newIndex = index+1;
@@ -182,7 +182,20 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 		printf("%d %d types\n", keyPos->key, codes[i]);
 
 		if (codes[i] == Function_k){
-			
+			int paramCount = 1;
+			struct KeyPos* currentKey = keyPos;
+			int nCount = 0;
+			while (currentKey->key != FuncTypeEnd_k){
+				if (currentKey->key == Param_k){
+					paramCount++;
+				}
+				nCount++;
+				if (newIndex + nCount >= length){
+					raiseError("no closing tag in types (missing ])", 1);
+				}
+				currentKey = &keyPosition[newIndex+nCount];
+			}
+			printf("%d\n", paramCount);
 		}
 
 		i++;
@@ -191,6 +204,8 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 		}
 		newIndex++;
 	}
+
+	*var = generateVar(codes, count, varName, "", param);
 
 	return var;
 }
