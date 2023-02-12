@@ -181,7 +181,7 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 
 		printf("%d %d types\n", keyPos->key, codes[i]);
 
-		if (codes[i] == Function_k){
+		if (codes[i] == Function_c){
 			int paramCount = 1;
 			struct KeyPos* currentKey = keyPos;
 			int nCount = 0;
