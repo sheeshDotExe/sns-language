@@ -12,12 +12,12 @@ JS_PATH          ("/static/javascript")
 typedef route : html ? json
 ***
 
-VALUE: float ? int ? string = 45
+VALUE: float ? int ? string = 45 + 15 * 3
 
 VALUE = 1
 
-main: function[bool] -> {
-	Route : function[route] -> new::route("/", "GET", "POST") -> {
+main: function[test: string, test2: int, bool ? float] -> {
+	Route : function[string] -> new::route("/", "GET", "POST") -> {
 		extend HomePage
 		extend Api
 	}
@@ -27,7 +27,7 @@ add: function[input: float, float] -> {
 	return input + 1
 }
 
-Api: function[route] -> new::route("/api/{number: int ? float}", "GET") -> {
+Api: function[string] -> new::route("/api/{number: int ? float}", "GET") -> {
 	new_number : float = number
 	new_number *= 2
 	new_number = add(new_number)
@@ -35,6 +35,6 @@ Api: function[route] -> new::route("/api/{number: int ? float}", "GET") -> {
 	return new::json(new_number)
 }
 
-HomePage: function[route] -> new::route("/") -> {
+HomePage: function[string] -> new::route("/") -> {
 	return new::html("./index.html")
 }

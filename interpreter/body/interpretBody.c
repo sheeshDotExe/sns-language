@@ -146,18 +146,20 @@ int typeFromString(char* value, unsigned int length){
 		return Function_c;
 	} else if (!strcmp(value, "array")){
 		return Array_c;
+	} else if (!strcmp(value, "bool")){
+		return Int_c;
 	}
 	printf("no type named %s\n", value);
 	raiseError("", 1);
 	return -1;
 }
 
-struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int length, unsigned int index){
+struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int length, unsigned int index, unsigned int* increment){
 	int count = 0;
 
 	struct Var* var = (struct Var*)malloc(sizeof(struct Var));
 
-	unsigned int newIndex = index+1;
+	unsigned int newIndex = index + 1;
 	while (newIndex < length){ // itterate keys
 		struct KeyPos* keyPos = &keyPosition[newIndex];
 		struct KeyWord* keyWord = &keyWords[newIndex];
@@ -173,13 +175,21 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 	struct Param* param;
 
 	unsigned int i = 0;
-	newIndex = index+1;
-	while (newIndex < length){ // itterate keys
+	newIndex = index + 1;
+	(*increment)++;
+	while (newIndex <= length){ // itterate keys
+
+		if (newIndex == length){
+			struct KeyWord* keyWord = &keyWords[newIndex];
+			codes[i] = typeFromString(keyWord->value, keyWord->length);
+			break;
+		}
+
 		struct KeyPos* keyPos = &keyPosition[newIndex];
 		struct KeyWord* keyWord = &keyWords[newIndex];
 		codes[i] = typeFromString(keyWord->value, keyWord->length);
 
-		printf("%d %d types\n", keyPos->key, codes[i]);
+		printf("%s %d %d types\n", varName, keyPos->key, codes[i]);
 
 		if (codes[i] == Function_c){
 			int paramCount = 1;
@@ -195,7 +205,40 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 				}
 				currentKey = &keyPosition[newIndex+nCount];
 			}
-			printf("%d\n", paramCount);
+			printf("%d params\n", paramCount);
+
+			param = (struct Param*)malloc(sizeof(struct Param));
+			param->inputVars = (struct Var*)malloc(sizeof(struct Var) * (paramCount-1));
+			param->inputCount = paramCount-1;
+			param->returnValue = (struct Var*)malloc(sizeof(struct Var));
+
+			unsigned int paramStart = newIndex;
+			unsigned int paramEnd = newIndex;
+			unsigned int paramCounter = 0;
+
+			currentKey = keyPos;
+			nCount = 0;
+			unsigned int wordCount = 0;
+
+			struct KeyWord* currentWord = &keyWords[paramStart];
+
+			while (currentKey->key != FuncTypeEnd_k){
+				if (currentKey->key == Param_k){
+					paramCount--;
+					if (paramCount){
+						param->inputVars[paramCounter] = *getVarTypes(keyWords[paramEnd+1].value, keyPosition, keyWords, length, paramEnd+1, increment);
+					} else {
+						break;
+					}
+					paramEnd = paramStart;
+				}
+				paramStart++;
+				currentKey = &keyPosition[paramStart];
+				currentWord = &keyWords[paramStart];
+
+				printf("%d %s\n", currentKey->key, currentWord->value);
+			}
+			param->returnValue = getVarTypes("return", keyPosition, keyWords, length, paramEnd, increment);
 		}
 
 		i++;
@@ -203,11 +246,17 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 			break;
 		}
 		newIndex++;
+		(*increment)++;
 	}
 
 	*var = generateVar(codes, count, varName, "", param);
 
+	printf("-------\n");
 	return var;
+}
+
+struct Var evaluateExpression(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int length, unsigned int index){
+	
 }
 
 int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsigned int length){
@@ -260,38 +309,38 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 	unsigned int wordLoc = 0;
 
 	unsigned int newVar = 0;
+	struct Var* newVarP;
 
 	// now parse the keywords with the keys
 	for (int i = 0; i < keysCount; i++){
-		struct KeyPos* key = &keyPositions[keyLoc];
-		struct KeyWord* keyWord = &keyWords[wordLoc];
+		struct KeyPos* key = &keyPositions[i];
+		struct KeyWord* keyWord = &keyWords[i];
 
 		switch (key->key){
 			case (NewVar_k):{
 				//allocate new var in the scope
 
 				char* varName = keyWord->value;
-				struct Var* var = getVarTypes(varName, keyPositions, keyWords, keysCount, i);
 
-				unsigned int newVar = 1;
+				unsigned int increment = 0;
+
+				struct Var* var = getVarTypes(varName, keyPositions, keyWords, keysCount, i, &increment);
+				i += increment-1;
+
+				newVar = 1;
+				newVarP = var;
 				
 				addVarToScope(&body->globalScope, var); 
 			}break;
 
 			case (Assign_k): {
 				//assign value to current variable
+				if (newVar){
+					keyWord = &keyWords[i+1];
+					printf("assign %s\n", keyWord->value);
+				}
 			}break;
-
-			case (FuncCallEnd_k): {
-			}
-
-			case (FuncTypeEnd_k): {
-				wordLoc--;
-			}
 		}
-
-		keyLoc++;
-		wordLoc++;
 	}
 
 	//printf("%s\n", body->globalScope.currentVar->name);
