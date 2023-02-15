@@ -29,7 +29,7 @@ add: function[input: float, float] -> {
 
 Api: function[string] -> new::route("/api/{number: int ? float}", "GET") -> {
 	new_number : float = number
-	new_number *= 2
+	new_number = 2
 	new_number = add(new_number)
 
 	return new::json(new_number)

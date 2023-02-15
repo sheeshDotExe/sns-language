@@ -189,8 +189,6 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 		struct KeyWord* keyWord = &keyWords[newIndex];
 		codes[i] = typeFromString(keyWord->value, keyWord->length);
 
-		printf("%s %d %d types\n", varName, keyPos->key, codes[i]);
-
 		if (codes[i] == Function_c){
 			int paramCount = 1;
 			struct KeyPos* currentKey = keyPos;
@@ -205,7 +203,6 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 				}
 				currentKey = &keyPosition[newIndex+nCount];
 			}
-			printf("%d params\n", paramCount);
 
 			param = (struct Param*)malloc(sizeof(struct Param));
 			param->inputVars = (struct Var*)malloc(sizeof(struct Var) * (paramCount-1));
@@ -235,12 +232,9 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 				paramStart++;
 				currentKey = &keyPosition[paramStart];
 				currentWord = &keyWords[paramStart];
-
-				printf("%d %s\n", currentKey->key, currentWord->value);
 			}
 			param->returnValue = getVarTypes("return", keyPosition, keyWords, length, paramEnd, increment);
 		}
-
 		i++;
 		if (keyPos->key != Type_k){
 			break;
@@ -248,15 +242,24 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 		newIndex++;
 		(*increment)++;
 	}
-
 	*var = generateVar(codes, count, varName, "", param);
-
-	printf("-------\n");
 	return var;
 }
 
-struct Var evaluateExpression(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int length, unsigned int index){
-	
+struct Var evaluateExpression(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
+	struct Var result;
+
+	unsigned int newIndex = index;
+
+	while (newIndex < stop){
+		struct KeyPos* keyPos = &keyPosition[newIndex];
+		struct KeyWord* keyWord = &keyWords[newIndex];
+
+		//printf("%d %s\n", keyPos->key, keyWord->value);
+		newIndex++;
+	}
+
+	return result;
 }
 
 int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsigned int length){
@@ -334,10 +337,13 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 			}break;
 
 			case (Assign_k): {
+
+				struct Var assignValue = evaluateExpression(keyPositions, keyWords, keysCount, i);
+
 				//assign value to current variable
 				if (newVar){
 					keyWord = &keyWords[i+1];
-					printf("assign %s\n", keyWord->value);
+					//printf("assign %s\n", keyWord->value);
 				}
 			}break;
 		}
