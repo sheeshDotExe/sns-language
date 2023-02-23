@@ -97,6 +97,7 @@ struct KeyPos getNextKey(struct KeyChars keyChars, char* line, unsigned int leng
 				keyPos.pos = index;
 				keyPos.endPos = index + (key->length-1);
 				keyPos.key = key->key;
+				keyPos.name = key->name;
 				return keyPos;
 			}
 		}
@@ -246,18 +247,119 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 	return var;
 }
 
+struct Operator** sortOperators(struct Operator** operators, unsigned int length){
+	struct Operator** newOperators = (struct Operator**)malloc(length*sizeof(struct Operator*));
+	int i = 0;
+	int order[NUMBER_OF_OPERATORS] = {Division_k, Multiplication_k, Subtract_k, Addition_k, Assign_k};
+
+	for (int j = 0; j < NUMBER_OF_OPERATORS; j++){
+		int operator = order[j];
+		for (int z = 0; z < length; z++){
+			if (operators[z]->type == operator){
+				newOperators[i] = operators[z];
+				i++;
+			}
+		}
+	}
+
+	return newOperators;
+}
+
+void freeOperator(struct Operator** operators, int length){
+	for (int i = 0; i < length; i++){
+		free(operators[i]);
+	}
+	free(operators);
+}
+
 struct Var evaluateExpression(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
 	struct Var result;
 
 	unsigned int newIndex = index;
 
-	while (newIndex < stop){
-		struct KeyPos* keyPos = &keyPosition[newIndex];
-		struct KeyWord* keyWord = &keyWords[newIndex];
+	unsigned int numberOfOperators = stop-index;
 
-		//printf("%d %s\n", keyPos->key, keyWord->value);
-		newIndex++;
+	struct Operator** operators = (struct Operator**)malloc(numberOfOperators*sizeof(struct Operator*));
+
+	for (int i = 0; i < numberOfOperators; i++){
+		struct KeyPos* keyPos = &keyPosition[newIndex+i];
+		struct KeyWord* keyWord = &keyWords[newIndex+i];
+
+		struct Operator* operator = (struct Operator*)malloc(sizeof(struct Operator));
+		operator->type = keyPos->key;
+
+		if (i){
+			operator->leftVar = generateVarFromString(keyWord->value, keyWord->length);
+		} else {
+			operator->leftVar = NULL;
+		}
+		keyWord = &keyWords[newIndex+i+1];
+		operator->rightVar = generateVarFromString(keyWord->value, strlen(keyWord->value));
+
+		operators[i] = operator;
 	}
+
+	for (int i = 0; i < numberOfOperators; i++){
+		struct Operator* operator = operators[i];
+		if (i){
+			operator->leftOperator = operators[i-1];
+		} else {
+			operator->leftOperator = NULL;
+		}
+		if (i < numberOfOperators-1){
+			operator->rightOperator = operators[i+1];
+		} else {
+			operator->rightOperator = NULL;
+		}
+	}
+
+	struct Operator** sortedOperators = sortOperators(operators, numberOfOperators);
+	free(operators);
+
+	for (int i = 0; i < numberOfOperators; i++){
+		struct Operator* operator = sortedOperators[i];
+		printf("%d\n", operator->type);
+		
+		if (operator->type == Assign_k){
+			result = *operator->rightVar;
+			break;
+		}
+
+		struct Var res;
+		switch (operator->type){
+			case (Division_k): {
+				res = divVars(operator->leftVar, operator->rightVar);
+			} break;
+
+			case (Multiplication_k): {
+				res = mulVars(operator->leftVar, operator->rightVar);
+			} break;
+
+			case (Addition_k): {
+				res = addVars(operator->leftVar, operator->rightVar);
+			} break;
+
+			case (Subtract_k): {
+				res = subVars(operator->leftVar, operator->rightVar);
+			} break;
+		}
+		printf("new %s\n", res.value);
+		
+		if (operator->leftOperator != NULL){
+			operator->leftOperator->rightVar = &res;
+			if (operator->rightOperator != NULL){
+				operator->leftOperator->rightOperator = operator->rightOperator;
+			}
+		}
+		if (operator->rightOperator != NULL){
+			operator->rightOperator->leftVar = &res;
+			if (operator->leftOperator != NULL){
+				operator->rightOperator->leftOperator = operator->leftOperator;
+			}
+		}
+	}
+
+	printf("result %s\n", result.value);
 
 	return result;
 }

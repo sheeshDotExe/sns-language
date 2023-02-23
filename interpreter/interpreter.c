@@ -1,6 +1,7 @@
 #include "interpreter.h"
 
-int interpret(FILE*file){
+int interpret(FILE *file)
+{
 
 	struct File data = readFile(file);
 
@@ -11,9 +12,10 @@ int interpret(FILE*file){
 	struct KeyChars keyChars = createKeyChars();
 
 	struct Body body = interpretBody(keyChars, data, headerOptions.headerEnd, data.length);
-	
-	//printf("%s", data);
-	//testVar();
+
+	// printf("%s", data);
+	// testVar();
+
 	/*
 	struct Var var = generateVarFromString("\"100\"", 5);
 

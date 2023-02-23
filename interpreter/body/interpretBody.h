@@ -2,6 +2,7 @@
 #define INTERPRET_BODY_H
 
 #include "../types/types.h"
+#include "../types/interpretType.h"
 #include "../fileReader/fileReader.h"
 #include "../filePatterns/patternReader.h"
 
@@ -24,12 +25,21 @@ struct DefinitionLines {
 struct KeyPos {
 	unsigned int pos;
 	unsigned int endPos;
+	char* name;
 	int key;
 };
 
 struct KeyWord {
 	char* value;
 	unsigned int length;
+};
+
+struct Operator {
+	int type;
+	struct Var* leftVar;
+	struct Var* rightVar;
+	struct Operator* leftOperator;
+	struct Operator* rightOperator;
 };
 
 struct DefinitionLines getLines(struct File file, unsigned long int start, unsigned long int end);

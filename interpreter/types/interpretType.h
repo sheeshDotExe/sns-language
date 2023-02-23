@@ -6,6 +6,6 @@
 
 int isString(char*value, unsigned int length);
 struct CommonTypes getValidTypes(char**value, unsigned int* length);
-struct Var generateVarFromString(char*value, unsigned int length);
+struct Var* generateVarFromString(char*value, unsigned int length);
 
 #endif

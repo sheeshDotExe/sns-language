@@ -67,7 +67,7 @@ struct CommonTypes getValidTypes(char**value, unsigned int* lengthP){
 	return types;
 }
 
-struct Var generateVarFromString(char*value, unsigned int length){
+struct Var* generateVarFromString(char*value, unsigned int length){
 
 	//value will be eaten
 
@@ -75,10 +75,12 @@ struct Var generateVarFromString(char*value, unsigned int length){
 
 	struct CommonTypes types = getValidTypes(valueP, &length);
 
-	struct Var var = generateVar(types.codes, types.length, "unnamed", *valueP, (struct Param*)NULL);
+	struct Var ret = generateVar(types.codes, types.length, "unnamed", *valueP, (struct Param*)NULL);
+
+	struct Var* var = (struct Var*)malloc(sizeof(struct Var));
+	*var = ret;
 
 	free(types.codes);
-	free(*valueP);
 
 	return var;
 }

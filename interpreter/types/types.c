@@ -377,7 +377,6 @@ struct Var mulVars(struct Var* first, struct Var* second){
 			gcvt(new, 100, newValue);
 		}
 	}
-
 	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
