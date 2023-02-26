@@ -2,7 +2,6 @@
 #define INTERPRET_BODY_H
 
 #include "../types/types.h"
-#include "../types/interpretType.h"
 #include "../fileReader/fileReader.h"
 #include "../filePatterns/patternReader.h"
 

@@ -319,14 +319,19 @@ struct Var evaluateExpression(struct KeyPos* keyPosition, struct KeyWord* keyWor
 	for (int i = 0; i < numberOfOperators; i++){
 		struct Operator* operator = sortedOperators[i];
 		printf("%d\n", operator->type);
-		
-		if (operator->type == Assign_k){
-			result = *operator->rightVar;
-			break;
-		}
 
 		struct Var res;
 		switch (operator->type){
+			case (Assign_k):
+			case (SubtractAssign_k):
+			case (AdditionAssign_k):
+			case (DivisionAssign_k):
+			case (MultiplicationAssign_k): {
+				result = *operator->rightVar;
+				printf("result %s\n", result.value);
+				return result;
+			} break;
+
 			case (Division_k): {
 				res = divVars(operator->leftVar, operator->rightVar);
 			} break;

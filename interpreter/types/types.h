@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "../errorHandler/errorHandler.h"
+#include "../filePatterns/patternReader.h"
 
 enum TypeCodes {
 	String_c,
@@ -191,5 +192,9 @@ struct Var equalTo(struct Var* first, struct Var* second);
 int stringToBool(char*string);
 int isFloat(char*string, unsigned int length);
 int isNum(char*string, unsigned int length);
+
+int isString(char*value, unsigned int length);
+struct CommonTypes getValidTypes(char**value, unsigned int* length);
+struct Var* generateVarFromString(char*value, unsigned int length);
 
 #endif
