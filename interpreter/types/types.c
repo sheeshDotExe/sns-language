@@ -12,7 +12,7 @@ int stringToBool(char*string){
 int isFloat(char*string, unsigned int length){
 	for (int i = 0; i < length; i++){
 		int isNumber = 0;
-		for (int j = 0; j < 11; j++){
+		for (int j = 0; j < 12; j++){
 			if (string[i] == NUMBERS_WITH_DOT[j]){
 				isNumber = 1;
 			}
@@ -27,7 +27,7 @@ int isFloat(char*string, unsigned int length){
 int isNum(char*string, unsigned int length){
 	for (int i = 0; i < length; i++){
 		int isNumber = 0;
-		for (int j = 0; j < 10; j++){
+		for (int j = 0; j < 11; j++){
 			if (string[i] == NUMBERS[j]){
 				isNumber = 1;
 			}

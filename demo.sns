@@ -12,7 +12,7 @@ JS_PATH          ("/static/javascript")
 typedef route : html ? json
 ***
 
-VALUE: float ? int ? string = 45 + 15 * 3 / 4 - 8
+VALUE: float ? int ? string = 45 + 15 * (3 / 4 - 8) * (4*4)
 
 VALUE = 1
 

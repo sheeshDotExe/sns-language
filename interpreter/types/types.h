@@ -12,8 +12,8 @@ enum TypeCodes {
 	String_c,
 	Char_c,
 	Bool_c,
-	Int_c,
 	Float_c,
+	Int_c,
 	Array_c,
 	User_c,
 	Function_c,
@@ -51,11 +51,11 @@ enum KeyCodes {
 };
 
 #define NUMBER_OF_TYPES 9
-#define NUMBERS "0123456789"
-#define NUMBERS_WITH_DOT "0123456789."
+#define NUMBERS "0123456789-"
+#define NUMBERS_WITH_DOT "0123456789.-"
 
 #define NUMBER_OF_KEYS 20
-#define NUMBER_OF_OPERATORS 5
+#define NUMBER_OF_OPERATORS 6
 
 struct Key {
 	char* name;
