@@ -273,8 +273,15 @@ void freeOperator(struct Operator** operators, int length){
 }
 
 unsigned int getParenthesesEnd(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
+	int parentLength = 1;
 	for (int i = index; i < stop; i++){
 		if (keyPosition[i].key == FuncCallEnd_k){
+			parentLength--;
+		} else if (keyPosition[i].key == FuncCallStart_k){
+			parentLength++;
+		}
+
+		if (!parentLength){
 			return i;
 		}
 	}
@@ -293,7 +300,7 @@ struct Values getValues(struct KeyPos* keyPosition, struct KeyWord* keyWords, un
 		}
 		if (keyPosition[i+1].key == FuncCallStart_k){
 			printf("new paren: %d\n", i);
-			unsigned int next = getParenthesesEnd(keyPosition, keyWords, stop, i);
+			unsigned int next = getParenthesesEnd(keyPosition, keyWords, stop, i+2);
 			i = next;
 		}
 	}
@@ -308,9 +315,9 @@ struct Values getValues(struct KeyPos* keyPosition, struct KeyWord* keyWords, un
 	for (int i = index; i < stop; i++){
 		if (i < stop-1){
 			if (keyPosition[i+1].key == FuncCallStart_k){
-				unsigned int newStop = getParenthesesEnd(keyPosition, keyWords, stop, i+1);
+				unsigned int newStop = getParenthesesEnd(keyPosition, keyWords, stop, i+2);
 				printf("%d %d\n", i, newStop);
-				struct Var result = evaluateExpression(keyPosition, keyWords, newStop, i+1);
+				struct Var result = evaluateExpression(keyPosition, keyWords, newStop, i+2);
 				values.vars[varIndex] = result;
 				varIndex++;
 				i = newStop;
@@ -344,6 +351,15 @@ struct Var evaluateExpression(struct KeyPos* keyPosition, struct KeyWord* keyWor
 	for (int i = 0; i < numberOfOperators; i++){
 		struct KeyPos* keyPos = &keyPosition[newIndex+i];
 		struct Operator* operator = (struct Operator*)malloc(sizeof(struct Operator));
+
+		if (i){
+			if (keyPos->key == FuncCallStart_k){
+				//unsigned int end = getParenthesesEnd(keyPosition, keyWords, stop, newIndex+i);
+				//newIndex = end;
+				//keyPos = &keyPosition[newIndex+i];
+			}
+		}
+		printf("operator %d\n", keyPos->key);
 		operator->type = keyPos->key;
 
 		if (i){
