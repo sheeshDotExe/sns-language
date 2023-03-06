@@ -272,6 +272,14 @@ void freeOperator(struct Operator** operators, int length){
 	free(operators);
 }
 
+void freeResults(struct Var** vars, int length){
+	for (int i = 0; i < length; i++){
+		freeVar(vars[i]);
+		free(vars[i]);
+	}
+	free(vars);
+}
+
 unsigned int getParenthesesEnd(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
 	int parentLength = 1;
 	for (int i = index; i < stop; i++){
@@ -291,15 +299,12 @@ unsigned int getParenthesesEnd(struct KeyPos* keyPosition, struct KeyWord* keyWo
 struct Values getValues(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
 	int numberOfValues = 0;
 
-	printf("index %d\n", index);
 	for (int i = index; i < stop; i++){
 		numberOfValues++;
-		printf("value: %s\n", keyWords[i+1].value);
 		if (i >= stop-1){
 			continue;
 		}
 		if (keyPosition[i+1].key == FuncCallStart_k){
-			printf("new paren: %d\n", i);
 			unsigned int next = getParenthesesEnd(keyPosition, keyWords, stop, i+2);
 			i = next;
 		}
@@ -316,12 +321,10 @@ struct Values getValues(struct KeyPos* keyPosition, struct KeyWord* keyWords, un
 		if (i < stop-1){
 			if (keyPosition[i+1].key == FuncCallStart_k){
 				unsigned int newStop = getParenthesesEnd(keyPosition, keyWords, stop, i+2);
-				printf("%d %d\n", i, newStop);
-				struct Var result = evaluateExpression(keyPosition, keyWords, newStop, i+2);
+				struct Var result = evaluateExpression(keyPosition, keyWords, newStop, i+1);
 				values.vars[varIndex] = result;
 				varIndex++;
 				i = newStop;
-				printf("var %s\n", result.value);
 				continue;
 			}
 		}
@@ -329,10 +332,7 @@ struct Values getValues(struct KeyPos* keyPosition, struct KeyWord* keyWords, un
 		struct Var* result = generateVarFromString(keyWords[i+1].value, strlen(keyWords[i+1].value));
 		values.vars[varIndex] = *result;
 		varIndex++;
-		printf("var %s %d\n", result->value, result->numberOfTypes);
 	}
-
-	printf("number of values: %d\n", numberOfValues);
 
 	return values;
 };
@@ -354,12 +354,11 @@ struct Var evaluateExpression(struct KeyPos* keyPosition, struct KeyWord* keyWor
 
 		if (i){
 			if (keyPos->key == FuncCallStart_k){
-				//unsigned int end = getParenthesesEnd(keyPosition, keyWords, stop, newIndex+i);
-				//newIndex = end;
-				//keyPos = &keyPosition[newIndex+i];
+				unsigned int end = getParenthesesEnd(keyPosition, keyWords, stop, newIndex+i+1);
+				newIndex = end-i+1;
+				keyPos = &keyPosition[newIndex+i];
 			}
 		}
-		printf("operator %d\n", keyPos->key);
 		operator->type = keyPos->key;
 
 		if (i){
@@ -389,11 +388,15 @@ struct Var evaluateExpression(struct KeyPos* keyPosition, struct KeyWord* keyWor
 	struct Operator** sortedOperators = sortOperators(operators, numberOfOperators);
 	free(operators);
 
+	struct Var** results = (struct Var**)malloc(numberOfOperators*sizeof(struct Var*));
+
 	for (int i = 0; i < numberOfOperators; i++){
 		struct Operator* operator = sortedOperators[i];
-		printf("%d\n", operator->type);
 
-		struct Var res;
+		struct Var* res = (struct Var*)malloc(sizeof(struct Var));
+		res->creationFlag = 0;
+		results[i] = res;
+		
 		switch (operator->type){
 			case (FuncCallStart_k):
 			case (Assign_k):
@@ -402,44 +405,45 @@ struct Var evaluateExpression(struct KeyPos* keyPosition, struct KeyWord* keyWor
 			case (DivisionAssign_k):
 			case (MultiplicationAssign_k): {
 				result = *operator->rightVar;
+				freeOperator(sortedOperators, numberOfOperators);
+				//freeResults(results, numberOfOperators);
 				printf("result %s\n", result.value);
 				return result;
 			} break;
 
 			case (Division_k): {
-				res = divVars(operator->leftVar, operator->rightVar);
+				*res = divVars(operator->leftVar, operator->rightVar);
 			} break;
 
 			case (Multiplication_k): {
-				res = mulVars(operator->leftVar, operator->rightVar);
+				*res = mulVars(operator->leftVar, operator->rightVar);
 			} break;
 
 			case (Addition_k): {
-				res = addVars(operator->leftVar, operator->rightVar);
+				*res = addVars(operator->leftVar, operator->rightVar);
 			} break;
 
 			case (Subtract_k): {
-				res = subVars(operator->leftVar, operator->rightVar);
+				*res = subVars(operator->leftVar, operator->rightVar);
 			} break;
 		}
-		printf("new %s\n", res.value);
 		
 		if (operator->leftOperator != NULL){
-			operator->leftOperator->rightVar = &res;
+			operator->leftOperator->rightVar = res;
 			if (operator->rightOperator != NULL){
 				operator->leftOperator->rightOperator = operator->rightOperator;
 			}
 		}
 		if (operator->rightOperator != NULL){
-			operator->rightOperator->leftVar = &res;
+			operator->rightOperator->leftVar = res;
 			if (operator->leftOperator != NULL){
 				operator->rightOperator->leftOperator = operator->leftOperator;
 			}
 		}
 	}
 
-	printf("result %s\n", result.value);
-
+	freeOperator(sortedOperators, numberOfOperators);
+	freeResults(results, numberOfOperators);
 	return result;
 }
 
@@ -519,8 +523,9 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 
 			case (Assign_k): {
 
-				struct Var assignValue = evaluateExpression(keyPositions, keyWords, keysCount, i);
-
+				while (1){
+					struct Var assignValue = evaluateExpression(keyPositions, keyWords, keysCount, i);
+				}
 				//assign value to current variable
 				if (newVar){
 					keyWord = &keyWords[i+1];

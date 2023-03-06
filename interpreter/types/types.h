@@ -42,7 +42,7 @@ enum KeyCodes {
 	FuncCallStart_k, // (
 	FuncCallEnd_k, // )
 
-	Subtract_k, // -
+	Subtract_k, // - 16
 	Addition_k, // +
 	Division_k, // /
 	Multiplication_k, // *
@@ -111,6 +111,7 @@ struct Type {
 struct Type generateType(int code, char* value, unsigned int length);
 
 struct Var {
+	int creationFlag;
 	char* name;
 	char* value;
 	unsigned int numberOfTypes;

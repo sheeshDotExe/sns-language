@@ -174,6 +174,8 @@ struct Type generateType(int code, char* value, unsigned int length){
 struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param){
 	struct Var var;
 
+	var.creationFlag = 1;
+
 	unsigned int nameLength = strlen(name);
 	var.name = (char*)malloc((nameLength+1)*sizeof(char));
 	memcpy(var.name, name, nameLength+1);
@@ -259,9 +261,11 @@ void freeTypes(struct Type* types, unsigned int length, struct Var* var){
 }
 
 void freeVar(struct Var* var){
-	freeTypes(var->types, var->numberOfTypes, var);
-	free(var->name);
-	free(var->value);
+	if (var->creationFlag){
+		freeTypes(var->types, var->numberOfTypes, var);
+		free(var->name);
+		free(var->value);
+	}
 }
 
 void assignValue(struct Var* var, struct Var*other){
