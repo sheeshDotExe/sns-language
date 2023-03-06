@@ -79,9 +79,6 @@ struct CommonTypes getValidTypes(char**value, unsigned int* lengthP){
 	int Bool_v = stringToBool(*value);
 	if (Bool_v != -1){
 		*lengthP = 1;
-		free(*value);
-		*value = (char*)malloc(2*sizeof(char));
-		itoa(Bool_v, *value, 10);
 
 		validTypes[length] = Int_c;
 		length++;
@@ -107,21 +104,15 @@ struct CommonTypes getValidTypes(char**value, unsigned int* lengthP){
 }
 
 struct Var* generateVarFromString(char*value, unsigned int length){
-
-	//value will be eaten
-
 	char**valueP = &value;
 
 	struct CommonTypes types = getValidTypes(valueP, &length);
 
-	struct Var ret = generateVar(types.codes, types.length, "unnamed", *valueP, (struct Param*)NULL);
-
-	struct Var* var = (struct Var*)malloc(sizeof(struct Var));
-	*var = ret;
+	struct Var* ret = generateVar(types.codes, types.length, "unnamed", *valueP, (struct Param*)NULL);
 
 	free(types.codes);
 
-	return var;
+	return ret;
 }
 
 void assignString(struct String* string, char* value, unsigned int length){
@@ -171,25 +162,48 @@ struct Type generateType(int code, char* value, unsigned int length){
 }
 
 
-struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param){
-	struct Var var;
+struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param){
+	struct Var* var = (struct Var*)malloc(sizeof(struct Var));
 
-	var.creationFlag = 1;
+	var->creationFlag = 1;
 
 	unsigned int nameLength = strlen(name);
-	var.name = (char*)malloc((nameLength+1)*sizeof(char));
-	memcpy(var.name, name, nameLength+1);
+	var->name = (char*)malloc((nameLength+1)*sizeof(char));
+	memcpy(var->name, name, nameLength+1);
 
 	unsigned int valueLength = strlen(value);
-	var.value = (char*)malloc((valueLength+1)*sizeof(char));
-	memcpy(var.value, value, valueLength+1);
+	var->value = (char*)malloc((valueLength+1)*sizeof(char));
+	memcpy(var->value, value, valueLength+1);
 
-	var.numberOfTypes = numberOfTypes;
+	var->numberOfTypes = numberOfTypes;
 
-	var.types = (struct Type*)malloc(numberOfTypes*sizeof(struct Type));
+	var->types = (struct Type*)malloc(numberOfTypes*sizeof(struct Type));
 
 	for (int i = 0; i < numberOfTypes; i++){
-		var.types[i] = generateType(codes[i], value, valueLength);
+		var->types[i] = generateType(codes[i], value, valueLength);
+	}
+
+	return var;
+}
+
+struct Var* copyVar(struct Var* instance){
+	struct Var* var = (struct Var*)malloc(sizeof(struct Var));
+
+	var->creationFlag = 1;
+
+	unsigned int nameLength = strlen(instance->name);
+	var->name = (char*)malloc((nameLength+1)*sizeof(char));
+	memcpy(var->name, instance->name, nameLength+1);
+
+	unsigned int valueLength = strlen(instance->value);
+	var->value = (char*)malloc((valueLength+1)*sizeof(char));
+	memcpy(var->value, instance->value, valueLength+1);
+
+	var->numberOfTypes = instance->numberOfTypes;
+	var->types = (struct Type*)malloc(instance->numberOfTypes*sizeof(struct Type));
+
+	for (int i = 0; i < instance->numberOfTypes; i++){
+		var->types[i] = generateType(instance->types[i].code, instance->value, valueLength);
 	}
 
 	return var;
@@ -296,7 +310,7 @@ void assignValue(struct Var* var, struct Var*other){
 
 }
 
-struct Var addVars(struct Var* first, struct Var* second){
+struct Var* addVars(struct Var* first, struct Var* second){
 	struct CommonTypes commonTypes = getCommonTypes(first, second);
 
 	if (commonTypes.length == 0){
@@ -338,14 +352,15 @@ struct Var addVars(struct Var* first, struct Var* second){
 		}
 	}
 
-	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue, (struct Param*)NULL);
+	struct Var* var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
+	free(newValue);
 
 	return var;
 }
 
-struct Var subVars(struct Var* first, struct Var* second){
+struct Var* subVars(struct Var* first, struct Var* second){
 	struct CommonTypes commonTypes = getCommonTypes(first, second);
 
 	if (commonTypes.length == 0){
@@ -381,14 +396,15 @@ struct Var subVars(struct Var* first, struct Var* second){
 		}
 	}
 
-	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue, (struct Param*)NULL);
+	struct Var* var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
+	free(newValue);
 
 	return var;
 }
 
-struct Var divVars(struct Var* first, struct Var* second){
+struct Var* divVars(struct Var* first, struct Var* second){
 	struct CommonTypes commonTypes = getCommonTypes(first, second);
 
 	if (commonTypes.length == 0){
@@ -426,11 +442,12 @@ struct Var divVars(struct Var* first, struct Var* second){
 
 	struct Var* var = generateVarFromString(newValue, strlen(newValue));
 	free(commonTypes.codes);
+	free(newValue);
 
-	return *var;
+	return var;
 }
 
-struct Var mulVars(struct Var* first, struct Var* second){
+struct Var* mulVars(struct Var* first, struct Var* second){
 	struct CommonTypes commonTypes = getCommonTypes(first, second);
 
 	if (commonTypes.length == 0){
@@ -465,14 +482,15 @@ struct Var mulVars(struct Var* first, struct Var* second){
 			gcvt(new, 100, newValue);
 		}
 	}
-	struct Var var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue, (struct Param*)NULL);
+	struct Var* var = generateVar(commonTypes.codes, commonTypes.length, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
+	free(newValue);
 
 	return var;
 }
 
-struct Var lessThan(struct Var* first, struct Var* second){
+struct Var* lessThan(struct Var* first, struct Var* second){
 	struct CommonTypes commonTypes = getCommonTypes(first, second);
 
 	if (commonTypes.length == 0){
@@ -515,14 +533,14 @@ struct Var lessThan(struct Var* first, struct Var* second){
 
 	int codes[4] = {Int_c, Float_c, String_c, Char_c};
 
-	struct Var var = generateVar((int*)codes, 5, "unnamed", newValue, (struct Param*)NULL);
+	struct Var* var = generateVar((int*)codes, 5, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
 
 	return var;
 }
 
-struct Var greaterThan(struct Var* first, struct Var* second){
+struct Var* greaterThan(struct Var* first, struct Var* second){
 	struct CommonTypes commonTypes = getCommonTypes(first, second);
 
 	if (commonTypes.length == 0){
@@ -565,14 +583,14 @@ struct Var greaterThan(struct Var* first, struct Var* second){
 
 	int codes[4] = {Int_c, Float_c, String_c, Char_c};
 
-	struct Var var = generateVar((int*)codes, 5, "unnamed", newValue, (struct Param*)NULL);
+	struct Var* var = generateVar((int*)codes, 5, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
 
 	return var;
 }
 
-struct Var equalTo(struct Var* first, struct Var* second){
+struct Var* equalTo(struct Var* first, struct Var* second){
 	struct CommonTypes commonTypes = getCommonTypes(first, second);
 
 	if (commonTypes.length == 0){
@@ -618,7 +636,7 @@ struct Var equalTo(struct Var* first, struct Var* second){
 
 	int codes[4] = {Int_c, Float_c, String_c, Char_c};
 
-	struct Var var = generateVar((int*)codes, 4, "unnamed", newValue, (struct Param*)NULL);
+	struct Var* var = generateVar((int*)codes, 4, "unnamed", newValue, (struct Param*)NULL);
 
 	free(commonTypes.codes);
 

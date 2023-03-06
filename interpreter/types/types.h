@@ -122,7 +122,8 @@ struct Param {
 	unsigned int inputCount;
 	struct Var* returnValue;
 };
-struct Var generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* params);
+struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* params);
+struct Var* copyVar(struct Var* instance);
 
 struct Instruction {
 	void* function;
@@ -182,13 +183,13 @@ int getSignificantType(struct CommonTypes* commonTypes);
 struct CommonTypes getCommonTypes(struct Var* first, struct Var* second);
 
 void assignValue(struct Var* var, struct Var* other); // assign others value to var
-struct Var addVars(struct Var* first, struct Var* second); // add vars and return new var with merged types
-struct Var subVars(struct Var* first, struct Var* second);
-struct Var divVars(struct Var* first, struct Var* second);
-struct Var mulVars(struct Var* first, struct Var* second);
-struct Var lessThan(struct Var* first, struct Var* second);
-struct Var greaterThan(struct Var* first, struct Var* second);
-struct Var equalTo(struct Var* first, struct Var* second);
+struct Var* addVars(struct Var* first, struct Var* second); // add vars and return new var with merged types
+struct Var* subVars(struct Var* first, struct Var* second);
+struct Var* divVars(struct Var* first, struct Var* second);
+struct Var* mulVars(struct Var* first, struct Var* second);
+struct Var* lessThan(struct Var* first, struct Var* second);
+struct Var* greaterThan(struct Var* first, struct Var* second);
+struct Var* equalTo(struct Var* first, struct Var* second);
 
 int stringToBool(char*string);
 int isFloat(char*string, unsigned int length);
