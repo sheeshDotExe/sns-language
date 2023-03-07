@@ -165,7 +165,7 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 		struct KeyPos* keyPos = &keyPosition[newIndex];
 		struct KeyWord* keyWord = &keyWords[newIndex];
 		count++;
-		if (keyPos->key != Type_k && keyPos->key != FuncTypeStart_k && keyPos->key != FuncTypeEnd_k){
+		if (keyPos->key != Type_k){
 			break;
 		}
 		newIndex++;
@@ -173,7 +173,8 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 
 	int* codes = (int*)malloc((count)*sizeof(int));
 
-	struct Param* param;
+	struct Param* param = NULL;
+	int hasParam = 0;
 
 	unsigned int i = 0;
 	newIndex = index + 1;
@@ -206,9 +207,8 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 			}
 
 			param = (struct Param*)malloc(sizeof(struct Param));
-			param->inputVars = (struct Var*)malloc(sizeof(struct Var) * (paramCount-1));
+			param->inputVars = (struct Var**)malloc(sizeof(struct Var*) * (paramCount-1));
 			param->inputCount = paramCount-1;
-			param->returnValue = (struct Var*)malloc(sizeof(struct Var));
 
 			unsigned int paramStart = newIndex;
 			unsigned int paramEnd = newIndex;
@@ -224,7 +224,7 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 				if (currentKey->key == Param_k){
 					paramCount--;
 					if (paramCount){
-						param->inputVars[paramCounter] = *getVarTypes(keyWords[paramEnd+1].value, keyPosition, keyWords, length, paramEnd+1, increment);
+						param->inputVars[paramCounter] = getVarTypes(keyWords[paramEnd+1].value, keyPosition, keyWords, length, paramEnd+1, increment);
 					} else {
 						break;
 					}
@@ -235,6 +235,7 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 				currentWord = &keyWords[paramStart];
 			}
 			param->returnValue = getVarTypes("return", keyPosition, keyWords, length, paramEnd, increment);
+			hasParam = 1;
 		}
 		i++;
 		if (keyPos->key != Type_k){
@@ -243,7 +244,12 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 		newIndex++;
 		(*increment)++;
 	}
+	printf("variable: %d\n", count);
+	for (int i = 0; i < count; i++){
+		printf("code: %d\n", codes[i]);
+	}
 	var = generateVar(codes, count, varName, "", param);
+	var->hasParam = hasParam;
 	return var;
 }
 
@@ -535,7 +541,11 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 				newVar = 1;
 				newVarP = var;
 
-				printf("new var %s\n", var->name);
+				printf("new var %s %d\n", var->name, var->hasParam);
+
+				if (var->hasParam){
+					printf("function %d %d\n", var->param->inputCount, var->param->returnValue->numberOfTypes);
+				}
 				
 				addVarToScope(&body->globalScope, var); 
 			}break;

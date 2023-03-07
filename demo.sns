@@ -11,13 +11,9 @@ JS_PATH          ("/static/javascript")
 
 ***
 
-VALUE: float ? int ? string = "1" + 3
+VALUE: float ? int ? string = 1 + 3
 
-VALUE2: float ? string = VALUE + 5
-
-VALUE = VALUE2 + VALUE
-
-VALUE = VALUE + 3
+VALUE2: float = VALUE
 
 main: function[test: string, test2: int, bool ? float] -> {
 	Route : function[string] -> route("/", "GET", "POST") -> {

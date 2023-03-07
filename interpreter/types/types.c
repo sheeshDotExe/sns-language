@@ -178,6 +178,7 @@ struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char
 	struct Var* var = (struct Var*)malloc(sizeof(struct Var));
 
 	var->creationFlag = 1;
+	var->hasParam = 0;
 
 	unsigned int nameLength = strlen(name);
 	var->name = (char*)malloc((nameLength+1)*sizeof(char));
@@ -194,6 +195,8 @@ struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char
 	for (int i = 0; i < numberOfTypes; i++){
 		var->types[i] = generateType(codes[i], value, valueLength);
 	}
+
+	var->param = param;
 
 	return var;
 }

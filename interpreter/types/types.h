@@ -116,13 +116,15 @@ struct Var {
 	char* value;
 	unsigned int numberOfTypes;
 	struct Type* types;
+	struct Param* param;
+	int hasParam;
 };
 struct Param {
-	struct Var* inputVars;
+	struct Var** inputVars;
 	unsigned int inputCount;
 	struct Var* returnValue;
 };
-struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* params);
+struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param);
 struct Var* copyVar(struct Var* instance);
 
 struct Instruction {
