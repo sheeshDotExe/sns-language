@@ -306,7 +306,7 @@ unsigned int getParenthesesEnd(struct KeyPos* keyPosition, struct KeyWord* keyWo
 	return -1;
 }
 
-struct Values getValues(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
+struct Values getValues(struct VarScope* varScope, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
 	int numberOfValues = 0;
 
 	for (int i = index; i < stop; i++){
@@ -331,7 +331,7 @@ struct Values getValues(struct KeyPos* keyPosition, struct KeyWord* keyWords, un
 		if (i < stop-1){
 			if (keyPosition[i+1].key == FuncCallStart_k){
 				unsigned int newStop = getParenthesesEnd(keyPosition, keyWords, stop, i+2);
-				values.vars[varIndex] = evaluateExpression(keyPosition, keyWords, newStop, i+1);
+				values.vars[varIndex] = evaluateExpression(varScope, keyPosition, keyWords, newStop, i+1);
 				varIndex++;
 				i = newStop;
 				continue;
@@ -339,6 +339,11 @@ struct Values getValues(struct KeyPos* keyPosition, struct KeyWord* keyWords, un
 		}
 
 		struct Var* result = generateVarFromString(keyWords[i+1].value, strlen(keyWords[i+1].value));
+		if (!result->numberOfTypes){
+			freeVar(result);
+			free(result);
+			result = copyVar(getVarFromScope(varScope, keyWords[i+1].value));
+		}
 		values.vars[varIndex] = result;
 		varIndex++;
 	}
@@ -346,12 +351,12 @@ struct Values getValues(struct KeyPos* keyPosition, struct KeyWord* keyWords, un
 	return values;
 };
 
-struct Var* evaluateExpression(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
+struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
 	struct Var* result;
 
 	unsigned int newIndex = index;
 
-	struct Values values = getValues(keyPosition, keyWords, stop, index);
+	struct Values values = getValues(varScope, keyPosition, keyWords, stop, index);
 
 	unsigned int numberOfOperators = values.length;
 
@@ -511,6 +516,7 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 	struct Var* newVarP;
 
 	// now parse the keywords with the keys
+
 	for (int i = 0; i < keysCount; i++){
 		struct KeyPos* key = &keyPositions[i];
 		struct KeyWord* keyWord = &keyWords[i];
@@ -528,22 +534,29 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 
 				newVar = 1;
 				newVarP = var;
+
+				printf("new var %s\n", var->name);
 				
 				addVarToScope(&body->globalScope, var); 
 			}break;
 
 			case (Assign_k): {
+				
+				struct Var* value = evaluateExpression(&body->globalScope, keyPositions, keyWords, keysCount, i);
+				printf("result %s\n", value->value);
 
-				while (1){
-					struct Var* assignValue = evaluateExpression(keyPositions, keyWords, keysCount, i);
-					freeVar(assignValue);
-					free(assignValue);
-				}
 				//assign value to current variable
 				if (newVar){
-					keyWord = &keyWords[i+1];
+					assignValue(newVarP, value);
 					//printf("assign %s\n", keyWord->value);
+				} else {
+					//get var from scope
+					struct Var* leftVar = getVarFromScope(&body->globalScope, keyWord->value);
+					assignValue(leftVar, value);
 				}
+
+				freeVar(value);
+				free(value);
 			}break;
 		}
 	}
@@ -566,7 +579,8 @@ struct Body interpretBody(struct KeyChars keyChars, struct File file, unsigned l
 	struct Body body;
 
 	body.globalScope.hasCurrentVar = 0;
-	body.globalScope.vars = (struct Var*)malloc(sizeof(struct Var));
+	body.globalScope.numberOfVars = 0;
+	body.globalScope.vars = (struct Var**)malloc(sizeof(struct Var*));
 
 	struct DefinitionLines lines = getLines(file, start, end);
 

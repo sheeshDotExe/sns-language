@@ -9,15 +9,18 @@ MAX_CONNECTIONS  (10)
 HTML_PATH        ("/static/html")
 JS_PATH          ("/static/javascript")
 
-typedef route : html ? json
 ***
 
-VALUE: float ? int ? string = 1+1
+VALUE: float ? int ? string = "1" + 3
 
-VALUE = 1
+VALUE2: float ? string = VALUE + 5
+
+VALUE = VALUE2 + VALUE
+
+VALUE = VALUE + 3
 
 main: function[test: string, test2: int, bool ? float] -> {
-	Route : function[string] -> new::route("/", "GET", "POST") -> {
+	Route : function[string] -> route("/", "GET", "POST") -> {
 		extend HomePage
 		extend Api
 	}
@@ -28,6 +31,6 @@ add: function[input: float, float] -> {
 }
 
 
-HomePage: function[string] -> new::route("/") -> {
-	return new::html("./index.html")
+HomePage: function[string] -> route("/") -> {
+	return html("./index.html")
 }

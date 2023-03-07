@@ -54,21 +54,16 @@ void fillTypes(struct CommonTypes* cTypes, int* types, unsigned int length){
 	}
 }
 
-struct CommonTypes getValidTypes(char**value, unsigned int* lengthP){
+struct CommonTypes getValidTypes(char*value, unsigned int lengthP){
 	struct CommonTypes types;
 
 	int validTypes[NUMBER_OF_TYPES];
 	unsigned int length = 0;
 
-	if (*lengthP == 1){
-		validTypes[length] = Char_c;
+	if (isString(value, lengthP)){
+		validTypes[length] = String_c;
 		length++;
-	}
-
-	validTypes[length] = String_c;
-	length++;
-	if (isString(*value, *lengthP)){
-		if (*lengthP == 3){
+		if (lengthP == 3){
 			validTypes[length] = Char_c;
 			length++;
 		}
@@ -76,10 +71,11 @@ struct CommonTypes getValidTypes(char**value, unsigned int* lengthP){
 		return types;
 	}
 
-	int Bool_v = stringToBool(*value);
+	int Bool_v = stringToBool(value);
 	if (Bool_v != -1){
-		*lengthP = 1;
 
+		validTypes[length] = String_c;
+		length++;
 		validTypes[length] = Int_c;
 		length++;
 		validTypes[length] = Float_c;
@@ -89,13 +85,22 @@ struct CommonTypes getValidTypes(char**value, unsigned int* lengthP){
 		return types;
 	}
 
-	if (!isNum(*value, *lengthP)){
+	int isString = 0;
+
+	if (!isNum(value, lengthP)){
+		isString = 1;
 		validTypes[length] = Int_c;
 		length++;
 	}
 
-	if (!isFloat(*value, *lengthP)){
+	if (!isFloat(value, lengthP)){
+		isString = 1;
 		validTypes[length] = Float_c;
+		length++;
+	}
+
+	if (isString){
+		validTypes[length] = String_c;
 		length++;
 	}
 
@@ -104,11 +109,11 @@ struct CommonTypes getValidTypes(char**value, unsigned int* lengthP){
 }
 
 struct Var* generateVarFromString(char*value, unsigned int length){
-	char**valueP = &value;
 
-	struct CommonTypes types = getValidTypes(valueP, &length);
+	struct CommonTypes types = getValidTypes(value, length);
 
-	struct Var* ret = generateVar(types.codes, types.length, "unnamed", *valueP, (struct Param*)NULL);
+	struct Var* ret;
+	ret = generateVar(types.codes, types.length, "unnamed", value, (struct Param*)NULL);
 
 	free(types.codes);
 
@@ -119,9 +124,16 @@ void assignString(struct String* string, char* value, unsigned int length){
 	if (string->size){
 		free(string->cString);
 	}
-	string->size = length;
-	string->cString = (char*)malloc((length+1)*sizeof(char));
-	memcpy(string->cString, value, length+1);
+	if (!isString(value, length)){
+		string->size = length;
+		string->cString = (char*)malloc((length+1)*sizeof(char));
+		memcpy(string->cString, value, length+1);
+	} else {
+		string->size = length-2;
+		string->cString = (char*)malloc((length-1)*sizeof(char));
+		memcpy(string->cString, value+1, length-2);
+		string->cString[length-2] = '\0';
+	}
 }
 
 void assignInt(struct Int* int_s, char* value, unsigned int length){
@@ -671,7 +683,7 @@ struct KeyChars createKeyChars(){
 
 struct Var* getVarFromScope(struct VarScope* scope, char* varName){
 	for (int i = 0; i < scope->numberOfVars; i++){
-		struct Var* var = &scope->vars[i];
+		struct Var* var = scope->vars[i];
 		if (!strcmp(varName, var->name)){
 			return var;
 		}
@@ -683,11 +695,11 @@ struct Var* getVarFromScope(struct VarScope* scope, char* varName){
 
 void addVarToScope(struct VarScope* scope, struct Var* var){
 	scope->numberOfVars++;
-	struct Var* newVars = (struct Var*)realloc(scope->vars, scope->numberOfVars*sizeof(struct Var));
+	struct Var** newVars = (struct Var**)realloc(scope->vars, scope->numberOfVars*sizeof(struct Var*));
 	if (newVars == NULL){
 		raiseError("memory error", 1);
 	} else {
 		scope->vars = newVars;
-		scope->vars[scope->numberOfVars-1] = *var;
+		scope->vars[scope->numberOfVars-1] = var;
 	}
 }

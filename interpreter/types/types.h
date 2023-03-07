@@ -146,7 +146,7 @@ struct Function {
 
 struct VarScope{
 	unsigned int numberOfVars;
-	struct Var* vars;
+	struct Var** vars;
 
 	struct Var* currentVar;
 	int hasCurrentVar;
@@ -196,7 +196,7 @@ int isFloat(char*string, unsigned int length);
 int isNum(char*string, unsigned int length);
 
 int isString(char*value, unsigned int length);
-struct CommonTypes getValidTypes(char**value, unsigned int* length);
+struct CommonTypes getValidTypes(char*value, unsigned int length);
 struct Var* generateVarFromString(char*value, unsigned int length);
 
 #endif
