@@ -1,20 +1,20 @@
 #include "interpretBody.h"
 
 // sussy algorithm
-unsigned int getNewline(struct File file, unsigned long int* start, unsigned long int end){
+unsigned int getNewline(char* mem, unsigned long int* start, unsigned long int end){
 	unsigned int length = 0;
 	unsigned int brackets = 0;
 	while (*start < end){
-		if (file.mem[*start] == '{'){
+		if (mem[*start] == '{'){
 			brackets++;
-		} else if (file.mem[*start] == '}'){
+		} else if (mem[*start] == '}'){
 			brackets--;
 		}
-		if ((file.mem[*start] == '\n' || *start == end-1) && !brackets){
+		if ((mem[*start] == '\n' || *start == end-1) && !brackets){
 			if (length){
 				int shouldAdd = 0;
 				for (int i = *start-length; i < *start; i++){
-					if (file.mem[i] != ' ' && file.mem[i] != '\n'){
+					if (mem[i] != ' ' && mem[i] != '\n'){
 						shouldAdd = 1;
 					}
 				}
@@ -30,7 +30,7 @@ unsigned int getNewline(struct File file, unsigned long int* start, unsigned lon
 	return length;
 }
 
-struct DefinitionLines getLines(struct File file, unsigned long int start, unsigned long int end){
+struct DefinitionLines getLines(char* mem, unsigned long int start, unsigned long int end){
 	struct DefinitionLines lines;
 
 	char* line;
@@ -41,7 +41,7 @@ struct DefinitionLines getLines(struct File file, unsigned long int start, unsig
 	unsigned long int newStart = start;
 	
 	while (newStart < end){
-		if (getNewline(file, &newStart, end)){
+		if (getNewline(mem, &newStart, end)){
 			numberOfLines++;
 		}
 		newStart++;
@@ -54,11 +54,11 @@ struct DefinitionLines getLines(struct File file, unsigned long int start, unsig
 	newStart = start;
 
 	while (newStart < end){
-		length = getNewline(file, &newStart, end);
+		length = getNewline(mem, &newStart, end);
 		if (length){
 			lines.lines[lineCount].length = length+2;
 			lines.lines[lineCount].value = (char*)malloc((length+2)*sizeof(char));
-			memcpy(lines.lines[lineCount].value, file.mem + newStart-length, length+1);
+			memcpy(lines.lines[lineCount].value, mem + newStart-length, length+1);
 			lines.lines[lineCount].value[length+1] = '\0';
 			lineCount++;
 		}
@@ -73,11 +73,34 @@ struct KeyPos getNextKey(struct KeyChars keyChars, char* line, unsigned int leng
 	struct KeyPos keyPos;
 
 	int isString = 0;
+	int hasFunction = 0;
+	int bracketCount = 0;
 
 	for (int index = start; index < length; index++){
 
+		if (line[index] == '{'){
+			bracketCount++;
+			hasFunction = 1;
+			continue;
+		} else if (line[index] == '}'){
+			bracketCount--;
+			continue;
+		}
+
+		if (bracketCount){
+			continue;
+		}
+
 		if (line[index] == '"'){
 			isString = !isString;
+		}
+
+		if (hasFunction){
+			keyPos.pos = index;
+			keyPos.endPos = index;
+			keyPos.key = FuncStart_k;
+			keyPos.name = (char*)"function";
+			return keyPos;
 		}
 
 		for (int i = 0; i < NUMBER_OF_KEYS; i++){
@@ -114,8 +137,26 @@ struct KeyWord getKeyword(char* line, unsigned int start, unsigned int stop){
 	struct KeyWord keyWord;
 
 	unsigned int charCount = 0;
+	int isFunction = 0;
+
 	for (int i = start; i < stop; i++){
-		if (line[i] != ' ' && line[i] != '\t' && line[i] != '\n'){
+		int isString = -1;
+		if (line[i] == '"' || line[i] == '\''){
+			isString = isString*-1;
+		}
+
+		if (isString == -1){
+			if (line[i] == '{'){
+				isFunction = 1;
+				start = i+1;
+				stop--;
+				break;
+			}
+		}
+	}
+
+	for (int i = start; i < stop; i++){
+		if (isFunction || (line[i] != ' ' && line[i] != '\t' && line[i] != '\n')){
 			charCount++;
 		}
 	}
@@ -124,7 +165,7 @@ struct KeyWord getKeyword(char* line, unsigned int start, unsigned int stop){
 
 	unsigned int count = 0;
 	for (int i = start; i < stop; i++){
-		if (line[i] != ' ' && line[i] != '\t' && line[i] != '\n'){
+		if (isFunction || (line[i] != ' ' && line[i] != '\t' && line[i] != '\n')){
 			keyWord.value[count] = line[i];
 			count++;
 		}
@@ -469,6 +510,16 @@ struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosi
 	return result;
 }
 
+struct Function* getFunction(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
+	struct Function* function = (struct Function*)malloc(sizeof(struct Function));
+
+	if (!strcmp(keyPosition[index+1].name, "function")){
+		raiseError("No function found\n", 1);
+	}
+
+	return function;
+}
+
 int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsigned int length){
 
 	// find keys
@@ -568,6 +619,11 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 				freeVar(value);
 				free(value);
 			}break;
+
+			case (Function_k): {
+				// get function
+				struct Function* function = getFunction(keyPositions, keyWords, keysCount, i);
+			}
 		}
 	}
 
@@ -592,7 +648,7 @@ struct Body interpretBody(struct KeyChars keyChars, struct File file, unsigned l
 	body.globalScope.numberOfVars = 0;
 	body.globalScope.vars = (struct Var**)malloc(sizeof(struct Var*));
 
-	struct DefinitionLines lines = getLines(file, start, end);
+	struct DefinitionLines lines = getLines(file.mem, start, end);
 
 	for (int i = 0; i < lines.length; i++){
 		interpretLine(keyChars, &body, lines.lines[i].value, lines.lines[i].length);

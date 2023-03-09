@@ -11,16 +11,6 @@ struct Body {
 	int hasMain;
 };
 
-struct DefinitionLine {
-	char* value;
-	unsigned int length;
-};
-
-struct DefinitionLines {
-	struct DefinitionLine* lines;
-	unsigned int length;
-};
-
 struct KeyPos {
 	unsigned int pos;
 	unsigned int endPos;
@@ -46,7 +36,7 @@ struct Operator {
 	struct Operator* rightOperator;
 };
 
-struct DefinitionLines getLines(struct File file, unsigned long int start, unsigned long int end);
+struct DefinitionLines getLines(char* mem, unsigned long int start, unsigned long int end);
 
 struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index);
 struct Body interpretBody(struct KeyChars keyChars, struct File file, unsigned long int start, unsigned long int end);

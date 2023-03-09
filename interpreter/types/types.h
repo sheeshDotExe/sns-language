@@ -118,6 +118,8 @@ struct Var {
 	struct Type* types;
 	struct Param* param;
 	int hasParam;
+	struct Function* function;
+	int hasFunction;
 };
 struct Param {
 	struct Var** inputVars;
@@ -127,6 +129,7 @@ struct Param {
 struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param);
 struct Var* copyVar(struct Var* instance);
 
+
 struct Instruction {
 	void* function;
 	void** args;
@@ -134,16 +137,19 @@ struct Instruction {
 	unsigned int argc;
 };
 
+struct DefinitionLine {
+	char* value;
+	unsigned int length;
+};
+
+struct DefinitionLines {
+	struct DefinitionLine* lines;
+	unsigned int length;
+};
+
 struct Function {
 	struct VarScope* varScope;
-	struct Instruction* instructions;
-	unsigned int numberOfInstructions;
-
-	struct Var* inputValues;
-	struct Var returnValue;
-
-	char* name;
-	unsigned int id;
+	struct DefinitionLines lines;
 };
 
 struct VarScope{
@@ -156,6 +162,8 @@ struct VarScope{
 	unsigned int numberOfFunctions;
 	struct Function* functions;
 };
+
+
 struct Var* getVarFromScope(struct VarScope* scope, char* varName);
 void addVarToScope(struct VarScope* scope, struct Var* var);
 
