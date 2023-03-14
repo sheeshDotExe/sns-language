@@ -333,7 +333,7 @@ struct Var* getVarTypes(char* varName, struct KeyPos* keyPosition, struct KeyWor
 struct Operator** sortOperators(struct Operator** operators, unsigned int length){
 	struct Operator** newOperators = (struct Operator**)malloc(length*sizeof(struct Operator*));
 	int i = 0;
-	int order[NUMBER_OF_OPERATORS] = {Division_k, Multiplication_k, Subtract_k, Addition_k, Assign_k, FuncCallStart_k};
+	int order[NUMBER_OF_OPERATORS] = {Division_k, Multiplication_k, Subtract_k, Addition_k, Assign_k, FuncCallStart_k, SplitBySpace};
 
 	for (int j = 0; j < NUMBER_OF_OPERATORS; j++){
 		int operator = order[j];
@@ -390,15 +390,12 @@ unsigned int getParenthesesEnd(struct KeyPos* keyPosition, struct KeyWord* keyWo
 }
 
 struct Values getValues(struct VarScope* varScope, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
-	int numberOfValues = 0;
+	int numberOfValues = 1;
 
 	for (int i = index; i < stop; i++){
 		numberOfValues++;
-		if (i >= stop-1){
-			continue;
-		}
-		if (keyPosition[i+1].key == FuncCallStart_k){
-			unsigned int next = getParenthesesEnd(keyPosition, keyWords, stop, i+2);
+		if (keyPosition[i].key == FuncCallStart_k){
+			unsigned int next = getParenthesesEnd(keyPosition, keyWords, stop, i+1);
 			i = next;
 		}
 	}
@@ -410,25 +407,33 @@ struct Values getValues(struct VarScope* varScope, struct KeyPos* keyPosition, s
 
 	
 	int varIndex = 0;
-	for (int i = index; i < stop; i++){
-		if (i < stop-1){
-			if (keyPosition[i+1].key == FuncCallStart_k){
-				unsigned int newStop = getParenthesesEnd(keyPosition, keyWords, stop, i+2);
-				values.vars[varIndex] = evaluateExpression(varScope, keyPosition, keyWords, newStop, i+1);
-				varIndex++;
-				i = newStop;
-				continue;
-			}
+	int i = index;
+	for (i; i < stop; i++){
+		if (keyPosition[i].key == FuncCallStart_k){
+			unsigned int newStop = getParenthesesEnd(keyPosition, keyWords, stop, i+1);
+			values.vars[varIndex] = evaluateExpression(varScope, keyPosition, keyWords, newStop, i+1);
+			varIndex++;
+			i = newStop;
+			continue;
 		}
 
-		struct Var* result = generateVarFromString(keyWords[i+1].value, strlen(keyWords[i+1].value));
+		struct Var* result = generateVarFromString(keyWords[i].value, strlen(keyWords[i].value));
 		if (!result->numberOfTypes){
 			freeVar(result);
 			free(result);
-			result = copyVar(getVarFromScope(varScope, keyWords[i+1].value));
+			result = copyVar(getVarFromScope(varScope, keyWords[i].value));
 		}
 		values.vars[varIndex] = result;
 		varIndex++;
+	}
+	if (keyPosition[i-1].key != FuncCallEnd_k){
+		struct Var* result = generateVarFromString(keyWords[i].value, strlen(keyWords[i].value));
+		if (!result->numberOfTypes){
+			freeVar(result);
+			free(result);
+			result = copyVar(getVarFromScope(varScope, keyWords[i].value));
+		}
+		values.vars[varIndex] = result;
 	}
 
 	return values;
@@ -437,11 +442,19 @@ struct Values getValues(struct VarScope* varScope, struct KeyPos* keyPosition, s
 struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
 	struct Var* result;
 
+	if (index >= stop){
+		raiseError("Incorrect expression", 1);
+	}
+
 	unsigned int newIndex = index;
 
 	struct Values values = getValues(varScope, keyPosition, keyWords, stop, index);
 
-	unsigned int numberOfOperators = values.length;
+	unsigned int numberOfOperators = values.length - 1;
+
+	if (!numberOfOperators){
+		return values.vars[0];
+	}
 
 	struct Operator** operators = (struct Operator**)malloc(numberOfOperators*sizeof(struct Operator*));
 
@@ -449,21 +462,16 @@ struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosi
 		struct KeyPos* keyPos = &keyPosition[newIndex+i];
 		struct Operator* operator = (struct Operator*)malloc(sizeof(struct Operator));
 
-		if (i){
-			if (keyPos->key == FuncCallStart_k){
-				unsigned int end = getParenthesesEnd(keyPosition, keyWords, stop, newIndex+i+1);
-				newIndex = end-i+1;
-				keyPos = &keyPosition[newIndex+i];
-			}
+		if (keyPos->key == FuncCallStart_k){
+			unsigned int end = getParenthesesEnd(keyPosition, keyWords, stop, newIndex+i+1);
+			newIndex = end-i+1;
+			keyPos = &keyPosition[newIndex+i];
 		}
+
 		operator->type = keyPos->key;
 
-		if (i){
-			operator->leftVar = values.vars[i-1];
-		} else {
-			operator->leftVar = NULL;
-		}
-		operator->rightVar = values.vars[i];
+		operator->leftVar = values.vars[i];
+		operator->rightVar = values.vars[i+1];
 
 		operators[i] = operator;
 	}
@@ -498,7 +506,9 @@ struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosi
 			case (SubtractAssign_k):
 			case (AdditionAssign_k):
 			case (DivisionAssign_k):
-			case (MultiplicationAssign_k):{
+			case (MultiplicationAssign_k):
+			case (SplitBySpace):{
+				raiseError("Invalid operator", 1);
 				result = copyVar(operator->rightVar);
 				freeOperator(sortedOperators, numberOfOperators);
 				freeValues(&values);
@@ -525,6 +535,8 @@ struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosi
 		}
 
 		results[i] = res;
+
+		printf("result %s\n", res->value);
 		
 		if (operator->leftOperator != NULL){
 			operator->leftOperator->rightVar = res;
@@ -706,7 +718,7 @@ int interpretLine(struct KeyChars keyChars, struct VarScope* varScope, char* lin
 
 			case (Assign_k): {
 				
-				struct Var* value = evaluateExpression(varScope, keyPositions, keyWords, keysCount, i);
+				struct Var* value = evaluateExpression(varScope, keyPositions, keyWords, keysCount, i+1);
 				printf("result %s\n", value->value);
 
 				//assign value to current variable

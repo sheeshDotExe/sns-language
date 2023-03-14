@@ -55,7 +55,7 @@ enum KeyCodes {
 #define NUMBERS_WITH_DOT "0123456789.-"
 
 #define NUMBER_OF_KEYS 20
-#define NUMBER_OF_OPERATORS 6
+#define NUMBER_OF_OPERATORS 7
 
 struct Key {
 	char* name;
