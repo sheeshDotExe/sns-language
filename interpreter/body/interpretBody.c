@@ -68,6 +68,16 @@ struct DefinitionLines getLines(char* mem, unsigned long int start, unsigned lon
 	return lines;
 }
 
+unsigned int getNextChar(char* string, unsigned int stop, unsigned int start){
+	for (int i = start; i < stop; i++){
+		if (string[i] == ' ' || string[i] == '\t'){
+			continue;
+		}
+		return i;
+	}
+	return stop;
+}
+
 struct KeyPos getNextKey(struct KeyChars keyChars, char* line, unsigned int length, unsigned int start){
 
 	struct KeyPos keyPos;
@@ -75,6 +85,10 @@ struct KeyPos getNextKey(struct KeyChars keyChars, char* line, unsigned int leng
 	int isString = 0;
 	int hasFunction = 0;
 	int bracketCount = 0;
+	int hasSpace = 0;
+	int stopAt = length;
+	int startAt = getNextChar(line, length, 0);
+	int foundAt = 0;
 
 	for (int index = start; index < length; index++){
 
@@ -93,6 +107,13 @@ struct KeyPos getNextKey(struct KeyChars keyChars, char* line, unsigned int leng
 
 		if (line[index] == '"'){
 			isString = !isString;
+		}
+
+		if ((line[index] == ' ' || line[index] == '\t') && index > startAt){
+			hasSpace = 1;
+			foundAt = index;
+			stopAt = getNextChar(line, length, index);
+			//printf("space: %d\n", index);
 		}
 
 		if (hasFunction){
@@ -118,13 +139,28 @@ struct KeyPos getNextKey(struct KeyChars keyChars, char* line, unsigned int leng
 
 			if (isValid && !isString) {
 				keyPos.pos = index;
-				keyPos.endPos = index + (key->length-1);
+				unsigned int nextStart = getNextChar(line, length, index + (key->length-1));
+				//printf("key found: %d\n", nextStart);
+				keyPos.endPos = nextStart;
 				keyPos.key = key->key;
 				keyPos.name = key->name;
 				return keyPos;
 			}
 		}
+
+		if (index == stopAt){
+			break;
+		}
 		
+	}
+
+	if (hasSpace && !isString) {
+		keyPos.pos = foundAt;
+		keyPos.endPos = stopAt;
+		keyPos.key = SplitBySpace;
+		keyPos.name = "none";
+		//printf("space split %d\n", keyPos.endPos);
+		return keyPos;
 	}
 
 	keyPos.pos = start;
@@ -462,7 +498,7 @@ struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosi
 			case (SubtractAssign_k):
 			case (AdditionAssign_k):
 			case (DivisionAssign_k):
-			case (MultiplicationAssign_k): {
+			case (MultiplicationAssign_k):{
 				result = copyVar(operator->rightVar);
 				freeOperator(sortedOperators, numberOfOperators);
 				freeValues(&values);
@@ -510,17 +546,84 @@ struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosi
 	return result;
 }
 
-struct Function* getFunction(struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
+void getSetParams(struct Var* var, struct KeyPos* keyPositions, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
+	if (!var->hasParam){
+		raiseError("no function found!", 1);
+	}
+	if (var->param->inputCount == 0){
+		printf("no param\n");
+		return;
+	}
+	int paramCount = 0;
+}
+
+struct VarScope* createVarScope(struct Var* var){
+	struct Param* varParam = var->param;
+	
+	struct VarScope* varScope = (struct VarScope*)malloc(sizeof(struct VarScope));
+
+	varScope->numberOfVars = varParam->inputCount+1; // add 1 for return value;
+	varScope->vars = (struct Var**)malloc(varScope->numberOfVars*sizeof(struct Var*));
+
+	int i = 0;
+	for(i; i < varParam->inputCount; i++){
+		varScope->vars[i] = copyVar(varParam->inputVars[i]);
+	}
+	varScope->vars[i] = copyVar(varParam->returnValue);
+
+	return varScope;
+}
+
+struct Var* callFunction(struct Var* var, struct KeyChars keyChars){
+	struct Function* function = var->function;
+
+	var->function->varScope = createVarScope(var);
+
+	for (int i = 0; i < function->lines.length; i++){
+		interpretLine(keyChars, function->varScope, function->lines.lines[i].value, function->lines.lines[i].length);
+	}
+	return getVarFromScope(function->varScope, "return");
+}
+
+struct Function* getFunction(struct Var* var, struct KeyChars keyChars, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
 	struct Function* function = (struct Function*)malloc(sizeof(struct Function));
 
-	if (!strcmp(keyPosition[index+1].name, "function")){
+	if (strcmp(keyPosition[index+1].name, "function")){
 		raiseError("No function found\n", 1);
 	}
+
+	char* functionContent = keyWords[index+1].value;
+
+	struct DefinitionLines lines = getLines(functionContent, 0, strlen(functionContent));
+
+	/*
+	for (int i = 0; i < lines.length; i++){
+		printf("line: %s\n", lines.lines[i].value);
+	}
+	*/
+
+	function->lines = lines;
 
 	return function;
 }
 
-int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsigned int length){
+int interpretKeyWord(struct VarScope* varScope, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
+	struct KeyWord keyWord = keyWords[index];
+
+	char* key = keyWord.value;
+
+	if (!strcmp(key, "return")){
+		printf("return\n");
+		struct Var* value = evaluateExpression(varScope, keyPosition, keyWords, stop, index+1);
+		//printf("result %s\n", value->value);
+	}
+
+	printf("Invalid syntax: %s\n", key);
+	raiseError("", 1);
+	return 1;
+}
+
+int interpretLine(struct KeyChars keyChars, struct VarScope* varScope, char* line, unsigned int length){
 
 	// find keys
 
@@ -598,12 +701,12 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 					printf("function %d %d\n", var->param->inputCount, var->param->returnValue->numberOfTypes);
 				}
 				
-				addVarToScope(&body->globalScope, var); 
+				addVarToScope(varScope, var); 
 			}break;
 
 			case (Assign_k): {
 				
-				struct Var* value = evaluateExpression(&body->globalScope, keyPositions, keyWords, keysCount, i);
+				struct Var* value = evaluateExpression(varScope, keyPositions, keyWords, keysCount, i);
 				printf("result %s\n", value->value);
 
 				//assign value to current variable
@@ -612,18 +715,37 @@ int interpretLine(struct KeyChars keyChars, struct Body* body, char* line, unsig
 					//printf("assign %s\n", keyWord->value);
 				} else {
 					//get var from scope
-					struct Var* leftVar = getVarFromScope(&body->globalScope, keyWord->value);
+					struct Var* leftVar = getVarFromScope(varScope, keyWord->value);
 					assignValue(leftVar, value);
 				}
 
 				freeVar(value);
 				free(value);
+
+				i = keysCount;
 			}break;
 
 			case (Function_k): {
 				// get function
-				struct Function* function = getFunction(keyPositions, keyWords, keysCount, i);
+				if (newVar){
+					struct Function* function = getFunction(newVarP, keyChars, keyPositions, keyWords, keysCount, i);
+					newVarP->function = function;
+				}
+			} break;
+
+			case (FuncCallStart_k): {
+				printf("function call %s\n", keyWord->value);
+				struct Var* var = getVarFromScope(varScope, keyWord->value);
+				getSetParams(var, keyPositions, keyWords, keysCount, i);
+				struct Var* returnValue = callFunction(var, keyChars); // key chars loop
+			} break;
+			/*
+			case (SplitBySpace): {
+				//abstract abstract abstract abstract abstrct ab scrtr asctrat
+				printf("sussy\n");
+				interpretKeyWord(varScope, keyPositions, keyWords, keysCount, i);
 			}
+			*/
 		}
 	}
 
@@ -651,7 +773,7 @@ struct Body interpretBody(struct KeyChars keyChars, struct File file, unsigned l
 	struct DefinitionLines lines = getLines(file.mem, start, end);
 
 	for (int i = 0; i < lines.length; i++){
-		interpretLine(keyChars, &body, lines.lines[i].value, lines.lines[i].length);
+		interpretLine(keyChars, &body.globalScope, lines.lines[i].value, lines.lines[i].length);
 		free(lines.lines[i].value);
 	}
 

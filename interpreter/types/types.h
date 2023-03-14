@@ -47,7 +47,7 @@ enum KeyCodes {
 	Division_k, // /
 	Multiplication_k, // *
 
-
+	SplitBySpace, // " "
 };
 
 #define NUMBER_OF_TYPES 9
@@ -126,6 +126,17 @@ struct Param {
 	unsigned int inputCount;
 	struct Var* returnValue;
 };
+
+struct VarScope{
+	unsigned int numberOfVars;
+	struct Var** vars;
+
+	struct Var* currentVar;
+	int hasCurrentVar;
+
+	unsigned int numberOfFunctions;
+	struct Function* functions;
+};
 struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param);
 struct Var* copyVar(struct Var* instance);
 
@@ -150,17 +161,6 @@ struct DefinitionLines {
 struct Function {
 	struct VarScope* varScope;
 	struct DefinitionLines lines;
-};
-
-struct VarScope{
-	unsigned int numberOfVars;
-	struct Var** vars;
-
-	struct Var* currentVar;
-	int hasCurrentVar;
-
-	unsigned int numberOfFunctions;
-	struct Function* functions;
 };
 
 

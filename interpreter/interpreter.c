@@ -11,6 +11,8 @@ int interpret(FILE *file)
 
 	struct KeyChars keyChars = createKeyChars();
 
+	printf("header compiled...\n");
+
 	struct Body body = interpretBody(keyChars, data, headerOptions.headerEnd, data.length);
 
 	// printf("%s", data);

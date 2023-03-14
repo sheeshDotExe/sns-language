@@ -696,7 +696,24 @@ struct Var* getVarFromScope(struct VarScope* scope, char* varName){
 	return (struct Var*)NULL;
 }
 
+int varExistsInScope(struct VarScope* scope, char* varName){
+	for (int i = 0; i < scope->numberOfVars; i++){
+		struct Var* var = scope->vars[i];
+		printf("check %s %s\n", varName, var->name);
+		if (!strcmp(varName, var->name)){
+			return 1;
+		}
+	}
+	return 0;
+}
+
 void addVarToScope(struct VarScope* scope, struct Var* var){
+
+	if (varExistsInScope(scope, var->name)){
+		printf("redefinition of variable %s\n", var->name);
+		raiseError("", 1);
+	}
+
 	scope->numberOfVars++;
 	struct Var** newVars = (struct Var**)realloc(scope->vars, scope->numberOfVars*sizeof(struct Var*));
 	if (newVars == NULL){
