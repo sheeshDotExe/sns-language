@@ -397,6 +397,7 @@ struct Values getValues(struct VarScope* varScope, struct KeyPos* keyPosition, s
 		if (keyPosition[i].key == FuncCallStart_k){
 			unsigned int next = getParenthesesEnd(keyPosition, keyWords, stop, i+1);
 			i = next;
+			numberOfValues--;
 		}
 	}
 
@@ -413,7 +414,7 @@ struct Values getValues(struct VarScope* varScope, struct KeyPos* keyPosition, s
 			unsigned int newStop = getParenthesesEnd(keyPosition, keyWords, stop, i+1);
 			values.vars[varIndex] = evaluateExpression(varScope, keyPosition, keyWords, newStop, i+1);
 			varIndex++;
-			i = newStop;
+			i = newStop+1;
 			continue;
 		}
 
@@ -426,7 +427,7 @@ struct Values getValues(struct VarScope* varScope, struct KeyPos* keyPosition, s
 		values.vars[varIndex] = result;
 		varIndex++;
 	}
-	if (keyPosition[i-1].key != FuncCallEnd_k){
+	if (i == stop && keyPosition[i-1].key != FuncCallEnd_k){
 		struct Var* result = generateVarFromString(keyWords[i].value, strlen(keyWords[i].value));
 		if (!result->numberOfTypes){
 			freeVar(result);
@@ -441,10 +442,6 @@ struct Values getValues(struct VarScope* varScope, struct KeyPos* keyPosition, s
 
 struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index){
 	struct Var* result;
-
-	if (index >= stop){
-		raiseError("Incorrect expression", 1);
-	}
 
 	unsigned int newIndex = index;
 
@@ -550,6 +547,10 @@ struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosi
 				operator->rightOperator->leftOperator = operator->leftOperator;
 			}
 		}
+
+		if (i == numberOfOperators-1){
+			result = copyVar(res);
+		}
 	}
 
 	freeOperator(sortedOperators, numberOfOperators);
@@ -625,9 +626,11 @@ int interpretKeyWord(struct VarScope* varScope, struct KeyPos* keyPosition, stru
 	char* key = keyWord.value;
 
 	if (!strcmp(key, "return")){
-		printf("return\n");
 		struct Var* value = evaluateExpression(varScope, keyPosition, keyWords, stop, index+1);
-		//printf("result %s\n", value->value);
+		struct Var* returnValue = getVarFromScope(varScope, "return");
+		assignValue(returnValue, value);
+		printf("return %s\n", value->value);
+		return 0;
 	}
 
 	printf("Invalid syntax: %s\n", key);
@@ -750,14 +753,15 @@ int interpretLine(struct KeyChars keyChars, struct VarScope* varScope, char* lin
 				struct Var* var = getVarFromScope(varScope, keyWord->value);
 				getSetParams(var, keyPositions, keyWords, keysCount, i);
 				struct Var* returnValue = callFunction(var, keyChars); // key chars loop
+
+				printf("function return val %s\n", returnValue->value);
 			} break;
-			/*
+			
 			case (SplitBySpace): {
 				//abstract abstract abstract abstract abstrct ab scrtr asctrat
-				printf("sussy\n");
 				interpretKeyWord(varScope, keyPositions, keyWords, keysCount, i);
 			}
-			*/
+			
 		}
 	}
 

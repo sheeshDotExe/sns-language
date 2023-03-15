@@ -11,7 +11,7 @@ JS_PATH          ("/static/javascript")
 
 ***
 
-VALUE: float ? int ? string = (1 + 3) + 5
+VALUE: float ? int ? string = ((1 + 3) + 5)
 
 VALUE2: float = VALUE
 
