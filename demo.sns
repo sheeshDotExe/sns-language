@@ -16,11 +16,7 @@ VALUE: float ? int ? string = ((1 + 3) + 5)
 VALUE2: float = VALUE
 
 add: function[float] -> {
-
-	new: float ? int = 2
-	new = new + 5
-
-	return new + 1
+	var: float
 }
 
 add()

@@ -21,6 +21,10 @@ enum TypeCodes {
 	Any_c
 };
 
+enum StatusCodes {
+	Return_s,
+};
+
 enum KeyCodes {
 	SubtractAssign_k, // -=
 	AdditionAssign_k, // +=
