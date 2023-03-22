@@ -36,9 +36,9 @@ struct Operator {
 	struct Operator* rightOperator;
 };
 
-struct DefinitionLines getLines(char* mem, unsigned long int start, unsigned long int end);
+struct DefinitionLines* getLines(char* mem, unsigned long int start, unsigned long int end);
 
-struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos* keyPosition, struct KeyWord* keyWords, unsigned int stop, unsigned int index);
+struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index);
 struct Body interpretBody(struct KeyChars keyChars, struct File file, unsigned long int start, unsigned long int end);
 int interpretLine(struct KeyChars keyChars, struct VarScope* varScope, char* line, unsigned int length);
 

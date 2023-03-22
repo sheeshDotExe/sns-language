@@ -687,6 +687,7 @@ struct KeyChars createKeyChars(){
 struct Var* getVarFromScope(struct VarScope* scope, char* varName){
 	for (int i = 0; i < scope->numberOfVars; i++){
 		struct Var* var = scope->vars[i];
+		//printf("check %s\n", var->name);
 		if (!strcmp(varName, var->name)){
 			return var;
 		}

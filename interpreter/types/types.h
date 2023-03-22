@@ -164,7 +164,7 @@ struct DefinitionLines {
 
 struct Function {
 	struct VarScope* varScope;
-	struct DefinitionLines lines;
+	struct DefinitionLines* lines;
 };
 
 
