@@ -23,6 +23,11 @@ struct KeyWord {
 	unsigned int length;
 };
 
+struct KeyParam {
+	unsigned int start;
+	unsigned int end;
+};
+
 struct Values {
 	struct Var** vars;
 	unsigned int length;

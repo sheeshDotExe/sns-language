@@ -144,7 +144,6 @@ struct VarScope{
 struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param);
 struct Var* copyVar(struct Var* instance);
 
-
 struct Instruction {
 	void* function;
 	void** args;

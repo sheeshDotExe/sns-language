@@ -271,6 +271,7 @@ struct Var* getVarTypes(char* varName, struct KeyPos** keyPosition, struct KeyWo
 		codes[i] = typeFromString(keyWord->value, keyWord->length);
 
 		if (codes[i] == Function_c){
+			(*increment)++;
 			int paramCount = 1;
 			struct KeyPos* currentKey = keyPos;
 			int nCount = 0;
@@ -285,6 +286,7 @@ struct Var* getVarTypes(char* varName, struct KeyPos** keyPosition, struct KeyWo
 				currentKey = keyPosition[newIndex+nCount];
 			}
 
+			printf("paramcount: %d\n", paramCount);
 			param = (struct Param*)malloc(sizeof(struct Param));
 			param->inputVars = (struct Var**)malloc(sizeof(struct Var*) * (paramCount-1));
 			param->inputCount = paramCount-1;
@@ -304,6 +306,7 @@ struct Var* getVarTypes(char* varName, struct KeyPos** keyPosition, struct KeyWo
 					paramCount--;
 					if (paramCount){
 						param->inputVars[paramCounter] = getVarTypes(keyWords[paramEnd+1]->value, keyPosition, keyWords, length, paramEnd+1, increment);
+						paramCounter++;
 					} else {
 						break;
 					}
@@ -409,6 +412,7 @@ struct Values getValues(struct VarScope* varScope, struct KeyPos** keyPosition, 
 	int i = index;
 	for (i; i < stop; i++){
 		if (keyPosition[i]->key == FuncCallStart_k){
+			printf("keyword for func %s\n", keyWords[i]->value);
 			unsigned int newStop = getParenthesesEnd(keyPosition, keyWords, stop, i+1);
 			values.vars[varIndex] = evaluateExpression(varScope, keyPosition, keyWords, newStop, i+1);
 			varIndex++;
@@ -557,13 +561,63 @@ struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos** keyPos
 	return result;
 }
 
-void getSetParams(struct Var* var, struct KeyPos** keyPositions, struct KeyWord** keyWords, unsigned int stop, unsigned int index){
+void getSetParams(struct Var* var, struct VarScope* varScope, struct KeyPos** keyPositions, struct KeyWord** keyWords, unsigned int stop, unsigned int index){
 	if (!var->hasParam){
 		raiseError("no function found!", 1);
 	}
 	if (var->param->inputCount == 0){
 		return;
 	}
+
+	int numberOfParams = 1;
+	
+	for (int i = index; i < stop; i++){
+		struct KeyPos* keyPos = keyPositions[i];
+		if (keyPos->key == Param_k){
+			numberOfParams++;
+		}
+		if (keyPos->key == FuncCallEnd_k){
+			break;
+		}
+	}
+
+	struct KeyParam* keyParams = (struct KeyParam*)malloc(numberOfParams*sizeof(struct KeyParam));
+
+	printf("params: %d\n", numberOfParams);
+
+	unsigned int start = index;
+	unsigned int paramIndex = 0;
+	for (int i = index; i < stop; i++){
+		struct KeyPos* keyPos = keyPositions[i];
+		if (keyPos->key == Param_k){
+			keyParams[paramIndex].start = start;
+			keyParams[paramIndex].end = i;
+			paramIndex++;
+			start = i;
+		}
+		if (keyPos->key == FuncCallEnd_k){
+			keyParams[paramIndex].start = start;
+			keyParams[paramIndex].end = i;
+			break;
+		}
+	}
+
+	printf("set param vars: %d\n", var->param->inputCount);
+
+	for (int i = 0; i < numberOfParams; i++){
+		struct Var* result = evaluateExpression(varScope, keyPositions, keyWords, keyParams[i].end, keyParams[i].start+1);
+		printf("param result: %s\n", result->value);
+		assignValue(var->param->inputVars[i], result);
+		freeVar(result);
+		free(result);
+	}
+
+	free(keyParams);
+
+	if (numberOfParams != var->param->inputCount){
+		raiseError("Incorrect number of params!", 1);
+	}
+
 	int paramCount = 0;
 }
 
@@ -587,6 +641,7 @@ struct VarScope* createVarScope(struct Var* var){
 	int i = 0;
 	for(i; i < varParam->inputCount; i++){
 		varScope->vars[i] = copyVar(varParam->inputVars[i]);
+		printf("%d test %s\n", i, varParam->inputVars[i]->name);
 	}
 	varScope->vars[i] = copyVar(varParam->returnValue);
 
@@ -728,7 +783,7 @@ int interpretLine(struct KeyChars keyChars, struct VarScope* varScope, char* lin
 				newVar = 1;
 				newVarP = var;
 
-				//printf("variable: %s\n", var->name);
+				printf("set variable: %s\n", var->name);
 
 				if (var->hasParam){
 					printf("function %d %d\n", var->param->inputCount, var->param->returnValue->numberOfTypes);
@@ -761,18 +816,18 @@ int interpretLine(struct KeyChars keyChars, struct VarScope* varScope, char* lin
 				if (newVar){
 					struct Function* function = getFunction(newVarP, keyChars, keyPositions, keyWords, keysCount, i);
 					newVarP->function = function;
+					printf("set function %s\n", newVarP->name);
 				}
 			} break;
 
 			case (FuncCallStart_k): {
 				printf("function call %s\n", keyWord->value);
 				struct Var* var = getVarFromScope(varScope, keyWord->value);
-				//printf("call var: %s\n", var->name);
+				printf("call var: %s\n", var->name);
+				getSetParams(var, varScope, keyPositions, keyWords, keysCount, i);
 				var->function->varScope = createVarScope(var);
-				getSetParams(var, keyPositions, keyWords, keysCount, i);
-				//printf("call\n");
+				printf("call\n");
 				struct Var* returnValue = callFunction(var, keyChars); // key chars loop
-
 				printf("function return val %s\n", returnValue->value);
 
 				freeVar(returnValue);
