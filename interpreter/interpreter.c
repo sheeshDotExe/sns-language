@@ -13,7 +13,10 @@ int interpret(FILE *file)
 
 	printf("header compiled...\n");
 
-	struct Body body = interpretBody(keyChars, data, headerOptions.headerEnd, data.length);
+	struct State* state = (struct State*)malloc(sizeof(struct State));
+	state->keyChars = keyChars;
+
+	struct Body body = interpretBody(state, data, headerOptions.headerEnd, data.length);
 
 	// printf("%s", data);
 	// testVar();

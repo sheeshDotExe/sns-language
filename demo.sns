@@ -21,7 +21,7 @@ add: function[first: float, second: float, float ? string] -> {
 	return var
 }
 
-VALUE3: float = add(VALUE, VALUE2)
+add(VALUE, VALUE2)
 
 main: function[test: string, test2: int, bool ? float] -> {
 	route("/", "GET", "POST") -> {

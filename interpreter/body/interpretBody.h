@@ -4,6 +4,9 @@
 #include "../types/types.h"
 #include "../fileReader/fileReader.h"
 #include "../filePatterns/patternReader.h"
+#include "./functionLogic/functionLogic.h"
+#include "./bodyTypes.h"
+#include "./eval/eval.h"
 
 struct Body {
 	struct VarScope globalScope;
@@ -11,40 +14,8 @@ struct Body {
 	int hasMain;
 };
 
-struct KeyPos {
-	unsigned int pos;
-	unsigned int endPos;
-	char* name;
-	int key;
-};
-
-struct KeyWord {
-	char* value;
-	unsigned int length;
-};
-
-struct KeyParam {
-	unsigned int start;
-	unsigned int end;
-};
-
-struct Values {
-	struct Var** vars;
-	unsigned int length;
-};
-
-struct Operator {
-	int type;
-	struct Var* leftVar;
-	struct Var* rightVar;
-	struct Operator* leftOperator;
-	struct Operator* rightOperator;
-};
 
 struct DefinitionLines* getLines(char* mem, unsigned long int start, unsigned long int end);
-
-struct Var* evaluateExpression(struct VarScope* varScope, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index);
-struct Body interpretBody(struct KeyChars keyChars, struct File file, unsigned long int start, unsigned long int end);
-int interpretLine(struct KeyChars keyChars, struct VarScope* varScope, char* line, unsigned int length);
-
+struct Body interpretBody(struct State* state, struct File file, unsigned long int start, unsigned long int end);
+int interpretLine(struct State* state, char* line, unsigned int length);
 #endif

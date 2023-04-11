@@ -7,6 +7,7 @@
 #include "header/findHeader.h"
 #include "types/types.h"
 #include "body/interpretBody.h"
+#include "body/bodyTypes.h"
 
 int interpret(FILE *file);
 

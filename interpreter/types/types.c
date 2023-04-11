@@ -684,6 +684,16 @@ struct KeyChars createKeyChars(){
 	return keyChars;
 }
 
+struct VarScope* copyVarScope(struct VarScope* varScope){
+	struct VarScope* newVarScope = (struct VarScope*)malloc(sizeof(struct VarScope));
+	newVarScope->numberOfVars = varScope->numberOfVars;
+	newVarScope->vars = (struct Var**)malloc(sizeof(struct Var*) * varScope->numberOfVars);
+	for (int i = 0; i < varScope->numberOfVars; i++){
+		newVarScope->vars[i] = copyVar(varScope->vars[i]);
+	}
+	return newVarScope;
+}
+
 struct Var* getVarFromScope(struct VarScope* scope, char* varName){
 	for (int i = 0; i < scope->numberOfVars; i++){
 		struct Var* var = scope->vars[i];
