@@ -129,6 +129,7 @@ void assignString(struct String* string, char* value, unsigned int length){
 		string->cString = (char*)malloc((length+1)*sizeof(char));
 		memcpy(string->cString, value, length+1);
 	} else {
+		printf("assign %s %d\n", value, length);
 		string->size = length-2;
 		string->cString = (char*)malloc((length-1)*sizeof(char));
 		memcpy(string->cString, value+1, length-2);
@@ -175,6 +176,7 @@ struct Type generateType(int code, char* value, unsigned int length){
 
 
 struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param){
+	printf("generateVar %s\n", name);
 	struct Var* var = (struct Var*)malloc(sizeof(struct Var));
 
 	var->creationFlag = 1;

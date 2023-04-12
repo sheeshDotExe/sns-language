@@ -19,8 +19,6 @@ int interpret(FILE *file)
 
 	struct Body body = interpretBody(state, data, headerOptions.headerEnd, data.length);
 
-	state->builtins->functions[0].function(NULL, state);
-
 	// printf("%s", data);
 	// testVar();
 

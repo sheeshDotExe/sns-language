@@ -37,7 +37,7 @@ struct Operator {
 
 struct Var* evaluateExpression(struct State* state, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index);
 
-void getSetParams(struct Var* var, struct State* state, struct KeyPos** keyPositions, struct KeyWord** keyWords, unsigned int stop, unsigned int index);
+void getSetParams(struct Param* param, struct State* state, struct KeyPos** keyPositions, struct KeyWord** keyWords, unsigned int stop, unsigned int index);
 struct VarScope* createVarScope(struct Var* var);
 void freeVarScope(struct VarScope* varScope);
 struct Var* callFunction(struct Var* var, struct State* state);

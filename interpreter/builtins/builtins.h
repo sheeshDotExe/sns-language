@@ -17,7 +17,8 @@ struct Builtins{
 	unsigned int numberOfFunctions;
 };
 
-void addBuiltin(struct Builtins* builtins, unsigned int index, char* name, unsigned int inputs, struct Var*(*function)(struct Param* params, struct State* state));
+void addBuiltin(struct Builtins* builtins, unsigned int index, char* name, unsigned int inputs, struct Var** inputVars, struct Var*(*function)(struct Param* params, struct State* state));
 struct Builtins* createBuiltins();
-int isBuiltin(struct Builtins* Builtins, char* name);
+int isBuiltin(struct Builtins* builtins, char* name);
+struct BuiltinFunction* getBuiltin(struct Builtins* builtins, int index);
 #endif

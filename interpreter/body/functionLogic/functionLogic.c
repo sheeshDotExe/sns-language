@@ -87,7 +87,7 @@ struct Values getValues(struct State* state, struct KeyPos** keyPosition, struct
 				printf("function call %s\n", keyWords[i]->value);
 				struct Var* var = getVarFromScope(state->localScope, keyWords[i]->value);
 				printf("call var: %s\n", var->name);
-				getSetParams(var, state, keyPosition, keyWords, stop, i);
+				getSetParams(var->param, state, keyPosition, keyWords, stop, i);
 				var->function->varScope = createVarScope(var);
 				printf("call\n");
 				struct State* copiedState = copyState(state);
@@ -250,11 +250,9 @@ struct Var* evaluateExpression(struct State* state, struct KeyPos** keyPosition,
 	return result;
 }
 
-void getSetParams(struct Var* var, struct State* state, struct KeyPos** keyPositions, struct KeyWord** keyWords, unsigned int stop, unsigned int index){
-	if (!var->hasParam){
-		raiseError("no function found!", 1);
-	}
-	if (var->param->inputCount == 0){
+void getSetParams(struct Param* param, struct State* state, struct KeyPos** keyPositions, struct KeyWord** keyWords, unsigned int stop, unsigned int index){
+
+	if (param->inputCount == 0){
 		return;
 	}
 
@@ -296,16 +294,12 @@ void getSetParams(struct Var* var, struct State* state, struct KeyPos** keyPosit
 	for (int i = 0; i < numberOfParams; i++){
 		struct Var* result = evaluateExpression(state, keyPositions, keyWords, keyParams[i].end, keyParams[i].start+1);
 		//printf("param result: %s\n", result->value);
-		assignValue(var->param->inputVars[i], result);
+		assignValue(param->inputVars[i], result);
 		freeVar(result);
 		free(result);
 	}
 
 	free(keyParams);
-
-	if (numberOfParams != var->param->inputCount){
-		raiseError("Incorrect number of params!", 1);
-	}
 
 	int paramCount = 0;
 }

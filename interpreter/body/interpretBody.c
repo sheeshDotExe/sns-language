@@ -481,9 +481,18 @@ int interpretLine(struct State* state, char* line, unsigned int length){
 
 			case (FuncCallStart_k): {
 				printf("function call %s\n", keyWord->value);
+
+				int builtinPos = isBuiltin(state->builtins, keyWord->value);
+				if (builtinPos){
+					printf("builtin\n");
+					struct BuiltinFunction* function = getBuiltin(state->builtins, builtinPos);
+					getSetParams(function->params, state, keyPositions, keyWords, keysCount, i);
+					function->function(function->params, state);
+					break;
+				}
 				struct Var* var = getVarFromScope(state->localScope, keyWord->value);
 				//printf("call var: %s\n", var->name);
-				getSetParams(var, state, keyPositions, keyWords, keysCount, i);
+				getSetParams(var->param, state, keyPositions, keyWords, keysCount, i);
 				var->function->varScope = createVarScope(var);
 				//printf("call\n");
 				struct State* copiedState = copyState(state);
