@@ -480,23 +480,21 @@ int interpretLine(struct State* state, char* line, unsigned int length){
 			} break;
 
 			case (FuncCallStart_k): {
-				while (1){
-					//printf("function call %s\n", keyWord->value);
-					struct Var* var = getVarFromScope(state->localScope, keyWord->value);
-					//printf("call var: %s\n", var->name);
-					getSetParams(var, state, keyPositions, keyWords, keysCount, i);
-					var->function->varScope = createVarScope(var);
-					//printf("call\n");
-					struct State* copiedState = copyState(state);
-					struct Var* returnValue = callFunction(var, copiedState); // key chars loop
-					free(copiedState);
-					//printf("function return val %s\n", returnValue->value);
+				printf("function call %s\n", keyWord->value);
+				struct Var* var = getVarFromScope(state->localScope, keyWord->value);
+				//printf("call var: %s\n", var->name);
+				getSetParams(var, state, keyPositions, keyWords, keysCount, i);
+				var->function->varScope = createVarScope(var);
+				//printf("call\n");
+				struct State* copiedState = copyState(state);
+				struct Var* returnValue = callFunction(var, copiedState); // key chars loop
+				free(copiedState);
+				printf("function return val %s\n", returnValue->value);
 
-					freeVar(returnValue);
-					free(returnValue);
+				freeVar(returnValue);
+				free(returnValue);
 
-					freeVarScope(var->function->varScope);
-				}
+				freeVarScope(var->function->varScope);
 				
 			} break;
 			

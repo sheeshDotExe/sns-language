@@ -15,8 +15,11 @@ int interpret(FILE *file)
 
 	struct State* state = (struct State*)malloc(sizeof(struct State));
 	state->keyChars = keyChars;
+	state->builtins = createBuiltins();
 
 	struct Body body = interpretBody(state, data, headerOptions.headerEnd, data.length);
+
+	state->builtins->functions[0].function(NULL, state);
 
 	// printf("%s", data);
 	// testVar();

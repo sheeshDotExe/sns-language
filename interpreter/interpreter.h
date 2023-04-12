@@ -8,6 +8,7 @@
 #include "types/types.h"
 #include "body/interpretBody.h"
 #include "body/bodyTypes.h"
+#include "builtins/builtins.h"
 
 int interpret(FILE *file);
 
