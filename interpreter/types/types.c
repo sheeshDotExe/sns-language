@@ -176,7 +176,6 @@ struct Type generateType(int code, char* value, unsigned int length){
 
 
 struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param){
-	printf("generateVar %s\n", name);
 	struct Var* var = (struct Var*)malloc(sizeof(struct Var));
 
 	var->creationFlag = 1;

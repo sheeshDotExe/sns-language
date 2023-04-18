@@ -4,6 +4,15 @@
 #include "../types/types.h"
 #include "../builtins/builtins.h"
 
+struct Route {
+	struct Var* function;
+	char* name;
+}
+
+struct Routes {
+	struct Route* routes;
+};
+
 struct State {
 	struct KeyChars keyChars;
 	struct Builtins* builtins;
