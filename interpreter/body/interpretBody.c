@@ -486,7 +486,9 @@ int interpretLine(struct State* state, char* line, unsigned int length){
 				if (builtinPos){
 					printf("builtin\n");
 					struct BuiltinFunction* function = getBuiltin(state->builtins, builtinPos);
+					printf("setparam\n");
 					getSetParams(function->params, state, keyPositions, keyWords, keysCount, i);
+					printf("builtinFunction\n");
 					function->function(function->params, state);
 					break;
 				}

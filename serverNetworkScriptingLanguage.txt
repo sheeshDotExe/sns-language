@@ -33,9 +33,7 @@ retval(json or html)
 
 types:
 string
-int16
-int32
-int64
+int
 float
 bool
 char

@@ -4,11 +4,6 @@
 #include "../types/types.h"
 #include "../builtins/builtins.h"
 
-struct Route {
-	struct Var* function;
-	char* name;
-}
-
 struct Routes {
 	struct Route* routes;
 };

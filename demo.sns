@@ -19,10 +19,8 @@ add: function[first: string, second: float ? string, float ? string] -> {
 	return var
 }
 
-PATH: string = "/home"
-
 add(VALUE, 5)
-route(PATH)
+route("/bruh/")
 
 main: function[test: string, test2: int, bool ? float] -> {
 	route("/") -> {

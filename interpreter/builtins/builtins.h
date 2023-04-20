@@ -5,6 +5,40 @@
 #include "../body/functionLogic/functionLogic.h"
 #include "../body/bodyTypes.h"
 
+/*
+Routing
+*/
+// ---------------
+
+struct Route {
+	struct Var* function;
+	struct Path* path;
+};
+
+struct Path {
+	char** folders;
+	unsigned int folderCount;
+
+	struct Var** pathVars;
+	unsigned int** varIndexes;
+	unsigned int varCount;
+};
+
+struct SplitPath {
+	unsigned int* nextPath;
+	unsigned int length;
+};
+
+struct VarLoc {
+	unsigned int start;
+	unsigned int end;
+	unsigned int exist;
+};
+
+struct Path * interpretPath(char* path, unsigned int length);
+
+// ---------------
+
 struct BuiltinFunction{
 	char * name;
 	unsigned int nameLength;
