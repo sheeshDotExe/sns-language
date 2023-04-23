@@ -20,7 +20,7 @@ struct Path {
 	unsigned int folderCount;
 
 	struct Var** pathVars;
-	unsigned int** varIndexes;
+	unsigned int* varIndexes;
 	unsigned int varCount;
 };
 
@@ -35,7 +35,7 @@ struct VarLoc {
 	unsigned int exist;
 };
 
-struct Path * interpretPath(char* path, unsigned int length);
+struct Path * interpretPath(struct State* state, char* path, unsigned int length);
 
 // ---------------
 

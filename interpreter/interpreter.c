@@ -19,16 +19,11 @@ int interpret(FILE *file)
 
 	struct Body body = interpretBody(state, data, headerOptions.headerEnd, data.length);
 
-	// printf("%s", data);
-	// testVar();
+	printf("body compiled...\n");
 
-	/*
-	struct Var var = generateVarFromString("\"100\"", 5);
+	startHTTPServer(state, &headerOptions, &body);
 
-	printf("%d\n", var.numberOfTypes);
-
-	freeVar(&var);
-	*/
+	printf("server started...\n");
 
 	printf("compiled\n");
 

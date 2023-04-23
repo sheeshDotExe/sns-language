@@ -9,6 +9,7 @@
 #include "body/interpretBody.h"
 #include "body/bodyTypes.h"
 #include "builtins/builtins.h"
+#include "httpParser/httpParser.h"
 
 int interpret(FILE *file);
 

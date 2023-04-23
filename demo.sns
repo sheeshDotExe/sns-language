@@ -20,7 +20,9 @@ add: function[first: string, second: float ? string, float ? string] -> {
 }
 
 add(VALUE, 5)
-route("/bruh/")
+route("/bruh/{test: string ? int}/{test2: int}") -> {
+	return "5"
+}
 
 main: function[test: string, test2: int, bool ? float] -> {
 	route("/") -> {

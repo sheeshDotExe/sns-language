@@ -4,13 +4,17 @@
 unsigned int getNewline(char* mem, unsigned long int* start, unsigned long int end){
 	unsigned int length = 0;
 	unsigned int brackets = 0;
+	int isString = 0;
 	while (*start < end){
-		if (mem[*start] == '{'){
+		if (mem[*start] == '"' || mem[*start] == '\'') {
+			isString = !isString;
+		}
+		if (mem[*start] == '{' && !isString){
 			brackets++;
-		} else if (mem[*start] == '}'){
+		} else if (mem[*start] == '}' && !isString){
 			brackets--;
 		}
-		if ((mem[*start] == '\n' || *start == end-1) && !brackets){
+		if ((mem[*start] == '\n' || *start == end-1) && !brackets && !isString){
 			if (length){
 				int shouldAdd = 0;
 				for (int i = *start-length; i < *start; i++){
@@ -92,11 +96,11 @@ struct KeyPos* getNextKey(struct KeyChars keyChars, char* line, unsigned int len
 
 	for (int index = start; index < length; index++){
 
-		if (line[index] == '{'){
+		if (line[index] == '{' && !isString){
 			bracketCount++;
 			hasFunction = 1;
 			continue;
-		} else if (line[index] == '}'){
+		} else if (line[index] == '}' && !isString){
 			bracketCount--;
 			continue;
 		}
@@ -109,7 +113,7 @@ struct KeyPos* getNextKey(struct KeyChars keyChars, char* line, unsigned int len
 			isString = !isString;
 		}
 
-		if ((line[index] == ' ' || line[index] == '\t') && index > startAt){
+		if ((line[index] == ' ' || line[index] == '\t') && index > startAt && !isString){
 			hasSpace = 1;
 			foundAt = index;
 			stopAt = getNextChar(line, length, index);
@@ -172,16 +176,18 @@ struct KeyPos* getNextKey(struct KeyChars keyChars, char* line, unsigned int len
 }
 
 struct KeyWord* getKeyword(char* line, unsigned int start, unsigned int stop){
+	//printf("new\n");
 	struct KeyWord* keyWord = (struct KeyWord*)malloc(sizeof(struct KeyWord));
 
 	unsigned int charCount = 0;
 	int isFunction = 0;
+	int isString = -1;
 
 	for (int i = start; i < stop; i++){
-		int isString = -1;
 		if (line[i] == '"' || line[i] == '\''){
 			isString = isString*-1;
 		}
+		//printf("%c %d\n", line[i], isString);
 
 		if (isString == -1){
 			if (line[i] == '{'){
@@ -366,12 +372,8 @@ void freeLines(struct KeyPos** keyPositions, struct KeyWord** keyWords, unsigned
 	free(keyPositions);
 }
 
-int interpretLine(struct State* state, char* line, unsigned int length){
-
-	// find keys
-
+unsigned int getKeysCount(struct State* state, char* line, unsigned int length, unsigned int start){
 	unsigned int keysCount = 0;
-	int start = 0;
 	while (start < length){
 		struct KeyPos* keyPos = getNextKey(state->keyChars, line, length, start);
 		free(keyPos->name);
@@ -384,10 +386,11 @@ int interpretLine(struct State* state, char* line, unsigned int length){
 		start = keyPos->endPos;
 		free(keyPos);
 	}
-	
-	struct KeyPos** keyPositions = (struct KeyPos**)malloc(keysCount*sizeof(struct KeyPos*));
+	return keysCount;
+}
 
-	start = 0;
+struct KeyPos** getKeyPositions(unsigned int keysCount, struct State* state, char* line, unsigned int length, unsigned int start){
+	struct KeyPos** keyPositions = (struct KeyPos**)malloc(keysCount*sizeof(struct KeyPos*));
 	int currentKey = 0;
 	while (start < length){
 		struct KeyPos* keyPos = getNextKey(state->keyChars, line, length, start);
@@ -399,9 +402,10 @@ int interpretLine(struct State* state, char* line, unsigned int length){
 		currentKey++;
 		start = keyPos->endPos;
 	}
+	return keyPositions;
+}
 
-	// find keywords
-
+struct KeyWord** getKeyWords(unsigned int keysCount, struct KeyPos** keyPositions, struct State* state, char* line, unsigned int length){
 	struct KeyWord** keyWords = (struct KeyWord**)malloc((keysCount+1)*sizeof(struct KeyWord*));
 
 	unsigned int currentKeyWord = 0;
@@ -415,6 +419,20 @@ int interpretLine(struct State* state, char* line, unsigned int length){
 	}
 	struct KeyWord* keyWord = getKeyword(line, lastPosition, length);
 	keyWords[currentKeyWord] = keyWord;
+	return keyWords;
+}
+
+int interpretLine(struct State* state, char* line, unsigned int length){
+
+	// find keys
+
+	unsigned int keysCount = getKeysCount(state, line, length, 0);
+	
+	struct KeyPos** keyPositions = getKeyPositions(keysCount, state, line, length, 0);
+
+	// find keywords
+
+	struct KeyWord** keyWords = getKeyWords(keysCount, keyPositions, state, line, length);
 
 	unsigned int keyLoc = 0;
 	unsigned int wordLoc = 0;
@@ -489,7 +507,10 @@ int interpretLine(struct State* state, char* line, unsigned int length){
 					printf("setparam\n");
 					getSetParams(function->params, state, keyPositions, keyWords, keysCount, i);
 					printf("builtinFunction\n");
-					function->function(function->params, state);
+					struct Var* returnValue = function->function(function->params, state);
+					printf("return value %s\n", returnValue->name);
+					newVar = 1;
+					newVarP = returnValue;
 					break;
 				}
 				struct Var* var = getVarFromScope(state->localScope, keyWord->value);

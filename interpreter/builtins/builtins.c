@@ -10,11 +10,27 @@ struct Var *route(struct Param *params, struct State *state)
 	//struct String* string = (struct String*)getType(String_c, path);
 	//printf("test %s\n", string->cString);
 
-	struct Path* path = interpretPath(string->cString, strlen(string->cString));
+	struct Path* path = interpretPath(state, string->cString, strlen(string->cString));
+
+	struct Param* routeVars = (struct Param*)malloc(sizeof(struct Param));
+	routeVars->inputCount = path->varCount;
+	routeVars->inputVars = (struct Var**)malloc(path->varCount*sizeof(struct Var*));
+	for (int i = 0; i < path->varCount; i++){
+		routeVars->inputVars[i] = path->pathVars[i];
+	}
+	int codes[1] = {String_c};
+
+	routeVars->returnValue = generateVar(&codes, 1, (char*)"return", "", (struct Param*)NULL);
+
+	codes[0] = Function_c;
+
+	struct Var* routeFunction = generateVar(&codes, 1, (char*)"route", "", routeVars);
+
+	routeFunction->hasParam = 1;
 
 	//struct returnVar = generateVar()
 
-	return NULL;
+	return routeFunction;
 }
 
 struct SplitPath* getSplitPath(char* path, unsigned int length){
@@ -57,7 +73,7 @@ struct VarLoc getPathVar(char* folder, unsigned int length){
 	return varLoc; 
 }
 
-struct Path * interpretPath(char* rawPath, unsigned int length){
+struct Path * interpretPath(struct State* state, char* rawPath, unsigned int length){
 	struct Path* path = (struct Path*)malloc(sizeof(struct Path));
 	struct SplitPath* splitPath = getSplitPath(rawPath, length);
 
@@ -66,13 +82,49 @@ struct Path * interpretPath(char* rawPath, unsigned int length){
 
 	for (int i = 0; i < splitPath->length-1; i++){
 		unsigned int size = splitPath->nextPath[i+1] - splitPath->nextPath[i];
-		path->folders[i] = (char*)malloc(size * sizeof(char));
-		memcpy(path->folders[i], rawPath + splitPath->nextPath[i], size);
+		path->folders[i] = (char*)malloc((size-1) * sizeof(char));
+		memcpy(path->folders[i], rawPath + splitPath->nextPath[i] + 1, size - 1);
+		path->folders[i][size-1] = '\0';
 	}
+
+	unsigned int varCount = 0;
 
 	for (int i = 0; i < splitPath->length-1; i++){
 		printf("path folder %s\n", path->folders[i]);
 		struct VarLoc varLoc = getPathVar(path->folders[i], strlen(path->folders[i]));
+		varCount += varLoc.exist;
+	}
+
+	path->pathVars = (struct Var**)malloc(varCount*sizeof(struct Var*));
+	path->varCount = varCount;
+	path->varIndexes = (unsigned int*)malloc(varCount*sizeof(unsigned int));
+
+	unsigned int index = 0;
+	for (int i = 0; i < splitPath->length-1; i++){
+		unsigned int pathLength = strlen(path->folders[i]);
+		struct VarLoc varLoc = getPathVar(path->folders[i], pathLength);
+		if (varLoc.exist){
+			//printf("path var %s\n", path->folders[i]);
+			path->varIndexes[index] = i;
+
+			unsigned int keysCount = getKeysCount(state, path->folders[i] + 1, pathLength - 2, 0);
+
+			//printf("%d\n", keysCount);
+	
+			struct KeyPos** keyPositions = getKeyPositions(keysCount, state, path->folders[i] + 1, pathLength - 2, 0);
+
+			struct KeyWord** keyWords = getKeyWords(keysCount, keyPositions, state, path->folders[i] + 1, pathLength - 2);
+			
+			unsigned int increment = 0;
+			struct Var* pathVar = getVarTypes(keyWords[0]->value, keyPositions, keyWords, keysCount, i, &increment);
+
+			//printf("var name %s\n", pathVar->name);
+			freeLines(keyPositions, keyWords, keysCount);
+
+			path->pathVars[index] = pathVar;
+			
+			index++;
+		}
 	}
 
 	free(splitPath->nextPath);
