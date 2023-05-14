@@ -40,84 +40,10 @@ int isNum(char*string, unsigned int length){
 }
 
 int isString(char*value, unsigned int length){
-	if (contains(value, '"', length) || contains(value, '\'', length)){
-		return 1;
+	if (strlen(value)){
+		if (value[0] == '"' || value[0] == '\'') return 1;
 	}
 	return 0;
-}
-
-void fillTypes(struct CommonTypes* cTypes, int* types, unsigned int length){
-	cTypes->length = length;
-	cTypes->codes = (int*)malloc(length*sizeof(int));
-	for (int i = 0; i < length; i++){
-		cTypes->codes[i] = types[i];
-	}
-}
-
-struct CommonTypes getValidTypes(char*value, unsigned int lengthP){
-	struct CommonTypes types;
-
-	int validTypes[NUMBER_OF_TYPES];
-	unsigned int length = 0;
-
-	if (isString(value, lengthP)){
-		validTypes[length] = String_c;
-		length++;
-		if (lengthP == 3){
-			validTypes[length] = Char_c;
-			length++;
-		}
-		fillTypes(&types, validTypes, length);
-		return types;
-	}
-
-	int Bool_v = stringToBool(value);
-	if (Bool_v != -1){
-
-		validTypes[length] = String_c;
-		length++;
-		validTypes[length] = Int_c;
-		length++;
-		validTypes[length] = Float_c;
-		length++;
-
-		fillTypes(&types, validTypes, length);
-		return types;
-	}
-
-	int isString = 0;
-
-	if (!isNum(value, lengthP)){
-		isString = 1;
-		validTypes[length] = Int_c;
-		length++;
-	}
-
-	if (!isFloat(value, lengthP)){
-		isString = 1;
-		validTypes[length] = Float_c;
-		length++;
-	}
-
-	if (isString){
-		validTypes[length] = String_c;
-		length++;
-	}
-
-	fillTypes(&types, validTypes, length);
-	return types;
-}
-
-struct Var* generateVarFromString(char*value, unsigned int length){
-
-	struct CommonTypes types = getValidTypes(value, length);
-
-	struct Var* ret;
-	ret = generateVar(types.codes, types.length, "unnamed", value, (struct Param*)NULL);
-
-	free(types.codes);
-
-	return ret;
 }
 
 void assignString(struct String* string, char* value, unsigned int length){
@@ -129,7 +55,6 @@ void assignString(struct String* string, char* value, unsigned int length){
 		string->cString = (char*)malloc((length+1)*sizeof(char));
 		memcpy(string->cString, value, length+1);
 	} else {
-		printf("assign %s %d\n", value, length);
 		string->size = length-2;
 		string->cString = (char*)malloc((length-1)*sizeof(char));
 		memcpy(string->cString, value+1, length-2);
@@ -155,21 +80,29 @@ struct Type generateType(int code, char* value, unsigned int length){
 	struct Type type;
 
 	type.code = code;
+
+	int hasValue = 0;
+
 	switch (code) {
 		case String_c : {
+			hasValue = 1;
 			type.type = (struct String*)malloc(sizeof(struct String));
 			((struct String*)type.type)->size = 0;
 			assignString((struct String*)type.type, value, length);
 		} break;
 		case Int_c : {
+			hasValue = 1;
 			type.type = (struct Int*)malloc(sizeof(struct Int));
 			assignInt((struct Int*)type.type, value, length);
 		} break;
 		case Float_c : {
+			hasValue = 1;
 			type.type = (struct Float*)malloc(sizeof(struct Float));
 			assignFloat((struct Float*)type.type, value, length);
 		} break;
 	}
+
+	type.hasValue = hasValue;
 
 	return type;
 }
@@ -197,7 +130,10 @@ struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char
 		var->types[i] = generateType(codes[i], value, valueLength);
 	}
 
-	var->param = param;
+	if (param){
+		var->param = param;
+		var->originalParam = copyParam(param);
+	}
 
 	return var;
 }
@@ -285,7 +221,9 @@ void freeTypes(struct Type* types, unsigned int length, struct Var* var){
 			case Float_c : {
 			}
 		}
-		free(var->types[i].type);
+		if (var->types[i].hasValue){
+			free(var->types[i].type);
+		}
 	}
 	free(var->types);
 }
@@ -685,6 +623,30 @@ struct KeyChars createKeyChars(){
 	return keyChars;
 }
 
+void freeParam(struct Param* param){
+	for (int i = 0; i < param->inputCount; i++){
+		freeVar(param->inputVars[i]);
+		free(param->inputVars[i]);
+	}
+	free(param->inputVars);
+	freeVar(param->returnValue);
+	free(param->returnValue);
+	free(param);
+}
+
+struct Param* copyParam(struct Param* param){
+	struct Param* newParam = (struct Param*)malloc(sizeof(struct Param));
+
+	newParam->inputCount = param->inputCount;
+	newParam->inputVars = (struct Var**)malloc(param->inputCount*sizeof(struct Var*));
+	for (int i = 0; i < param->inputCount; i++){
+		newParam->inputVars[i] = copyVar(param->inputVars[i]);
+	}
+	newParam->returnValue = copyVar(param->returnValue);
+
+	return newParam;
+}
+
 struct VarScope* copyVarScope(struct VarScope* varScope){
 	struct VarScope* newVarScope = (struct VarScope*)malloc(sizeof(struct VarScope));
 	newVarScope->numberOfVars = varScope->numberOfVars;
@@ -693,6 +655,15 @@ struct VarScope* copyVarScope(struct VarScope* varScope){
 		newVarScope->vars[i] = copyVar(varScope->vars[i]);
 	}
 	return newVarScope;
+}
+
+struct Var* getVarFromScopes(struct VarScope* localScope, struct VarScope* globalScope, char* varName){
+	if (varExistsInScope(localScope, varName)) return getVarFromScope(localScope, varName);
+	if (varExistsInScope(globalScope, varName)) return getVarFromScope(globalScope, varName);
+
+	printf("no variable named %s", varName);
+	raiseError("", 1);
+	return NULL;
 }
 
 struct Var* getVarFromScope(struct VarScope* scope, char* varName){

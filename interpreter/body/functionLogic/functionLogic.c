@@ -84,23 +84,40 @@ struct Values getValues(struct State* state, struct KeyPos** keyPosition, struct
 
 			unsigned int newStop = getParenthesesEnd(keyPosition, keyWords, stop, i+1);
 			if (strlen(keyWords[i]->value) > 0){
-				printf("function call %s\n", keyWords[i]->value);
-				struct Var* var = getVarFromScope(state->localScope, keyWords[i]->value);
-				printf("call var: %s\n", var->name);
-				getSetParams(var->param, state, keyPosition, keyWords, stop, i);
-				var->function->varScope = createVarScope(var);
-				printf("call\n");
-				struct State* copiedState = copyState(state);
-				struct Var* returnValue = callFunction(var, copiedState); // key chars loop
-				free(copiedState);
-				printf("function return val %s\n", returnValue->value);
 
-				values.vars[varIndex] = copyVar(returnValue);
+				int builtinPos = isBuiltin(state->builtins, keyWords[i]->value);
+				if (builtinPos){
+					struct BuiltinFunction* function = getBuiltin(state->builtins, builtinPos);
+					getSetParams(function->params, state, keyPosition, keyWords, stop, i);
+					struct Var* returnValue = function->function(function->params, state);
 
-				freeVar(returnValue);
-				free(returnValue);
+					values.vars[varIndex] = copyVar(returnValue);
+					freeVar(returnValue);
+					free(returnValue);
 
-				freeVarScope(var->function->varScope);
+					freeParam(function->params);
+					function->params = copyParam(function->originalParams);
+				} else {
+					struct Var* var = getVarFromScopes(state->localScope, state->globalScope, keyWords[i]->value);
+					//printf("call var: %s\n", var->name);
+					getSetParams(var->param, state, keyPosition, keyWords, stop, i);
+					var->function->varScope = createVarScope(var);
+					//printf("call\n");
+					struct State* copiedState = copyState(state);
+					struct Var* returnValue = callFunction(var, copiedState); // key chars loop
+
+					freeParam(var->param);
+					var->param = copyParam(var->originalParam);
+					free(copiedState);
+					//printf("function return val %s\n", returnValue->value);
+
+					values.vars[varIndex] = copyVar(returnValue);
+
+					freeVar(returnValue);
+					free(returnValue);
+
+					freeVarScope(var->function->varScope);
+				}
 			} else {
 				values.vars[varIndex] = evaluateExpression(state, keyPosition, keyWords, newStop, i+1);
 			}
@@ -110,20 +127,20 @@ struct Values getValues(struct State* state, struct KeyPos** keyPosition, struct
 		}
 
 		struct Var* result = generateVarFromString(keyWords[i]->value, strlen(keyWords[i]->value));
-		if (!result->numberOfTypes){
+		if (result->numberOfTypes == 1 && result->types[0].code == String_c && !isString(keyWords[i]->value, strlen(keyWords[i]->value))){
 			freeVar(result);
 			free(result);
-			result = copyVar(getVarFromScope(state->localScope, keyWords[i]->value));
+			result = copyVar(getVarFromScopes(state->localScope, state->globalScope, keyWords[i]->value));
 		}
 		values.vars[varIndex] = result;
 		varIndex++;
 	}
 	if (i == stop && keyPosition[i-1]->key != FuncCallEnd_k){
 		struct Var* result = generateVarFromString(keyWords[i]->value, strlen(keyWords[i]->value));
-		if (!result->numberOfTypes){
+		if (result->numberOfTypes == 1 && result->types[0].code == String_c && !isString(keyWords[i]->value, strlen(keyWords[i]->value))){
 			freeVar(result);
 			free(result);
-			result = copyVar(getVarFromScope(state->localScope, keyWords[i]->value));
+			result = copyVar(getVarFromScopes(state->localScope, state->globalScope, keyWords[i]->value));
 		}
 		values.vars[varIndex] = result;
 	}
@@ -332,9 +349,10 @@ struct VarScope* createVarScope(struct Var* var){
 }
 
 struct Var* callFunction(struct Var* var, struct State* state){
-	struct Function* function = var->function;
 
+	struct Function* function = var->function;
 	freeVarScope(state->localScope);
+
 	state->localScope = function->varScope;
 
 	for (int i = 0; i < function->lines->length; i++){
@@ -343,6 +361,7 @@ struct Var* callFunction(struct Var* var, struct State* state){
 			break;
 		}
 	}
+
 	return copyVar(getVarFromScope(function->varScope, "return"));
 }
 
@@ -365,6 +384,8 @@ struct State* copyState(struct State* state){
 	struct State* newState = (struct State*)malloc(sizeof(struct State));
 	newState->keyChars = state->keyChars;
 	newState->builtins = state->builtins;
+	newState->routes = state->routes;
+	newState->files = state->files;
 	newState->globalScope = state->globalScope;
 	newState->localScope = copyVarScope(state->localScope);
 

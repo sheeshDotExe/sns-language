@@ -5,7 +5,13 @@
 #include "../builtins/builtins.h"
 
 struct Routes {
-	struct Route* routes;
+	struct Route** routes;
+	unsigned int numberOfRoutes;
+};
+
+struct Files {
+	struct UserFile** files;
+	unsigned int numberOfFiles;
 };
 
 struct State {
@@ -13,6 +19,8 @@ struct State {
 	struct Builtins* builtins;
 	struct VarScope* globalScope;
 	struct VarScope* localScope;
+	struct Routes* routes;
+	struct Files* files;
 };
 
 

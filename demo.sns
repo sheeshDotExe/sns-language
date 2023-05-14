@@ -1,6 +1,6 @@
 ***
 USE_LOCAL_HOST   (True)
-USE_PORT         (4040)
+USE_PORT         (8080)
 DEBUG_MODE       (True)
 FORCE_SSL        (True)
 USE_SSL          (path_to_certificate)
@@ -11,24 +11,24 @@ JS_PATH          ("/static/javascript")
 
 ***
 
-VALUE: float ? int ? string = ((1 + 3) + 5)
-
-add: function[first: string, second: float ? string, float ? string] -> {
-	var: string = "sheesh"
-	var = var + 2 - (1*1) + first + second
-	return var
+add: function[first: float ? int ? string, second: float ? int ? string, float ? int ? string] -> {
+	return first + second
 }
 
-add(VALUE, 5)
-route("/bruh/{test: string ? int}/{test2: int}") -> {
-	return "5"
-}
-
-main: function[test: string, test2: int, bool ? float] -> {
+main: function[int] -> {
 	route("/") -> {
-		extend HomePage
-		extend Api
+		return html("./homepage.html");
 	}
+
+	route("/api/{test: string ? int}") -> {
+
+		test2: int ? string = 3
+
+		variable: string = "Welcome to my test website " + add(test2, test)
+		return variable
+	}
+
+	return 0
 }
 
 HomePage: function[string] -> {

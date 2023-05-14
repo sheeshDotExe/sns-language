@@ -5,5 +5,6 @@
 #include <stdlib.h>
 
 void raiseError(char*errorMessage, int stopCompiling);
+void pause();
 
 #endif

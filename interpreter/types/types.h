@@ -7,6 +7,7 @@
 
 #include "../errorHandler/errorHandler.h"
 #include "../filePatterns/patternReader.h"
+#include "interpretType.h"
 
 enum TypeCodes {
 	String_c,
@@ -110,6 +111,7 @@ struct Any {
 
 struct Type {
 	int code;
+	int hasValue;
 	void* type;
 };
 struct Type generateType(int code, char* value, unsigned int length);
@@ -121,6 +123,7 @@ struct Var {
 	unsigned int numberOfTypes;
 	struct Type* types;
 	struct Param* param;
+	struct Param* originalParam;
 	int hasParam;
 	struct Function* function;
 	int hasFunction;
@@ -143,7 +146,10 @@ struct VarScope{
 };
 struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param);
 struct Var* copyVar(struct Var* instance);
+struct Param* copyParam(struct Param* param);
 struct VarScope* copyVarScope(struct VarScope* varScope);
+
+void freeParam(struct Param* param);
 
 struct Instruction {
 	void* function;
@@ -167,7 +173,7 @@ struct Function {
 	struct DefinitionLines* lines;
 };
 
-
+struct Var* getVarFromScopes(struct VarScope* localScope, struct VarScope* globalScope, char* varName);
 struct Var* getVarFromScope(struct VarScope* scope, char* varName);
 void addVarToScope(struct VarScope* scope, struct Var* var);
 
@@ -210,7 +216,7 @@ int isFloat(char*string, unsigned int length);
 int isNum(char*string, unsigned int length);
 
 int isString(char*value, unsigned int length);
-struct CommonTypes getValidTypes(char*value, unsigned int length);
-struct Var* generateVarFromString(char*value, unsigned int length);
+//struct CommonTypes getValidTypes(char*value, unsigned int length);
+//struct Var* generateVarFromString(char*value, unsigned int length);
 
 #endif

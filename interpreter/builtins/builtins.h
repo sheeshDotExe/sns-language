@@ -4,6 +4,7 @@
 #include "../types/types.h"
 #include "../body/functionLogic/functionLogic.h"
 #include "../body/bodyTypes.h"
+#include "../fileReader/fileReader.h"
 
 /*
 Routing
@@ -39,10 +40,21 @@ struct Path * interpretPath(struct State* state, char* path, unsigned int length
 
 // ---------------
 
+// file loading
+
+struct UserFile{
+	char* data;
+	unsigned int length;
+	char* path;
+};
+
+// -----------------
+
 struct BuiltinFunction{
 	char * name;
 	unsigned int nameLength;
-	struct Param* params;	
+	struct Param* params;
+	struct Param* originalParams;	
 	struct Var*(*function)(struct Param* params, struct State* state);
 };
 
@@ -51,8 +63,11 @@ struct Builtins{
 	unsigned int numberOfFunctions;
 };
 
-void addBuiltin(struct Builtins* builtins, unsigned int index, char* name, unsigned int inputs, struct Var** inputVars, struct Var*(*function)(struct Param* params, struct State* state));
+void addBuiltin(struct Builtins* builtins, unsigned int index, char* name, unsigned int inputs, struct Var** inputVars, struct Var* returnValue, struct Var*(*function)(struct Param* params, struct State* state));
 struct Builtins* createBuiltins();
 int isBuiltin(struct Builtins* builtins, char* name);
 struct BuiltinFunction* getBuiltin(struct Builtins* builtins, int index);
+
+void addRoute(struct State* state, struct Var* function, struct Path* path);
+struct SplitPath* getSplitPath(char* path, unsigned int length);
 #endif

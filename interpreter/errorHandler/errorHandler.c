@@ -9,3 +9,8 @@ void raiseError(char*errorMessage, int stopCompiling){
 		exit(1);
 	}
 }
+
+void pause(){
+	char buff[100];
+	gets(buff);
+}

@@ -17,7 +17,29 @@ int interpret(FILE *file)
 	state->keyChars = keyChars;
 	state->builtins = createBuiltins();
 
-	struct Body body = interpretBody(state, data, headerOptions.headerEnd, data.length);
+	state->routes = (struct Routes*)malloc(sizeof(struct Routes));
+	state->routes->routes = (struct Route**)malloc(0);
+	state->routes->numberOfRoutes = 0;
+
+	state->files = (struct Files*)malloc(sizeof(struct Files));
+	state->files->files = (struct UserFile**)malloc(0);
+	state->files->numberOfFiles = 0;
+
+	struct Body* body = interpretBody(state, data, headerOptions.headerEnd, data.length);
+
+	if (!body->hasMain) {
+		raiseError("No entry point found (missing main function)", 1);
+	}
+
+	struct Var* mainFunction = getVarFromScope(state->globalScope, "main");
+
+	mainFunction->function->varScope = createVarScope(mainFunction);
+	struct State* copiedState = copyState(state);
+	struct Var* statusCode = callFunction(mainFunction, copiedState);
+
+	if (!strcmp(statusCode->value, "1")){
+		raiseError("Main function returned with error code 1", 1);
+	}
 
 	printf("body compiled...\n");
 

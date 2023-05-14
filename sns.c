@@ -7,14 +7,14 @@ FILE* getFile(char*path){
 
 int main(int argc, char **argv)
 {
-	if (argc < 1){ // < 2
+	if (argc < 2){
 		printf("incorrect input\n");
 		return 1;
 	}
 
-	//char* path = argv[1];
+	char* path = argv[1];
 
-	FILE* file = getFile((char*)"demo.sns");
+	FILE* file = getFile(path);
 
 	if (interpret(file)){
 		printf("error error\n");

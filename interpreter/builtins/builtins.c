@@ -4,31 +4,26 @@
 struct Var *route(struct Param *params, struct State *state)
 {
 	struct Var *rawPath = params->inputVars[0];
-	printf("test name %s\n", rawPath->name);
 	struct String* string = (struct String*)(getType(String_c, rawPath)->type);
-	printf("test type %d %s %s\n", rawPath->types[0].code, ((struct String*)rawPath->types[0].type)->cString, string->cString);
-	//struct String* string = (struct String*)getType(String_c, path);
-	//printf("test %s\n", string->cString);
-
 	struct Path* path = interpretPath(state, string->cString, strlen(string->cString));
 
 	struct Param* routeVars = (struct Param*)malloc(sizeof(struct Param));
 	routeVars->inputCount = path->varCount;
 	routeVars->inputVars = (struct Var**)malloc(path->varCount*sizeof(struct Var*));
 	for (int i = 0; i < path->varCount; i++){
-		routeVars->inputVars[i] = path->pathVars[i];
+		routeVars->inputVars[i] = copyVar(path->pathVars[i]);
 	}
 	int codes[1] = {String_c};
 
-	routeVars->returnValue = generateVar(&codes, 1, (char*)"return", "", (struct Param*)NULL);
+	routeVars->returnValue = generateVar(&codes, 1, "return", "", (struct Param*)NULL);
 
 	codes[0] = Function_c;
 
-	struct Var* routeFunction = generateVar(&codes, 1, (char*)"route", "", routeVars);
+	struct Var* routeFunction = generateVar(&codes, 1, "route", "", routeVars);
 
 	routeFunction->hasParam = 1;
 
-	//struct returnVar = generateVar()
+	addRoute(state, routeFunction, path);
 
 	return routeFunction;
 }
@@ -90,7 +85,6 @@ struct Path * interpretPath(struct State* state, char* rawPath, unsigned int len
 	unsigned int varCount = 0;
 
 	for (int i = 0; i < splitPath->length-1; i++){
-		printf("path folder %s\n", path->folders[i]);
 		struct VarLoc varLoc = getPathVar(path->folders[i], strlen(path->folders[i]));
 		varCount += varLoc.exist;
 	}
@@ -108,7 +102,6 @@ struct Path * interpretPath(struct State* state, char* rawPath, unsigned int len
 			path->varIndexes[index] = i;
 
 			unsigned int keysCount = getKeysCount(state, path->folders[i] + 1, pathLength - 2, 0);
-
 			//printf("%d\n", keysCount);
 	
 			struct KeyPos** keyPositions = getKeyPositions(keysCount, state, path->folders[i] + 1, pathLength - 2, 0);
@@ -116,7 +109,7 @@ struct Path * interpretPath(struct State* state, char* rawPath, unsigned int len
 			struct KeyWord** keyWords = getKeyWords(keysCount, keyPositions, state, path->folders[i] + 1, pathLength - 2);
 			
 			unsigned int increment = 0;
-			struct Var* pathVar = getVarTypes(keyWords[0]->value, keyPositions, keyWords, keysCount, i, &increment);
+			struct Var* pathVar = getVarTypes(keyWords[0]->value, keyPositions, keyWords, keysCount, 0, &increment);
 
 			//printf("var name %s\n", pathVar->name);
 			freeLines(keyPositions, keyWords, keysCount);
@@ -133,7 +126,112 @@ struct Path * interpretPath(struct State* state, char* rawPath, unsigned int len
 	return path;
 }
 
+int routeExists(struct State* state, struct Path* path){
+	return 0;
+}
+
+void addRoute(struct State* state, struct Var* function, struct Path* path){
+	if (routeExists(state, path)){
+		raiseError("route already exists\n", 1);
+	}
+
+	struct Route** newRoutes = (struct Route**)realloc(state->routes->routes, (state->routes->numberOfRoutes+1)*sizeof(struct Route*));
+
+	if (newRoutes == NULL){
+		raiseError("memory error on routes\n", 1);
+	}
+
+	struct Route* newRoute = (struct Route*)malloc(sizeof(struct Route));
+	newRoute->function = function;
+	newRoute->path = path;
+
+	state->routes->routes = newRoutes;
+	state->routes->routes[state->routes->numberOfRoutes] = newRoute;
+	state->routes->numberOfRoutes++;
+}
 // --------------
+
+
+// load html document/ data
+
+void addUserFile(struct State* state, struct UserFile* userFile){
+	struct UserFile** newUserFiles = (struct Route**)realloc(state->files->files, (state->files->numberOfFiles+1)*sizeof(struct UserFile*));
+
+	if (newUserFiles == NULL){
+		raiseError("memory error on files\n", 1);
+	}
+
+	state->files->files = newUserFiles;
+	state->files->files[state->files->numberOfFiles] = userFile;
+	state->files->numberOfFiles++;
+}
+
+struct UserFile* createUserFile(struct State* state, char* path){
+
+	FILE* fileH = fopen(path, "r");
+	if (fileH == NULL){
+		printf("found no file: %s\n", path);
+		raiseError("", 1);
+	}
+
+	struct File file = readFile(fileH);
+
+	struct UserFile* userFile = (struct UserFile*)malloc(sizeof(struct UserFile));
+	userFile->data = file.mem;
+	userFile->length = file.length;
+	userFile->path = strdup(path);
+
+
+	return userFile;
+}
+
+struct UserFile* getUserFile(struct State* state, char* path){
+	struct Files* files = state->files;
+
+	for (int i = 0; i < files->numberOfFiles; i++){
+		struct UserFile* file = files->files[i];
+
+		if (!strcmp(file->path, path)) return file;
+	}
+
+	return NULL;
+}
+
+char* safePath(char* path){
+	char* newPath = (char*)malloc(strlen(path)+1);
+	int i = 0;
+	for (i; i < strlen(path); i++){
+		if (path[i] == '/') newPath[i] = '\\';
+		else newPath[i] = path[i];
+	}
+	newPath[i] = '\0';
+
+	return newPath;
+}
+
+struct Var *html(struct Param *params, struct State *state){
+	struct Var* rawPath = params->inputVars[0];
+	struct String* string = (struct String*)(getType(String_c, rawPath)->type);
+	char* path = string->cString;
+
+	char* relPath = safePath(path);
+	char* fullPath = _fullpath(NULL, relPath, 0);
+
+	struct UserFile* file = getUserFile(state, fullPath);
+
+	if (file != NULL){
+		return generateVarFromString(file->data, file->length);
+	}
+
+	file = createUserFile(state, fullPath);
+
+	free(relPath);
+	free(fullPath);
+
+	return generateVarFromString(file->data, file->length);
+}
+
+// ------------------------
 
 int isBuiltin(struct Builtins *builtins, char *name)
 {
@@ -152,30 +250,41 @@ struct BuiltinFunction *getBuiltin(struct Builtins *builtins, int index)
 	return &builtins->functions[index - 1];
 }
 
-void addBuiltin(struct Builtins *builtins, unsigned int index, char *name, unsigned int inputs, struct Var **inputVars, struct Var *(*function)(struct Param *params, struct State *state))
+void addBuiltin(struct Builtins *builtins, unsigned int index, char *name, unsigned int inputs, struct Var **inputVars, struct Var* returnValue, struct Var *(*function)(struct Param *params, struct State *state))
 {
 	builtins->functions[index].function = function;
 	builtins->functions[index].name = name;
 	builtins->functions[index].nameLength = strlen(name);
 	builtins->functions[index].params = (struct Param *)malloc(sizeof(struct Param));
 	builtins->functions[index].params->inputCount = inputs;
-	builtins->functions[index].params->inputVars = inputVars; // yoink
+	builtins->functions[index].params->inputVars = inputVars;
+	builtins->functions[index].params->returnValue = returnValue;
+	builtins->functions[index].originalParams = copyParam(builtins->functions[index].params);
 }
 
-struct Builtins *createBuiltins()
+struct Builtins* createBuiltins()
 {
-	struct Builtins *builtins = (struct Builtins *)malloc(sizeof(struct Builtins));
-	builtins->numberOfFunctions = 1;
-	builtins->functions = (struct BuiltinFunction *)malloc(sizeof(struct BuiltinFunction) * builtins->numberOfFunctions);
+	struct Builtins* builtins = (struct Builtins*)malloc(sizeof(struct Builtins));
+	builtins->numberOfFunctions = 2;
+	builtins->functions = (struct BuiltinFunction*)malloc(sizeof(struct BuiltinFunction) * builtins->numberOfFunctions);
 
-	struct Var **inputVars;
+	struct Var** inputVars;
+	struct Var* returnValue;
 	int types[NUMBER_OF_TYPES];
 
 	// route builtin
-	inputVars = (struct Var **)malloc(sizeof(struct Var *) * 1);
+	inputVars = (struct Var**)malloc(sizeof(struct Var*) * 1);
 	types[0] = String_c;
-	inputVars[0] = generateVar(&types, 1, (char *)"path", "", NULL);
-	addBuiltin(builtins, 0, (char *)"route", 1, inputVars, &route);
+	inputVars[0] = generateVar(&types, 1, (char*)"path", "", NULL);
+	returnValue = generateVar(NULL, 0, "return", "", NULL);
+	addBuiltin(builtins, 0, strdup("route"), 1, inputVars, returnValue, &route);
+
+	// html builtin
+	inputVars = (struct Var**)malloc(sizeof(struct Var*) * 1);
+	types[0] = String_c;
+	inputVars[0] = generateVar(&types, 1, "path", "", NULL);
+	returnValue = generateVar(NULL, 0, "return", "", NULL);
+	addBuiltin(builtins, 1, strdup("html"), 1, inputVars, returnValue, &html);
 
 	return builtins;
 }

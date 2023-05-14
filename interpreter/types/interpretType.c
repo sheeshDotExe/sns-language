@@ -1,14 +1,5 @@
 #include "interpretType.h"
 
-int isString(char *value, unsigned int length)
-{
-	if (contains(value, '"', length) || contains(value, '\'', length))
-	{
-		return 1;
-	}
-	return 0;
-}
-
 void fillTypes(struct CommonTypes *cTypes, int *types, unsigned int length)
 {
 	cTypes->length = length;
@@ -80,8 +71,6 @@ struct CommonTypes getValidTypes(char **value, unsigned int *lengthP)
 
 struct Var *generateVarFromString(char *value, unsigned int length)
 {
-
-	// value will be eaten
 
 	char **valueP = &value;
 
