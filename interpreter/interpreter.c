@@ -5,6 +5,8 @@ int interpret(FILE *file)
 
 	struct File data = readFile(file);
 
+	fclose(file);
+
 	printf("compiling...\n");
 
 	struct HeaderOptions headerOptions = getHeaderOptions(data);

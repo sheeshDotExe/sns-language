@@ -42,7 +42,7 @@ int isValidRoute(struct Path* path, struct Route* route){
 		if (!serverPath->varCount || serverPath->varIndexes[currentVarIndex] != i){
 			if (strcmp(path->folders[i], serverPath->folders[i])) return 0;
 		}
-		else if (serverPath->varIndexes[currentVarIndex] == i){
+		else if (serverPath->varCount && serverPath->varIndexes[currentVarIndex] == i){
 			struct Var* pathVar = serverPath->pathVars[currentVarIndex];
 
 			struct Var* otherVar = generateVarFromString(path->folders[i], strlen(path->folders[i]));
@@ -100,7 +100,7 @@ struct Var* parseRoute(struct State* state, struct Route* route, struct HttpRequ
 
 	for (int i = 0; i < serverPath->folderCount; i++){
 
-		if (serverPath->varIndexes[currentVarIndex] == i){
+		if (serverPath->varCount && serverPath->varIndexes[currentVarIndex] == i){
 			struct Var* pathVar = serverPath->pathVars[currentVarIndex];
 			struct Param* param = route->function->param;
 			struct Var* paramVar = param->inputVars[currentVarIndex];
@@ -179,9 +179,9 @@ struct Path* generatePath(char* rawPath, unsigned int length){
 
 	for (int i = 0; i < splitPath->length-1; i++){
 		unsigned int size = splitPath->nextPath[i+1] - splitPath->nextPath[i];
-		path->folders[i] = (char*)malloc((size-1) * sizeof(char));
+		path->folders[i] = (char*)malloc((size) * sizeof(char));
 		memcpy(path->folders[i], rawPath + splitPath->nextPath[i] + 1, size - 1);
-		path->folders[i][size-1] = '\0';
+		path->folders[i][size - 1] = '\0';
 	}
 
 	free(splitPath->nextPath);

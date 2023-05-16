@@ -77,9 +77,9 @@ struct Path * interpretPath(struct State* state, char* rawPath, unsigned int len
 
 	for (int i = 0; i < splitPath->length-1; i++){
 		unsigned int size = splitPath->nextPath[i+1] - splitPath->nextPath[i];
-		path->folders[i] = (char*)malloc((size-1) * sizeof(char));
+		path->folders[i] = (char*)malloc((size) * sizeof(char));
 		memcpy(path->folders[i], rawPath + splitPath->nextPath[i] + 1, size - 1);
-		path->folders[i][size-1] = '\0';
+		path->folders[i][size - 1] = '\0';
 	}
 
 	unsigned int varCount = 0;
@@ -176,6 +176,8 @@ struct UserFile* createUserFile(struct State* state, char* path){
 
 	struct File file = readFile(fileH);
 
+	fclose(fileH);
+
 	struct UserFile* userFile = (struct UserFile*)malloc(sizeof(struct UserFile));
 	userFile->data = file.mem;
 	userFile->length = file.length;
@@ -224,6 +226,8 @@ struct Var *html(struct Param *params, struct State *state){
 	}
 
 	file = createUserFile(state, fullPath);
+
+	addUserFile(state, file);
 
 	free(relPath);
 	free(fullPath);

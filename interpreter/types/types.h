@@ -98,15 +98,15 @@ struct Char {
 };
 
 struct User {
-
+	int i;
 };
 
 struct Empty {
-
+	int i;
 };
 
 struct Any {
-
+	int i;
 };
 
 struct Type {

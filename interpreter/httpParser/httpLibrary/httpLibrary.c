@@ -180,24 +180,25 @@ struct HttpRequest* parseRequestFields(char* request, unsigned int length){
 
 struct HttpRequest* recive(struct Socket* client){
 
-	char buf[MAX_PACKET_SIZE];
+	char* buf = (char*)malloc(MAX_PACKET_SIZE);
 	int read = 1;
 	int total = 0;
 
 	while (read > 0){
-		read = recv(client->id, &buf + total, MAX_PACKET_SIZE - total, 0);
+		read = recv(client->id, buf + total, MAX_PACKET_SIZE - total, 0);
 		if (read > 0){
 			total += read;
 		}
 	}
 
 	char* message = (char*)malloc((total+1)*sizeof(char));
-	memcpy(message, &buf, total);
+	if (total) memcpy(message, buf, total);
 	message[total] = '\0';
 
 	struct HttpRequest* httpRequest = parseRequestFields(message, total);
 
 	free(message);
+	free(buf);
 
 	return httpRequest;
 }

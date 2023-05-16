@@ -16,5 +16,6 @@ struct PathInfo {
 void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, struct Body* body);
 char* parseRequest(struct State* state, struct HttpRequest* request);
 struct Path* generatePath(char* rawPath, unsigned int length);
+void freePath(struct Path* path);
 
 #endif
