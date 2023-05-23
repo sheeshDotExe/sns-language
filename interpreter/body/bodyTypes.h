@@ -19,8 +19,11 @@ struct State {
 	struct Builtins* builtins;
 	struct VarScope* globalScope;
 	struct VarScope* localScope;
+	struct InheritedVarscopes* inheritedVarscopes;
+	int useInheritence;
 	struct Routes* routes;
 	struct Files* files;
+	char** fileExtension;
 };
 
 

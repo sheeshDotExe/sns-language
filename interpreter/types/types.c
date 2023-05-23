@@ -53,11 +53,11 @@ void assignString(struct String* string, char* value, unsigned int length){
 	if (!isString(value, length)){
 		string->size = length;
 		string->cString = (char*)malloc((length+1)*sizeof(char));
-		memcpy(string->cString, value, length+1);
+		memcpy(string->cString, value, (length+1)*sizeof(char));
 	} else {
 		string->size = length-2;
 		string->cString = (char*)malloc((length-1)*sizeof(char));
-		memcpy(string->cString, value+1, length-2);
+		memcpy(string->cString, value+1, (length-2)*sizeof(char));
 		string->cString[length-2] = '\0';
 	}
 }
@@ -113,14 +113,18 @@ struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char
 
 	var->creationFlag = 1;
 	var->hasParam = 0;
+	var->shouldExecute = 0;
+	var->inheritScopes = 0;
+	var->returned = 0;
+	var->isBuiltin = 0;
 
 	unsigned int nameLength = strlen(name);
 	var->name = (char*)malloc((nameLength+1)*sizeof(char));
-	memcpy(var->name, name, nameLength+1);
+	memcpy(var->name, name, (nameLength+1)*sizeof(char));
 
 	unsigned int valueLength = strlen(value);
 	var->value = (char*)malloc((valueLength+1)*sizeof(char));
-	memcpy(var->value, value, valueLength+1);
+	memcpy(var->value, value, (valueLength+1)*sizeof(char));
 
 	var->numberOfTypes = numberOfTypes;
 
@@ -142,14 +146,18 @@ struct Var* copyVar(struct Var* instance){
 	struct Var* var = (struct Var*)malloc(sizeof(struct Var));
 
 	var->creationFlag = 1;
+	var->shouldExecute = instance->shouldExecute;
+	var->inheritScopes = instance->inheritScopes;
+	var->returned = instance->returned;
+	var->isBuiltin = instance->isBuiltin;
 
 	unsigned int nameLength = strlen(instance->name);
 	var->name = (char*)malloc((nameLength+1)*sizeof(char));
-	memcpy(var->name, instance->name, nameLength+1);
+	memcpy(var->name, instance->name, (nameLength+1)*sizeof(char));
 
 	unsigned int valueLength = strlen(instance->value);
 	var->value = (char*)malloc((valueLength+1)*sizeof(char));
-	memcpy(var->value, instance->value, valueLength+1);
+	memcpy(var->value, instance->value, (valueLength+1)*sizeof(char));
 
 	var->numberOfTypes = instance->numberOfTypes;
 	var->types = (struct Type*)malloc(instance->numberOfTypes*sizeof(struct Type));
@@ -258,7 +266,7 @@ void assignValue(struct Var* var, struct Var*other){
 
 	free(var->value);
 	var->value = (char*)malloc((valueLength+1)*sizeof(char));
-	memcpy(var->value, value, valueLength+1);
+	memcpy(var->value, value, (valueLength+1)*sizeof(char));
 
 	free(commonTypes.codes);
 
@@ -283,8 +291,8 @@ struct Var* addVars(struct Var* first, struct Var* second){
 
 			unsigned int length = string1->size + string2->size + 1;
 			newValue = (char*)malloc(length*sizeof(char));
-			memcpy(newValue, string1->cString, string1->size);
-			memcpy(newValue+string1->size, string2->cString, string2->size+1); // copy null terminator
+			memcpy(newValue, string1->cString, string1->size*sizeof(char));
+			memcpy(newValue+string1->size, string2->cString, (string2->size+1)*sizeof(char)); // copy null terminator
 		} break;
 
 		case Int_c : {
@@ -293,7 +301,7 @@ struct Var* addVars(struct Var* first, struct Var* second){
 
 			long long new = int1->value + int2->value;
 			newValue = (char*)malloc(20*sizeof(char)); // largest 64 bit signed integer
-			itoa(new, newValue, 10);
+			_itow(new, newValue, 10);
 		} break;
 
 		case Float_c : {
@@ -480,8 +488,8 @@ struct Var* lessThan(struct Var* first, struct Var* second){
 			struct Float* float2 = (struct Float*)getType(Float_c, second)->type;
 
 			float new = float1->value < float2->value;
-			newValue = (char*)malloc(1*sizeof(char));
-			gcvt(new, 1, newValue);
+			newValue = (char*)malloc(100*sizeof(char));
+			gcvt(new, 100, newValue);
 		}
 	}
 
@@ -530,8 +538,8 @@ struct Var* greaterThan(struct Var* first, struct Var* second){
 			struct Float* float2 = (struct Float*)getType(Float_c, second)->type;
 
 			float new = float1->value > float2->value;
-			newValue = (char*)malloc(1*sizeof(char));
-			gcvt(new, 1, newValue);
+			newValue = (char*)malloc(100*sizeof(char));
+			gcvt(new, 100, newValue);
 		}
 	}
 
@@ -583,8 +591,8 @@ struct Var* equalTo(struct Var* first, struct Var* second){
 			struct Float* float2 = (struct Float*)getType(Float_c, second)->type;
 
 			float new = float1->value == float2->value;
-			newValue = (char*)malloc(1*sizeof(char));
-			gcvt(new, 1, newValue);
+			newValue = (char*)malloc(100*sizeof(char));
+			gcvt(new, 100, newValue);
 		}
 	}
 
@@ -597,10 +605,41 @@ struct Var* equalTo(struct Var* first, struct Var* second){
 	return var;
 }
 
+int isTrue(struct Var* var){
+	struct CommonTypes* commonTypes = (struct CommonTypes*)malloc(sizeof(struct CommonTypes));
+	commonTypes->length = var->numberOfTypes;
+	commonTypes->codes = (int*)malloc(commonTypes->length*sizeof(int));
+
+	for (int i = 0; i < var->numberOfTypes; i++){
+		commonTypes->codes[i] = var->types[i].code;
+	}
+
+	int code = getSignificantType(commonTypes);
+
+	switch (code){
+		case String_c : {
+			struct String* string = (struct String*)getType(String_c, var)->type;
+			return strlen(string->cString);
+		} break;
+
+		case Int_c : {
+			struct Int* intT = (struct Int*)getType(Int_c, var)->type;
+			return intT->value;
+		} break;
+
+		case Float_c : {
+			struct Float* floatT = (struct Float*)getType(Float_c, var)->type;
+			return floatT->value;
+		}
+	}
+
+	return 0;
+}
+
 void addKey(struct Key* keyP, char* name, unsigned int length, int key){
 
 	keyP->name = (char*)malloc(length*sizeof(char));
-	memcpy(keyP->name, name, length);
+	memcpy(keyP->name, name, length*sizeof(char));
 
 	keyP->key = key;
 	keyP->length = length;
@@ -612,7 +651,8 @@ struct KeyChars createKeyChars(){
 	keyChars.length = NUMBER_OF_KEYS;
 	keyChars.keys = (struct Key*)malloc(NUMBER_OF_KEYS*sizeof(struct Key));
 
-	char* keys[] = {"-=", "+=", "/=", "*=", "::", ":", "?",",", "=", "->", "{", "}", "[", "]",
+	char* keys[] = {"-=", "+=", "/=", "*=", "::", "<", ">", "==", ":", "?", ",", "=",
+					"->", "{", "}", "[", "]",
 					"(", ")", "-", "+", "/", "*"
 					};
 
@@ -650,11 +690,34 @@ struct Param* copyParam(struct Param* param){
 struct VarScope* copyVarScope(struct VarScope* varScope){
 	struct VarScope* newVarScope = (struct VarScope*)malloc(sizeof(struct VarScope));
 	newVarScope->numberOfVars = varScope->numberOfVars;
+	newVarScope->isTrue = varScope->isTrue;
 	newVarScope->vars = (struct Var**)malloc(sizeof(struct Var*) * varScope->numberOfVars);
 	for (int i = 0; i < varScope->numberOfVars; i++){
 		newVarScope->vars[i] = copyVar(varScope->vars[i]);
 	}
 	return newVarScope;
+}
+
+struct InheritedVarscopes* copyInheritedVarscope(struct InheritedVarscopes* inheritedVarscopes){
+	struct InheritedVarscopes* newScopes = (struct InheritedVarscopes*)malloc(sizeof(struct InheritedVarscopes));
+
+	newScopes->numberOfScopes = inheritedVarscopes->numberOfScopes;
+	newScopes->scopes = (struct InheritedVarscopes**)malloc(newScopes->numberOfScopes*sizeof(struct InheritedVarscopes*));
+
+	for (int i = 0; i < inheritedVarscopes->numberOfScopes; i++){
+		newScopes->scopes[i] = inheritedVarscopes->scopes[i];
+	}
+
+	return newScopes;
+}
+
+struct Var* getVarFromInheritedScopes(struct InheritedVarscopes* inheritedVarscopes, char* varName){
+	for (int i = 0; i < inheritedVarscopes->numberOfScopes; i++){
+		if (varExistsInScope(inheritedVarscopes->scopes[i], varName)){
+			return getVarFromScope(inheritedVarscopes->scopes[i], varName);
+		}
+	}
+	return NULL;
 }
 
 struct Var* getVarFromScopes(struct VarScope* localScope, struct VarScope* globalScope, char* varName){
@@ -703,5 +766,16 @@ void addVarToScope(struct VarScope* scope, struct Var* var){
 	} else {
 		scope->vars = newVars;
 		scope->vars[scope->numberOfVars-1] = var;
+	}
+}
+
+void addVarScope(struct InheritedVarscopes* scopes, struct VarScope* varScope){
+	scopes->numberOfScopes++;
+	struct VarScope** newScopes = (struct VarScope**)realloc(scopes->scopes, scopes->numberOfScopes*sizeof(struct VarScope*));
+	if (newScopes == NULL){
+		raiseError("memory error on scope inheriting", 1);
+	} else {
+		scopes->scopes = newScopes;
+		scopes->scopes[scopes->numberOfScopes-1] = varScope;
 	}
 }

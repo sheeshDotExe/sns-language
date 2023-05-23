@@ -3,10 +3,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <wchar.h>
 
 struct File
 {
-	char*mem;
+	unsigned char*mem;
 	long unsigned int length;
 };
 

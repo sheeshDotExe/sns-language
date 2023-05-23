@@ -1,5 +1,7 @@
 #include "interpreter/interpreter.h"
 #include <stdio.h>
+#include <wchar.h>
+#include <locale.h>
 
 FILE* getFile(char*path){
 	return fopen(path, "r");
@@ -7,6 +9,7 @@ FILE* getFile(char*path){
 
 int main(int argc, char **argv)
 {
+
 	if (argc < 1){
 		printf("incorrect input\n");
 		return 1;

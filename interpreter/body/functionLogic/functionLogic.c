@@ -3,7 +3,7 @@
 struct Operator** sortOperators(struct Operator** operators, unsigned int length){
 	struct Operator** newOperators = (struct Operator**)malloc(length*sizeof(struct Operator*));
 	int i = 0;
-	int order[NUMBER_OF_OPERATORS] = {Division_k, Multiplication_k, Subtract_k, Addition_k, Assign_k, FuncCallStart_k, SplitBySpace};
+	int order[NUMBER_OF_OPERATORS] = {Division_k, Multiplication_k, Subtract_k, Addition_k, Assign_k, LessThan_k, GreaterThan_k, EqualTo_k, FuncCallStart_k, SplitBySpace};
 
 	for (int j = 0; j < NUMBER_OF_OPERATORS; j++){
 		int operator = order[j];
@@ -98,7 +98,13 @@ struct Values getValues(struct State* state, struct KeyPos** keyPosition, struct
 					freeParam(function->params);
 					function->params = copyParam(function->originalParams);
 				} else {
-					struct Var* var = getVarFromScopes(state->localScope, state->globalScope, keyWords[i]->value);
+					struct Var* var = NULL;
+					if (state->useInheritence){
+						var = getVarFromInheritedScopes(state->inheritedVarscopes, keyWords[i]->value);
+					}
+					if (var == NULL){
+						var = getVarFromScopes(state->localScope, state->globalScope, keyWords[i]->value);
+					}
 					//printf("call var: %s\n", var->name);
 					getSetParams(var->param, state, keyPosition, keyWords, stop, i);
 					var->function->varScope = createVarScope(var);
@@ -130,7 +136,14 @@ struct Values getValues(struct State* state, struct KeyPos** keyPosition, struct
 		if (result->numberOfTypes == 1 && result->types[0].code == String_c && !isString(keyWords[i]->value, strlen(keyWords[i]->value))){
 			freeVar(result);
 			free(result);
-			result = copyVar(getVarFromScopes(state->localScope, state->globalScope, keyWords[i]->value));
+			struct Var* var = NULL;
+			if (state->useInheritence){
+				var = getVarFromInheritedScopes(state->inheritedVarscopes, keyWords[i]->value);
+			}
+			if (var == NULL){
+				var = getVarFromScopes(state->localScope, state->globalScope, keyWords[i]->value);
+			}
+			result = copyVar(var);
 		}
 		values.vars[varIndex] = result;
 		varIndex++;
@@ -140,7 +153,14 @@ struct Values getValues(struct State* state, struct KeyPos** keyPosition, struct
 		if (result->numberOfTypes == 1 && result->types[0].code == String_c && !isString(keyWords[i]->value, strlen(keyWords[i]->value))){
 			freeVar(result);
 			free(result);
-			result = copyVar(getVarFromScopes(state->localScope, state->globalScope, keyWords[i]->value));
+			struct Var* var = NULL;
+			if (state->useInheritence){
+				var = getVarFromInheritedScopes(state->inheritedVarscopes, keyWords[i]->value);
+			}
+			if (var == NULL){
+				var = getVarFromScopes(state->localScope, state->globalScope, keyWords[i]->value);
+			}
+			result = copyVar(var);
 		}
 		values.vars[varIndex] = result;
 	}
@@ -239,6 +259,18 @@ struct Var* evaluateExpression(struct State* state, struct KeyPos** keyPosition,
 			case (Subtract_k): {
 				res = subVars(operator->leftVar, operator->rightVar);
 			} break;
+
+			case (GreaterThan_k): {
+				res = greaterThan(operator->leftVar, operator->rightVar);
+			} break;
+
+			case (LessThan_k): {
+				res = lessThan(operator->leftVar, operator->rightVar);
+			} break;
+
+			case (EqualTo_k): {
+				res = equalTo(operator->leftVar, operator->rightVar);
+			} break;
 		}
 
 		results[i] = res;
@@ -335,6 +367,8 @@ struct VarScope* createVarScope(struct Var* var){
 	
 	struct VarScope* varScope = (struct VarScope*)malloc(sizeof(struct VarScope));
 
+	varScope->isTrue = 0;
+
 	varScope->numberOfVars = varParam->inputCount+1; // add 1 for return value;
 	varScope->vars = (struct Var**)malloc(varScope->numberOfVars*sizeof(struct Var*));
 
@@ -354,15 +388,20 @@ struct Var* callFunction(struct Var* var, struct State* state){
 	freeVarScope(state->localScope);
 
 	state->localScope = function->varScope;
+	int returned = 0;
 
 	for (int i = 0; i < function->lines->length; i++){
 		int code = interpretLine(state, function->lines->lines[i].value, function->lines->lines[i].length);
 		if (code){
+			returned = 1;
 			break;
 		}
 	}
 
-	return copyVar(getVarFromScope(function->varScope, "return"));
+	struct Var* returnValue = getVarFromScope(function->varScope, "return");
+	returnValue->returned = returned;
+
+	return copyVar(returnValue);
 }
 
 struct Function* getFunction(struct Var* var, struct State* state, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index){
@@ -380,6 +419,7 @@ struct Function* getFunction(struct Var* var, struct State* state, struct KeyPos
 	return function;
 }
 
+
 struct State* copyState(struct State* state){
 	struct State* newState = (struct State*)malloc(sizeof(struct State));
 	newState->keyChars = state->keyChars;
@@ -387,6 +427,11 @@ struct State* copyState(struct State* state){
 	newState->routes = state->routes;
 	newState->files = state->files;
 	newState->globalScope = state->globalScope;
+	newState->fileExtension = state->fileExtension;
+
+	newState->inheritedVarscopes = copyInheritedVarscope(state->inheritedVarscopes);
+
+	newState->useInheritence = state->useInheritence;
 	newState->localScope = copyVarScope(state->localScope);
 
 	return newState;

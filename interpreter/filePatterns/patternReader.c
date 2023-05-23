@@ -6,9 +6,11 @@ unsigned long int findNext(char*data, unsigned long int end, char*key, unsigned 
 	for (unsigned long int i = 0; i < end - keyLength; i++){
 		int match = 1;
 		for (int j = 0; j < keyLength; j++){
+			//wprintf(L"compairing %lc with %lc\n", data[i+j], key[j]);
 			if (data[i+j] != key[j]){
 				match = 0;
 			}
+			//if (match) wprintf(L"they were equal\n");
 		}
 		if (match){
 			return i;

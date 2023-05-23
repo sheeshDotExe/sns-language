@@ -34,7 +34,7 @@ int isValidRoute(struct Path* path, struct Route* route){
 
 	struct Path* serverPath = route->path;
 
-	if (path->folderCount != serverPath->folderCount) return 0;
+	if (!route->isStatic && path->folderCount != serverPath->folderCount) return 0;
 
 	unsigned int currentVarIndex = 0;
 
@@ -43,6 +43,8 @@ int isValidRoute(struct Path* path, struct Route* route){
 			if (strcmp(path->folders[i], serverPath->folders[i])) return 0;
 		}
 		else if (serverPath->varCount && serverPath->varIndexes[currentVarIndex] == i){
+			if (route->isStatic) continue; // var type doesn't matter for static files
+
 			struct Var* pathVar = serverPath->pathVars[currentVarIndex];
 
 			struct Var* otherVar = generateVarFromString(path->folders[i], strlen(path->folders[i]));
@@ -105,7 +107,9 @@ struct Var* parseRoute(struct State* state, struct Route* route, struct HttpRequ
 			struct Param* param = route->function->param;
 			struct Var* paramVar = param->inputVars[currentVarIndex];
 
-			struct Var* otherVar = generateVarFromString(path->folders[i], strlen(path->folders[i]));
+			struct Var* otherVar = NULL;
+			if (!route->isStatic) otherVar = generateVarFromString(path->folders[i], strlen(path->folders[i]));
+			else otherVar = generateVarFromString(request->path, strlen(request->path));
 
 			assignValue(paramVar, otherVar);
 
@@ -131,6 +135,14 @@ struct Var* parseRoute(struct State* state, struct Route* route, struct HttpRequ
 	return returnValue;
 }
 
+char* getValidContentType(char* extension){
+	if (!strcmp(extension, ".html")) return "text/html";
+	if (!strcmp(extension, ".css")) return "text/css";
+	if (!strcmp(extension, ".js")) return "application/javascript";
+
+	return "text";
+}
+
 char* parseRequest(struct State* state, struct HttpRequest* request){
 
 	if (request->method == INVALID_METHOD){
@@ -147,18 +159,23 @@ char* parseRequest(struct State* state, struct HttpRequest* request){
 	struct String* responseString = (struct String*)(getType(String_c, returnValue)->type);
 	char* response = responseString->cString;
 
-	char* ok = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length:";
+	char* ok = "HTTP/1.1 200 OK\r\nContent-Type: ";
+	char* contentLength = "\r\nContent-Length:";
+
+	char* contentType = getValidContentType(state->fileExtension[0]);
 
 	char* length = (char*)malloc(100);
 	itoa(strlen(response), length, 10);
 
-	int responseLength = strlen(response) + strlen(ok) + strlen(length) + 4 + 1;
+	int responseLength = strlen(response) + strlen(ok) + strlen(contentLength) + strlen(length) + strlen(contentType) + 4 + 1;
 
-	char* httpResponse = (char*)malloc(responseLength);
+	char* httpResponse = (char*)malloc(responseLength*sizeof(char));
 
 	strcpy(httpResponse, ok);
+	strcat(httpResponse, contentType);
+	strcat(httpResponse, contentLength);
 	strcat(httpResponse, length);
-	strcat(httpResponse, (char*)"\r\n\r\n");
+	strcat(httpResponse, "\r\n\r\n");
 	strcat(httpResponse, response);
 	httpResponse[responseLength-1] = '\0';
 
@@ -180,7 +197,7 @@ struct Path* generatePath(char* rawPath, unsigned int length){
 	for (int i = 0; i < splitPath->length-1; i++){
 		unsigned int size = splitPath->nextPath[i+1] - splitPath->nextPath[i];
 		path->folders[i] = (char*)malloc((size) * sizeof(char));
-		memcpy(path->folders[i], rawPath + splitPath->nextPath[i] + 1, size - 1);
+		memcpy(path->folders[i], rawPath + splitPath->nextPath[i] + 1, (size - 1)*sizeof(char));
 		path->folders[i][size - 1] = '\0';
 	}
 

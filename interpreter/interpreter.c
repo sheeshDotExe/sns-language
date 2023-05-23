@@ -27,6 +27,13 @@ int interpret(FILE *file)
 	state->files->files = (struct UserFile**)malloc(0);
 	state->files->numberOfFiles = 0;
 
+	state->inheritedVarscopes = (struct InheritedVarscopes*)malloc(sizeof(struct InheritedVarscopes));
+	state->inheritedVarscopes->numberOfScopes = 0;
+	state->useInheritence = 0;
+
+	state->fileExtension = (char**)malloc(sizeof(char*));
+	state->fileExtension[0] = strdup("\0");
+
 	struct Body* body = interpretBody(state, data, headerOptions.headerEnd, data.length);
 
 	if (!body->hasMain) {

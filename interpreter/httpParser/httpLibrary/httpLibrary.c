@@ -106,7 +106,7 @@ struct RequestLines* getRequestLines(char* request, unsigned int length, char ke
 
 	int lastIndex = 0;
 	for (int i = 0; i < numberOfLines; i++){
-		requestLines->lines[i] = (char*)malloc((lineLoc[i] - lastIndex)+1);
+		requestLines->lines[i] = (char*)malloc(((lineLoc[i] - lastIndex)+1)*sizeof(char));
 		int z = 0;
 		for (int j = lastIndex; j < lineLoc[i]; j++){
 			requestLines->lines[i][z] = request[j];
@@ -178,21 +178,25 @@ struct HttpRequest* parseRequestFields(char* request, unsigned int length){
 	return httpRequest;
 }
 
+
 struct HttpRequest* recive(struct Socket* client){
 
-	char* buf = (char*)malloc(MAX_PACKET_SIZE);
+	unsigned char* buf = (unsigned char*)malloc(MAX_PACKET_SIZE*sizeof(unsigned char));
 	int read = 1;
 	int total = 0;
 
 	while (read > 0){
-		read = recv(client->id, buf + total, MAX_PACKET_SIZE - total, 0);
+		read = recv(client->id, buf + total, (MAX_PACKET_SIZE - total)*sizeof(unsigned char), 0);
 		if (read > 0){
 			total += read;
 		}
 	}
 
+	buf[total] = '\0';
+
 	char* message = (char*)malloc((total+1)*sizeof(char));
-	if (total) memcpy(message, buf, total);
+
+	if (total) memcpy(message, buf, total*sizeof(char));
 	message[total] = '\0';
 
 	struct HttpRequest* httpRequest = parseRequestFields(message, total);
@@ -204,11 +208,13 @@ struct HttpRequest* recive(struct Socket* client){
 }
 
 void sendData(struct Socket* client, char* response){
+
 	send(client->id, response, strlen(response), 0);
 }
 
 char* getClientIP(struct Socket* client){
-	return inet_ntoa(client->addr->sin_addr);
+	char* ip = inet_ntoa(client->addr->sin_addr);
+	return ip;
 }
 
 void freeSocket(struct Socket* sock){

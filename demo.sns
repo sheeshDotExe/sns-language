@@ -11,18 +11,29 @@ JS_PATH          ("/static/javascript")
 
 ***
 
-add: function[first: float ? int ? string, second: float ? int ? string, float ? int ? string] -> {
+add: function [first: float ? int ? string, second: float ? int ? string, float ? int ? string] -> {
 	return first + second
 }
 
-main: function[int] -> {
-	route("/") -> {
-		return html("./homepage.html");
+main: function [int] -> {
+	route_static("/public/{path: string}") -> {
+		return html("./" + path);
 	}
 
-	route("/api/{test: string ? int}") -> {
+	route("/api/{test: int ? string}") -> {
 
-		test2: int ? string = 3
+		test2: int ? string = 0
+
+		if (test < 20) -> {
+			test2 = test2 + 5
+			if (test < 10) -> {
+				test2 = test2 + 5
+				return 2
+			}
+		}
+		else() -> {
+			return 200
+		}
 
 		variable: string = "Welcome to my test website " + add(test2, test)
 		return variable
@@ -31,7 +42,7 @@ main: function[int] -> {
 	return 0
 }
 
-HomePage: function[string] -> {
+HomePage: function [string] -> {
 	route("/") -> {
 		return html("./index.html")
 	}

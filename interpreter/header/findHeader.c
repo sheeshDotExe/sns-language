@@ -111,7 +111,7 @@ void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtla
 			keyword[i] = command[i];
 		}
 
-		keyword[keywordEnd]='\0';
+		keyword[keywordEnd]= '\0';
 
 		unsigned long int argumentStart = findNextChar(command, "(", length, 1);
 		unsigned long int agrumentEnd = findNextChar(command, ")", length, 1);
@@ -134,7 +134,7 @@ void setDefaultHeaderOptions(struct HeaderOptions* headerOptions){
 
 	headerOptions->tcpOptions.localHost = 1; // use localhost by default
 	headerOptions->tcpOptions.hostAddress = (char*)malloc(10*sizeof(char));
-	memcpy(headerOptions->tcpOptions.hostAddress, (char*)"127.0.0.1", 10); // copy nullterminator
+	memcpy(headerOptions->tcpOptions.hostAddress, "127.0.0.1", 10*sizeof(char)); // copy nullterminator
 	headerOptions->tcpOptions.port = 8080;
 	headerOptions->tcpOptions.releaseMode = 0;
 	headerOptions->tcpOptions.connectionQueue = 10;

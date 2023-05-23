@@ -1,10 +1,17 @@
 #ifndef HTTP_LIBRARY
 #define HTTP_LIBRARY
 
+#ifdef __unix__
+#include <sys/socket.h>
+
+#else
 #include <winsock2.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
+#endif
+
+#include <wchar.h>
 
 #include "../../header/findHeader.h"
 #include "../../types/types.h"

@@ -20,7 +20,7 @@ struct File readFile(FILE*fileHandle){
 
 	fseek(fileHandle, 0, SEEK_SET);
 
-	unsigned char*fileData = (unsigned char*)malloc(length*sizeof(unsigned char));
+	unsigned char* fileData = (unsigned char*)malloc((length+1)*sizeof(unsigned char));
 
 	long unsigned int readBytes = 0;
 

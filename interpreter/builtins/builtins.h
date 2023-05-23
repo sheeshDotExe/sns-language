@@ -5,6 +5,9 @@
 #include "../body/functionLogic/functionLogic.h"
 #include "../body/bodyTypes.h"
 #include "../fileReader/fileReader.h"
+#include "./route/route.h"
+#include "./html/html.h"
+#include "./if/if.h"
 
 /*
 Routing
@@ -14,6 +17,7 @@ Routing
 struct Route {
 	struct Var* function;
 	struct Path* path;
+	int isStatic;
 };
 
 struct Path {
@@ -36,8 +40,6 @@ struct VarLoc {
 	unsigned int exist;
 };
 
-struct Path * interpretPath(struct State* state, char* path, unsigned int length);
-
 // ---------------
 
 // file loading
@@ -51,7 +53,7 @@ struct UserFile{
 // -----------------
 
 struct BuiltinFunction{
-	char * name;
+	char* name;
 	unsigned int nameLength;
 	struct Param* params;
 	struct Param* originalParams;	
@@ -67,7 +69,4 @@ void addBuiltin(struct Builtins* builtins, unsigned int index, char* name, unsig
 struct Builtins* createBuiltins();
 int isBuiltin(struct Builtins* builtins, char* name);
 struct BuiltinFunction* getBuiltin(struct Builtins* builtins, int index);
-
-void addRoute(struct State* state, struct Var* function, struct Path* path);
-struct SplitPath* getSplitPath(char* path, unsigned int length);
 #endif

@@ -62,8 +62,9 @@ struct DefinitionLines* getLines(char* mem, unsigned long int start, unsigned lo
 		if (length){
 			lines->lines[lineCount].length = length + 2;
 			lines->lines[lineCount].value = (char*)malloc((length+2)*sizeof(char));
-			memcpy(lines->lines[lineCount].value, mem + newStart-length, length+1);
+			memcpy(lines->lines[lineCount].value, mem + newStart-length, (length+1)*sizeof(char));
 			lines->lines[lineCount].value[length+1] = '\0';
+			//printf("line: %ls\n", lines->lines[lineCount].value);
 			lineCount++;
 		}
 		newStart++;
@@ -117,7 +118,6 @@ struct KeyPos* getNextKey(struct KeyChars keyChars, char* line, unsigned int len
 			hasSpace = 1;
 			foundAt = index;
 			stopAt = getNextChar(line, length, index);
-			//printf("space: %d\n", index);
 		}
 
 		if (hasFunction){
@@ -144,11 +144,10 @@ struct KeyPos* getNextKey(struct KeyChars keyChars, char* line, unsigned int len
 			if (isValid && !isString) {
 				keyPos->pos = index;
 				unsigned int nextStart = getNextChar(line, length, index + (key->length-1));
-				//printf("key found: %d\n", nextStart);
 				keyPos->endPos = nextStart;
 				keyPos->key = key->key;
 				keyPos->name = (char*)malloc((strlen(key->name)+1)*sizeof(char));
-				memcpy(keyPos->name, key->name, strlen(key->name)+1);
+				memcpy(keyPos->name, key->name, (strlen(key->name)+1)*sizeof(char));
 				return keyPos;
 			}
 		}
@@ -243,7 +242,7 @@ int typeFromString(char* value, unsigned int length){
 	} else if (!strcmp(value, "bool")){
 		return Int_c;
 	}
-	printf("no type named %s\n", value);
+	printf("no type named %ls\n", value);
 	raiseError("", 1);
 	return -1;
 }
@@ -354,6 +353,7 @@ int interpretKeyWord(struct State* state, struct KeyPos** keyPosition, struct Ke
 		struct Var* value = evaluateExpression(state, keyPosition, keyWords, stop, index+1);
 		struct Var* returnValue = getVarFromScope(state->localScope, "return");
 		assignValue(returnValue, value);
+		returnValue->returned = 1;
 		freeVar(value);
 		free(value);
 		return Return_s;
@@ -433,6 +433,8 @@ struct KeyWord** getKeyWords(unsigned int keysCount, struct KeyPos** keyPosition
 
 int interpretLine(struct State* state, char* line, unsigned int length){
 
+	//printf("Line: %ls\n", line);
+
 	unsigned int keysCount = getKeysCount(state, line, length, 0);
 	
 	struct KeyPos** keyPositions = getKeyPositions(keysCount, state, line, length, 0);
@@ -479,7 +481,13 @@ int interpretLine(struct State* state, char* line, unsigned int length){
 					//printf("assign %s\n", keyWord->value);
 				} else {
 					//get var from scope
-					struct Var* leftVar = getVarFromScopes(state->localScope, state->globalScope, keyWord->value);
+					struct Var* leftVar = NULL;
+					if (state->useInheritence){
+						leftVar = getVarFromInheritedScopes(state->inheritedVarscopes, keyWord->value);
+					}
+					if (leftVar == NULL){
+						leftVar = getVarFromScopes(state->localScope, state->globalScope, keyWord->value);
+					}
 					assignValue(leftVar, value);
 				}
 
@@ -495,6 +503,41 @@ int interpretLine(struct State* state, char* line, unsigned int length){
 					struct Function* function = getFunction(newVarP, state, keyPositions, keyWords, keysCount, i);
 					newVarP->function = function;
 					newVarP->hasFunction = 1;
+
+					if (newVarP->isBuiltin && newVarP->shouldExecute == 1){
+						state->localScope->isTrue = 1;
+					}
+
+					if (newVarP->isBuiltin && (newVarP->shouldExecute == 1 || newVarP->shouldExecute == 2 && !state->localScope->isTrue)){
+						newVarP->function->varScope = createVarScope(newVarP);
+						struct State* copiedState = copyState(state);
+
+						if (newVarP->inheritScopes){
+							addVarScope(copiedState->inheritedVarscopes, state->localScope);
+							copiedState->useInheritence = 1; // share localscope(s) for if/for/while
+						}
+
+						struct Var* returnValue = callFunction(newVarP, copiedState);
+
+						freeParam(newVarP->param);
+						newVarP->param = copyParam(newVarP->originalParam);
+
+						free(copiedState);
+						freeVarScope(newVarP->function->varScope);
+
+						if (returnValue->returned && newVarP->inheritScopes){
+							struct Var* currentReturnValue = getVarFromScope(state->localScope, "return");
+							assignValue(currentReturnValue, returnValue);
+							returnValue->returned = 1;
+							return 1;
+						}
+
+						freeVar(returnValue);
+						free(returnValue);
+					}
+					else if (newVarP->isBuiltin) {
+						state->localScope->isTrue = 0;
+					}
 				}
 			} break;
 
@@ -510,16 +553,28 @@ int interpretLine(struct State* state, char* line, unsigned int length){
 					freeParam(function->params);
 					function->params = copyParam(function->originalParams);
 
-					if (!strcmp(function->name, "route")){
+					if (returnValue->assignable){
 						newVar = 1;
 						newVarP = returnValue;
 					}
 					break;
 				}
-				struct Var* var = getVarFromScopes(state->localScope, state->globalScope, keyWord->value);
+				struct Var* var = NULL;
+				if (state->useInheritence){
+					var = getVarFromInheritedScopes(state->inheritedVarscopes, keyWord->value);
+				}
+				if (var == NULL){
+					var = getVarFromScopes(state->localScope, state->globalScope, keyWord->value);
+				}
 				getSetParams(var->param, state, keyPositions, keyWords, keysCount, i);
 				var->function->varScope = createVarScope(var);
 				struct State* copiedState = copyState(state);
+
+				if (newVarP->inheritScopes){
+					addVarScope(copiedState->inheritedVarscopes, state->localScope);
+					copiedState->useInheritence = 1; // share localscope(s) for if/for/while
+				}
+
 				struct Var* returnValue = callFunction(var, copiedState);
 
 				freeParam(var->param);
@@ -559,6 +614,7 @@ struct Body* interpretBody(struct State* state, struct File file, unsigned long 
 
 	body->globalScope.hasCurrentVar = 0;
 	body->globalScope.numberOfVars = 0;
+	body->globalScope.isTrue = 0;
 	body->globalScope.vars = (struct Var**)malloc(sizeof(struct Var*));
 
 	struct DefinitionLines* lines = getLines(file.mem, start, end);
