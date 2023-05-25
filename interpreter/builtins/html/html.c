@@ -15,7 +15,7 @@ void addUserFile(struct State* state, struct UserFile* userFile){
 }
 
 struct UserFile* createUserFile(struct State* state, char* path){
-
+	
 	FILE* fileH = fopen(path, "r");
 	if (fileH == NULL){
 		printf("found no file: %s\n", path);

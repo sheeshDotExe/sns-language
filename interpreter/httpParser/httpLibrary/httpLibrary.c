@@ -208,7 +208,6 @@ struct HttpRequest* recive(struct Socket* client){
 }
 
 void sendData(struct Socket* client, char* response){
-
 	send(client->id, response, strlen(response), 0);
 }
 

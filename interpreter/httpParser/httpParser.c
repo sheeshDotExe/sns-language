@@ -140,7 +140,7 @@ char* getValidContentType(char* extension){
 	if (!strcmp(extension, ".css")) return "text/css";
 	if (!strcmp(extension, ".js")) return "application/javascript";
 
-	return "text";
+	return "text/plain";
 }
 
 char* parseRequest(struct State* state, struct HttpRequest* request){
@@ -160,7 +160,7 @@ char* parseRequest(struct State* state, struct HttpRequest* request){
 	char* response = responseString->cString;
 
 	char* ok = "HTTP/1.1 200 OK\r\nContent-Type: ";
-	char* contentLength = "\r\nContent-Length:";
+	char* contentLength = ";charset=utf-8\r\nContent-Length:";
 
 	char* contentType = getValidContentType(state->fileExtension[0]);
 
@@ -183,6 +183,8 @@ char* parseRequest(struct State* state, struct HttpRequest* request){
 	free(pathInfo);
 	freeVar(returnValue);
 	free(returnValue);
+
+	//httpResponse = "HTTP/1.1 200 OK\r\nContent-Type: text/plain;charset=utf-8\r\nContent-Length:15\r\n\r\nunicode: ååå";
 
 	return httpResponse;
 }

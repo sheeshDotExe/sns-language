@@ -15,6 +15,8 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	printf("test: %d", strlen("ååå"));
+
 	//char* path = argv[1];
 
 	FILE* file = getFile("./demo.sns");
