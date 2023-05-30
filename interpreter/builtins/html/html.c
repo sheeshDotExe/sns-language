@@ -15,7 +15,9 @@ void addUserFile(struct State* state, struct UserFile* userFile){
 }
 
 struct UserFile* createUserFile(struct State* state, char* path){
-	
+		
+	//wchar_t* unicodePath = utf8ToUtf16(path); "C:\\Users\\Viktor\\Documents\\cpp\\sns-language\\public\\ååå.txt"
+
 	FILE* fileH = fopen(path, "r");
 	if (fileH == NULL){
 		printf("found no file: %s\n", path);
@@ -59,6 +61,61 @@ char* safePath(char* path){
 	return newPath;
 }
 
+int validHex(char hex){
+	int hexVal = (int)hex;
+
+	return ((hexVal > 64 && hexVal < 71) || (hexVal > 47 && hexVal < 58));
+}
+
+int validateHexChar(char* hex){
+	for (int i = 0; i < strlen(hex); i++){
+		if (!validHex(hex[i])) return 0;
+	}
+	return 1;
+}
+
+char* urlEncodingToUtf8(char* url){
+	int numberOfSpecialChars = 0;
+
+	for (int i = 0; i < strlen(url); i++){
+		if (url[i] == '%') numberOfSpecialChars++;
+	}
+
+	if (numberOfSpecialChars*2 > strlen(url)) return strdup(url);
+
+	char* newUrl = (char*)malloc((strlen(url)-numberOfSpecialChars*2+1)*sizeof(char));
+
+	int newUrlIndex = 0;
+	for (int i = 0; i < strlen(url); i++){
+		if (url[i] != '%'){
+			newUrl[newUrlIndex] = url[i];
+		} else {
+			char* hexChar = (char*)malloc(3*sizeof(char));
+			memcpy(hexChar, url+i+1, 2*sizeof(char));
+			hexChar[2] = '\0';
+
+			if (!validateHexChar(hexChar)) {
+				free(newUrl);
+				free(hexChar);
+				printf("invalid hex\n");
+				return strdup(url);
+			}
+
+			int hexValue = (int)strtol(hexChar, NULL, 16);
+
+			newUrl[newUrlIndex] = (char)hexValue;
+
+			free(hexChar);
+
+			i+=2;
+		}
+		newUrlIndex++;
+	}
+	newUrl[newUrlIndex] = '\0';
+
+	return newUrl;
+}
+
 char* getExtension(char* path){
 	for (int i = strlen(path); i > 0; i--){
 		if (path[i] == '.'){
@@ -72,7 +129,10 @@ struct Var *html(struct Param *params, struct State *state){
 	struct String* string = (struct String*)(getType(String_c, rawPath)->type);
 	char* path = string->cString;
 
-	char* relPath = safePath(path);
+	char* utf8Url = urlEncodingToUtf8(path);
+
+	char* relPath = safePath(utf8Url);
+
 	char* fullPath = _fullpath(NULL, relPath, 0);
 
 	free(state->fileExtension[0]);
@@ -88,6 +148,7 @@ struct Var *html(struct Param *params, struct State *state){
 
 	addUserFile(state, file);
 
+	free(utf8Url);
 	free(relPath);
 	free(fullPath);
 

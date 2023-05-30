@@ -9,7 +9,7 @@ int interpret(FILE *file)
 
 	printf("compiling...\n");
 
-	struct HeaderOptions headerOptions = getHeaderOptions(data);
+	struct HeaderOptions* headerOptions = getHeaderOptions(data);
 
 	struct KeyChars keyChars = createKeyChars();
 
@@ -34,7 +34,7 @@ int interpret(FILE *file)
 	state->fileExtension = (char**)malloc(sizeof(char*));
 	state->fileExtension[0] = strdup("\0");
 
-	struct Body* body = interpretBody(state, data, headerOptions.headerEnd, data.length);
+	struct Body* body = interpretBody(state, data, headerOptions->headerEnd, data.length);
 
 	if (!body->hasMain) {
 		raiseError("No entry point found (missing main function)", 1);
@@ -52,7 +52,7 @@ int interpret(FILE *file)
 
 	printf("body compiled...\n");
 
-	startHTTPServer(state, &headerOptions, &body);
+	startHTTPServer(state, headerOptions, &body);
 
 	printf("server started...\n");
 

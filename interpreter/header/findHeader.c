@@ -132,28 +132,32 @@ void setDefaultHeaderOptions(struct HeaderOptions* headerOptions){
 	headerOptions->headerEnd = 0;
 	headerOptions->formattedFiles = 0;
 
-	headerOptions->tcpOptions.localHost = 1; // use localhost by default
-	headerOptions->tcpOptions.hostAddress = (char*)malloc(10*sizeof(char));
-	memcpy(headerOptions->tcpOptions.hostAddress, "127.0.0.1", 10*sizeof(char)); // copy nullterminator
-	headerOptions->tcpOptions.port = 8080;
-	headerOptions->tcpOptions.releaseMode = 0;
-	headerOptions->tcpOptions.connectionQueue = 10;
-	headerOptions->tcpOptions.connectionTimeoutWait = 5000;
+	headerOptions->tcpOptions = (struct TcpOptions*)malloc(sizeof(struct TcpOptions));
 
-	headerOptions->tcpOptions.sslOptions.forceSSL = 0;
-	headerOptions->tcpOptions.sslOptions.useSSL = 0;
-	headerOptions->tcpOptions.sslOptions.hasCertificate = 0;
+	headerOptions->tcpOptions->localHost = 1; // use localhost by default
+	headerOptions->tcpOptions->hostAddress = (char*)malloc(10*sizeof(char));
+	memcpy(headerOptions->tcpOptions->hostAddress, "127.0.0.1", 10*sizeof(char)); // copy nullterminator
+	headerOptions->tcpOptions->port = 8080;
+	headerOptions->tcpOptions->releaseMode = 0;
+	headerOptions->tcpOptions->connectionQueue = 10;
+	headerOptions->tcpOptions->connectionTimeoutWait = 5000;
+
+	headerOptions->tcpOptions->sslOptions = (struct SSLOptions*)malloc(sizeof(struct SSLOptions));
+
+	headerOptions->tcpOptions->sslOptions->forceSSL = 0;
+	headerOptions->tcpOptions->sslOptions->useSSL = 0;
+	headerOptions->tcpOptions->sslOptions->hasCertificate = 0;
 }
 
-struct HeaderOptions getHeaderOptions(struct File file){
-	struct HeaderOptions headerOptions;
+struct HeaderOptions* getHeaderOptions(struct File file){
+	struct HeaderOptions* headerOptions = (struct HeaderOptions*)malloc(sizeof(struct HeaderOptions));
 
-	setDefaultHeaderOptions(&headerOptions);
+	setDefaultHeaderOptions(headerOptions);
 
 	struct PatternRange headerLocation = getPatternByKey(file, 0, "***");
 
-	headerOptions.headerStart = headerLocation.start;
-	headerOptions.headerEnd = headerLocation.end;
+	headerOptions->headerStart = headerLocation.start;
+	headerOptions->headerEnd = headerLocation.end;
 
 	struct HeaderLines headerLines = readHeaderData(file, headerLocation.start + 3, headerLocation.end - 3);
 
@@ -161,7 +165,7 @@ struct HeaderOptions getHeaderOptions(struct File file){
 
 	for (int i = 0; i < headerLines.numberOfLines; i++){
 		unsigned int length = strlen(headerLines.lines[i]);
-		interpreteHeaderLine(&headerOptions, &headerAtlas, headerLines.lines[i], length);
+		interpreteHeaderLine(headerOptions, &headerAtlas, headerLines.lines[i], length);
 
 		free(headerLines.lines[i]);
 	}

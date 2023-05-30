@@ -9,6 +9,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
+#include <openssl/bio.h>
 #endif
 
 #include <wchar.h>
@@ -37,27 +38,36 @@ struct RequestLines {
 };
 
 #define MAX_PACKET_SIZE 65535
-#define CERT_FILE "server.crt"
-#define KEY_FILE "server.key"
+#define CERT_FILE "certificate/certificate.crt"
+#define KEY_FILE "certificate/private.key"
 
 struct HttpRequest {
 	int method;
 	char* path;
 };
 
-struct Socket {
+struct Server {
 	SOCKET id;
 	struct sockaddr_in* addr;
 	int maxQueue;
 	int valid;
+	SSL_CTX* serverCtx;
+};
+
+struct Client {
+	SOCKET id;
+	struct sockaddr_in* addr;
+	int maxQueue;
+	int valid;
+	SSL* ssl;
 };
 
 int initWinsock();
-struct Socket* createServer(struct HeaderOptions* headerOptions);
-struct Socket* getClient(struct Socket* server);
-void freeSocket(struct Socket* sock);
-char* getClientIP(struct Socket* client);
-struct HttpRequest* recive(struct Socket* client);
-void sendData(struct Socket* client, char* response);
+struct Server* createServer(struct HeaderOptions* headerOptions);
+struct Client* getClient(struct Server* server);
+void freeSocket(struct Client* sock);
+char* getClientIP(struct Client* client);
+struct HttpRequest* recive(struct Client* client);
+void sendData(struct Client* client, char* response);
 
 #endif

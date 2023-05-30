@@ -10,20 +10,41 @@ int initWinsock(){
 		return 1;
 	}
 
-	//SSL_library_init();
+	SSL_library_init();
 
 	return 0;
 }
 
-struct Socket* createServer(struct HeaderOptions* headerOptions){
-	struct Socket* socket_s = (struct Socket*)malloc(sizeof(struct Socket));
+SSL_CTX* createServerContext(){
+	SSL_CTX* ctx;
+	SSL_METHOD* method;
 
-	//SSL_CTX *ctx;
-    //SSL *ssl;
+	OpenSSL_add_all_algorithms();
+	SSL_load_error_strings();
+	method = SSLv23_server_method();
+	ctx = SSL_CTX_new(method);
 
-    //ctx = SSL_CTX_new(SSLv23_server_method());
-    //SSL_CTX_use_certificate_file(ctx, CERT_FILE, SSL_FILETYPE_PEM);
-    //SSL_CTX_use_PrivateKey_file(ctx, KEY_FILE, SSL_FILETYPE_PEM);
+	if (ctx == NULL){
+		raiseError("Failed to create context\n", 1);
+	}
+
+	return ctx;
+}
+
+struct Server* createServer(struct HeaderOptions* headerOptions){
+	struct Server* socket_s = (struct Server*)malloc(sizeof(struct Server));
+
+	SSL_CTX *ctx;
+
+    ctx = createServerContext();
+    SSL_CTX_use_certificate_file(ctx, headerOptions->tcpOptions->sslOptions->sslCertificate, SSL_FILETYPE_PEM);
+    SSL_CTX_use_PrivateKey_file(ctx, headerOptions->tcpOptions->sslOptions->keyPath, SSL_FILETYPE_PEM);
+
+    if (!SSL_CTX_check_private_key(ctx)){
+    	raiseError("Private key doesn't match public certificate\n", 1);
+    }
+
+    socket_s->serverCtx = ctx;
 
     printf("context created\n");
 
@@ -38,16 +59,16 @@ struct Socket* createServer(struct HeaderOptions* headerOptions){
 	setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(unsigned int));
 
 	struct sockaddr_in* server = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
-	if (!headerOptions->tcpOptions.localHost){
+	if (!headerOptions->tcpOptions->localHost){
 		server->sin_addr.s_addr = INADDR_ANY;
 	} else {
-		server->sin_addr.s_addr = inet_addr(headerOptions->tcpOptions.hostAddress);
+		server->sin_addr.s_addr = inet_addr(headerOptions->tcpOptions->hostAddress);
 	}
 	server->sin_family = AF_INET;
-	server->sin_port = htons(headerOptions->tcpOptions.port);
+	server->sin_port = htons(headerOptions->tcpOptions->port);
 
 	socket_s->id = s;
-	socket_s->maxQueue = headerOptions->tcpOptions.connectionQueue;
+	socket_s->maxQueue = headerOptions->tcpOptions->connectionQueue;
 	socket_s->addr = server;
 
 	if( bind(s ,(struct sockaddr *)server , sizeof(struct sockaddr_in)) == SOCKET_ERROR)
@@ -57,13 +78,13 @@ struct Socket* createServer(struct HeaderOptions* headerOptions){
 
 	listen(s, socket_s->maxQueue);
 
-	printf("listening on port %d\n", headerOptions->tcpOptions.port);
+	printf("listening on port %d\n", headerOptions->tcpOptions->port);
 
 	return socket_s;
 }
 
-struct Socket* getClient(struct Socket* server){
-	struct Socket* client = (struct Socket*)malloc(sizeof(struct Socket));
+struct Client* getClient(struct Server* server){
+	struct Client* client = (struct Client*)malloc(sizeof(struct Client));
 	struct sockaddr_in* addr = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
 
 	int size = sizeof(struct sockaddr_in);
@@ -77,6 +98,19 @@ struct Socket* getClient(struct Socket* server){
 		client->valid = 0;
 		return client;
 	}
+
+
+	client->ssl = SSL_new(server->serverCtx);
+
+	BIO* bio = BIO_new_socket(client->id, BIO_NOCLOSE);
+	SSL_set_bio(client->ssl, bio, bio);
+
+	//SSL_set_fd(client->ssl, client->id);
+	if (SSL_accept(client->ssl) == -1){
+		ERR_print_errors_fp(stderr);
+		return NULL;
+	}
+
 	client->maxQueue = 0;
 	client->valid = 1;
 
@@ -179,14 +213,15 @@ struct HttpRequest* parseRequestFields(char* request, unsigned int length){
 }
 
 
-struct HttpRequest* recive(struct Socket* client){
+struct HttpRequest* recive(struct Client* client){
 
 	unsigned char* buf = (unsigned char*)malloc(MAX_PACKET_SIZE*sizeof(unsigned char));
 	int read = 1;
 	int total = 0;
 
 	while (read > 0){
-		read = recv(client->id, buf + total, (MAX_PACKET_SIZE - total)*sizeof(unsigned char), 0);
+		//read = recv(client->id, buf + total, (MAX_PACKET_SIZE - total)*sizeof(unsigned char), 0);
+		read = SSL_read(client->ssl, buf + total, (MAX_PACKET_SIZE - total)*sizeof(unsigned char));
 		if (read > 0){
 			total += read;
 		}
@@ -207,16 +242,18 @@ struct HttpRequest* recive(struct Socket* client){
 	return httpRequest;
 }
 
-void sendData(struct Socket* client, char* response){
-	send(client->id, response, strlen(response), 0);
+void sendData(struct Client* client, char* response){
+	//send(client->id, response, strlen(response), 0);
+	SSL_write(client->ssl, response, strlen(response));
 }
 
-char* getClientIP(struct Socket* client){
+char* getClientIP(struct Client* client){
 	char* ip = inet_ntoa(client->addr->sin_addr);
 	return ip;
 }
 
-void freeSocket(struct Socket* sock){
+void freeSocket(struct Client* sock){
+	SSL_free(sock->ssl);
 	closesocket(sock->id);
 	free(sock->addr);
 	free(sock);

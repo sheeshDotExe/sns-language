@@ -5,11 +5,17 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 		raiseError("winsock init failed", 1);
 	}
 
-	struct Socket* server = createServer(headerOptions);
+	struct Server* server = createServer(headerOptions);
 	printf("server started\n");
 
 	while (1){
-		struct Socket* client = getClient(server);
+		struct Client* client = getClient(server);
+
+		if (client == NULL){
+			freeSocket(client);
+			continue;
+		}
+
 		if (client->valid){
 			printf("\n\nnew client %s\n", getClientIP(client));
 

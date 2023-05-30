@@ -6,6 +6,7 @@ struct SSLOptions{
 	int useSSL;
 	int hasCertificate;
 	char* sslCertificate;
+	char* keyPath;
 };
 
 struct TcpOptions{
@@ -16,7 +17,7 @@ struct TcpOptions{
 	unsigned long int connectionQueue;
 	float connectionTimeoutWait;
 
-	struct SSLOptions sslOptions;
+	struct SSLOptions* sslOptions;
 };
 
 struct resourcePath{
@@ -29,7 +30,7 @@ struct HeaderOptions{
 	long unsigned int headerEnd;
 	char* rawHeaderData;
 
-	struct TcpOptions tcpOptions;
+	struct TcpOptions* tcpOptions;
 	struct resourcePath staticFiles;
 	struct resourcePath* staticFormattedFiles;
 	unsigned int formattedFiles;

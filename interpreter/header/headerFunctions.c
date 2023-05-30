@@ -33,9 +33,9 @@ int _UseLocalHost(struct HeaderOptions* headerOptions, char*name, char**args, in
 		printf("invalid parameter\n");
 	}
 	else if (Bool){
-		headerOptions->tcpOptions.localHost = 1;
+		headerOptions->tcpOptions->localHost = 1;
 	} else {
-		headerOptions->tcpOptions.localHost = 0;
+		headerOptions->tcpOptions->localHost = 0;
 	}
 
 	return 0;
@@ -52,7 +52,7 @@ int _UsePort(struct HeaderOptions* headerOptions, char*name, char**args, int arg
 	}
 
 	int port = atoi(args[0]);
-	headerOptions->tcpOptions.port = port;
+	headerOptions->tcpOptions->port = port;
 	return 0;
 }
 
@@ -66,9 +66,9 @@ int _DebugMode(struct HeaderOptions* headerOptions, char*name, char**args, int a
 		printf("invalid parameter\n");
 	}
 	else if (Bool){
-		headerOptions->tcpOptions.releaseMode = 0;
+		headerOptions->tcpOptions->releaseMode = 0;
 	} else {
-		headerOptions->tcpOptions.releaseMode = 1;
+		headerOptions->tcpOptions->releaseMode = 1;
 	}
 
 	return 0;
@@ -84,29 +84,24 @@ int _ForceSSL(struct HeaderOptions* headerOptions, char*name, char**args, int ar
 		printf("invalid parameter\n");
 	}
 	else if (Bool){
-		headerOptions->tcpOptions.sslOptions.forceSSL = 1;
-		headerOptions->tcpOptions.sslOptions.useSSL = 1;
+		headerOptions->tcpOptions->sslOptions->forceSSL = 1;
+		headerOptions->tcpOptions->sslOptions->useSSL = 1;
 	} else {
-		headerOptions->tcpOptions.sslOptions.forceSSL = 0;
+		headerOptions->tcpOptions->sslOptions->forceSSL = 0;
 	}
 
 	return 0;
 }
 
 int _UseSSL(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
-	if (checkArgsCount(name, 1, argc)){
+	if (checkArgsCount(name, 2, argc)){
 		return 1;
 	}
 
-	int Bool = stringToBool(args[0]);
-	if (Bool == -1){
-		printf("invalid parameter\n");
-	}
-	else if (Bool){
-		headerOptions->tcpOptions.sslOptions.useSSL = 1;
-	} else {
-		headerOptions->tcpOptions.sslOptions.useSSL = 0;
-	}
+	headerOptions->tcpOptions->sslOptions->useSSL = 1;
+
+	headerOptions->tcpOptions->sslOptions->sslCertificate = strdup(args[0]);
+	headerOptions->tcpOptions->sslOptions->keyPath = strdup(args[1]);
 
 	return 0;
 }
@@ -122,7 +117,7 @@ int _MaxConnections(struct HeaderOptions* headerOptions, char*name, char**args, 
 	}
 
 	int connections = atoi(args[0]);
-	headerOptions->tcpOptions.connectionQueue = connections;
+	headerOptions->tcpOptions->connectionQueue = connections;
 
 	return 0;
 }

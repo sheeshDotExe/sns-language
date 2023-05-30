@@ -22,6 +22,6 @@ struct Arguments {
 void setDefaultHeaderOptions(struct HeaderOptions* headerOptions);
 void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtlas* headerAtlas, char*command, unsigned int length);
 struct HeaderLines readHeaderData(struct File file, unsigned long int start, unsigned long int end);
-struct HeaderOptions getHeaderOptions(struct File file);
+struct HeaderOptions* getHeaderOptions(struct File file);
 
 #endif

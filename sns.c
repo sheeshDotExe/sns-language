@@ -15,7 +15,10 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	printf("test: %d", strlen("ååå"));
+
+	setlocale(LC_ALL, ".UTF8");
+
+	printf("test: ååå %d", strlen("ååå"));
 
 	//char* path = argv[1];
 

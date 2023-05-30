@@ -3,7 +3,7 @@ USE_LOCAL_HOST   (True)
 USE_PORT         (8080)
 DEBUG_MODE       (True)
 FORCE_SSL        (True)
-USE_SSL          (path_to_certificate)
+USE_SSL          (certificate/certificate.crt, certificate/private.key)
 
 MAX_CONNECTIONS  (10)
 HTML_PATH        ("/static/html")
