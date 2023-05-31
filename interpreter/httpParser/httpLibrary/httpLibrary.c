@@ -86,10 +86,21 @@ struct Server* createServer(struct HeaderOptions* headerOptions){
 	socket_s->maxQueue = headerOptions->tcpOptions->connectionQueue;
 	socket_s->addr = server;
 
+	#ifndef __unix__
+
 	if( bind(s ,(struct sockaddr *)server , sizeof(struct sockaddr_in)) == SOCKET_ERROR)
 	{
 		raiseError("connect error\n", 1);
 	}
+
+	#else
+
+	if( bind(s ,(struct sockaddr *)server , sizeof(struct sockaddr_in)) < 0)
+	{
+		raiseError("connect error\n", 1);
+	}
+
+	#endif
 
 	listen(s, socket_s->maxQueue);
 
@@ -119,7 +130,7 @@ struct Client* getClient(struct Server* server, struct HeaderOptions* headerOpti
 	int c = accept(server->id, (struct sockaddr *)addr, &size);
 
 	client->id = c;
-	if (c == 0)
+	if (c < 0)
 	{
 		client->valid = 0;
 		return client;
