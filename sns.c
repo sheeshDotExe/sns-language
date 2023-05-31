@@ -18,8 +18,6 @@ int main(int argc, char **argv)
 
 	setlocale(LC_ALL, ".UTF8");
 
-	printf("test: ååå %d", strlen("ååå"));
-
 	//char* path = argv[1];
 
 	FILE* file = getFile("./demo.sns");
