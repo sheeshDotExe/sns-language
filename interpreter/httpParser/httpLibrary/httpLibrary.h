@@ -3,14 +3,16 @@
 
 #ifdef __unix__
 #include <sys/socket.h>
+#include <arpa/inet.h>
 
 #else
 #include <winsock2.h>
+#endif
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
 #include <openssl/bio.h>
-#endif
 
 #include <wchar.h>
 
@@ -46,6 +48,26 @@ struct HttpRequest {
 	char* path;
 };
 
+// unix sockets
+#ifdef __unix__
+struct Server {
+	int id;
+	struct sockaddr_in* addr;
+	int maxQueue;
+	int valid;
+	SSL_CTX* serverCtx;
+};
+
+struct Client {
+	int id;
+	struct sockaddr_in* addr;
+	int maxQueue;
+	int valid;
+	SSL* ssl;
+};
+
+#else
+
 struct Server {
 	SOCKET id;
 	struct sockaddr_in* addr;
@@ -62,12 +84,17 @@ struct Client {
 	SSL* ssl;
 };
 
+#endif
+
+#ifndef __unix___
 int initWinsock();
+#endif
+int initSSL();
 struct Server* createServer(struct HeaderOptions* headerOptions);
-struct Client* getClient(struct Server* server);
-void freeSocket(struct Client* sock);
+struct Client* getClient(struct Server* server, struct HeaderOptions* headerOptions);
+void freeSocket(struct Client* sock, struct HeaderOptions* headerOptions);
 char* getClientIP(struct Client* client);
-struct HttpRequest* recive(struct Client* client);
-void sendData(struct Client* client, char* response);
+struct HttpRequest* recive(struct Client* client, struct HeaderOptions* headerOptions);
+void sendData(struct Client* client, char* response, struct HeaderOptions* headerOptions);
 
 #endif

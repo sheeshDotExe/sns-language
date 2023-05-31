@@ -2,7 +2,7 @@
 USE_LOCAL_HOST   (True)
 USE_PORT         (8080)
 DEBUG_MODE       (True)
-FORCE_SSL        (True)
+FORCE_SSL        (False)
 USE_SSL          (certificate/certificate.crt, certificate/private.key)
 
 MAX_CONNECTIONS  (10)

@@ -1,38 +1,47 @@
 #include "httpParser.h"
 
 void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, struct Body* body){
+
+	#ifndef __unix__
 	if (initWinsock()){
 		raiseError("winsock init failed", 1);
 	}
+	#endif
+
+	initSSL();
 
 	struct Server* server = createServer(headerOptions);
 	printf("server started\n");
 
 	while (1){
-		struct Client* client = getClient(server);
+		struct Client* client = getClient(server, headerOptions);
 
 		if (client == NULL){
-			freeSocket(client);
+			freeSocket(client, headerOptions);
 			continue;
 		}
 
 		if (client->valid){
 			printf("\n\nnew client %s\n", getClientIP(client));
 
-			struct HttpRequest* httpRequest = recive(client);
+			struct HttpRequest* httpRequest = recive(client, headerOptions);
 
 			char* response = parseRequest(state, httpRequest);
 
-			sendData(client, response);
+			sendData(client, response, headerOptions);
 
 			free(response);
 
 			free(httpRequest->path);
 			free(httpRequest);
 		} else {
+			#ifndef __unix__
 			printf("error %d\n", WSAGetLastError());
+			#else
+			printf("error error\n");
+			#endif
 		}
-		freeSocket(client);
+		freeSocket(client, headerOptions);
 	}
 }
 
