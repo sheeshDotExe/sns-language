@@ -86,7 +86,7 @@ struct Client {
 
 #endif
 
-#ifndef __unix___
+#ifndef __unix__
 int initWinsock();
 #endif
 int initSSL();

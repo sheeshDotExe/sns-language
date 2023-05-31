@@ -1,6 +1,6 @@
 #include "httpLibrary.h"
 
-#ifndef __unix___
+#ifndef __unix__
 int initWinsock(){
 	WSADATA wsaData;
 	int iResult;
@@ -55,7 +55,7 @@ struct Server* createServer(struct HeaderOptions* headerOptions){
 
     printf("context created\n");
 
-    #ifndef __unix___
+    #ifndef __unix__
 	SOCKET s;
 	if((s = socket(AF_INET , SOCK_STREAM , 0 )) == INVALID_SOCKET)
 	{
@@ -106,7 +106,7 @@ struct Client* getClient(struct Server* server, struct HeaderOptions* headerOpti
 
 	client->addr = addr;
 
-	#ifndef __unix___
+	#ifndef __unix__
 	SOCKET c = accept(server->id, (struct sockaddr *)addr, &size);
 
 	client->id = c;
