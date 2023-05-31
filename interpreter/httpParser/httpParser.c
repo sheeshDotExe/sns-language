@@ -26,6 +26,8 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 
 			struct HttpRequest* httpRequest = recive(client, headerOptions);
 
+			printf("recived request\n");
+
 			char* response = parseRequest(state, httpRequest);
 
 			sendData(client, response, headerOptions);
