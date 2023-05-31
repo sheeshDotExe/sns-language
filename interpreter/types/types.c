@@ -301,7 +301,7 @@ struct Var* addVars(struct Var* first, struct Var* second){
 
 			long long new = int1->value + int2->value;
 			newValue = (char*)malloc(20*sizeof(char)); // largest 64 bit signed integer
-			_itow(new, newValue, 10);
+			sprintf(newValue, "%d", new);
 		} break;
 
 		case Float_c : {
@@ -345,7 +345,7 @@ struct Var* subVars(struct Var* first, struct Var* second){
 
 			long long new = int1->value - int2->value;
 			newValue = (char*)malloc(20*sizeof(char)); // largest 64 bit signed integer
-			itoa(new, newValue, 10);
+			sprintf(newValue, "%d", new);
 		} break;
 
 		case Float_c : {
@@ -389,7 +389,7 @@ struct Var* divVars(struct Var* first, struct Var* second){
 
 			long long new = int1->value / int2->value;
 			newValue = (char*)malloc(20*sizeof(char)); // largest 64 bit signed integer
-			itoa(new, newValue, 10);
+			sprintf(newValue, "%d", new);
 		} break;
 
 		case Float_c : {
@@ -432,7 +432,7 @@ struct Var* mulVars(struct Var* first, struct Var* second){
 
 			long long new = int1->value * int2->value;
 			newValue = (char*)malloc(20*sizeof(char)); // largest 64 bit signed integer
-			itoa(new, newValue, 10);
+			sprintf(newValue, "%d", new);
 		} break;
 
 		case Float_c : {
@@ -471,7 +471,7 @@ struct Var* lessThan(struct Var* first, struct Var* second){
 
 			unsigned int result = string1->size < string2->size;
 			newValue = (char*)malloc(1*sizeof(char));
-			itoa(result, newValue, 10);
+			sprintf(newValue, "%d", result);
 		} break;
 
 		case Int_c : {
@@ -480,7 +480,7 @@ struct Var* lessThan(struct Var* first, struct Var* second){
 
 			long long new = int1->value < int2->value;
 			newValue = (char*)malloc(1*sizeof(char)); // largest 64 bit signed integer
-			itoa(new, newValue, 10);
+			sprintf(newValue, "%d", new);
 		} break;
 
 		case Float_c : {
@@ -521,7 +521,7 @@ struct Var* greaterThan(struct Var* first, struct Var* second){
 
 			unsigned int result = string1->size > string2->size;
 			newValue = (char*)malloc(1*sizeof(char));
-			itoa(result, newValue, 10);
+			sprintf(newValue, "%d", result);
 		} break;
 
 		case Int_c : {
@@ -530,7 +530,7 @@ struct Var* greaterThan(struct Var* first, struct Var* second){
 
 			long long new = int1->value > int2->value;
 			newValue = (char*)malloc(1*sizeof(char)); // largest 64 bit signed integer
-			itoa(new, newValue, 10);
+			sprintf(newValue, "%d", new);
 		} break;
 
 		case Float_c : {
@@ -574,7 +574,7 @@ struct Var* equalTo(struct Var* first, struct Var* second){
 				result = 1;
 			}
 			newValue = (char*)malloc(1*sizeof(char));
-			itoa(result, newValue, 10);
+			sprintf(newValue, "%d", result);
 		} break;
 
 		case Int_c : {
@@ -583,7 +583,7 @@ struct Var* equalTo(struct Var* first, struct Var* second){
 
 			long long new = int1->value == int2->value;
 			newValue = (char*)malloc(1*sizeof(char)); // largest 64 bit signed integer
-			itoa(new, newValue, 10);
+			sprintf(newValue, "%d", new);
 		} break;
 
 		case Float_c : {

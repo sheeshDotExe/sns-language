@@ -133,7 +133,11 @@ struct Var *html(struct Param *params, struct State *state){
 
 	char* relPath = safePath(utf8Url);
 
+	#ifndef __unix__
 	char* fullPath = _fullpath(NULL, relPath, 0);
+	#else
+	char* fullPath = realpath(relPath, NULL);
+	#endif
 
 	free(state->fileExtension[0]);
 	state->fileExtension[0] = getExtension(fullPath);

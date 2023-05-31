@@ -301,7 +301,11 @@ void freeSocket(struct Client* sock, struct HeaderOptions* headerOptions){
 	if (headerOptions->tcpOptions->sslOptions->useSSL){
 		SSL_free(sock->ssl);
 	}
+	#ifndef __unix__
 	closesocket(sock->id);
+	#else
+	close(sock->id);
+	#endif
 	free(sock->addr);
 	free(sock);
 }
