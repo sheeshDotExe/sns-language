@@ -42,7 +42,7 @@ struct CommonTypes getValidTypes(char **value, unsigned int *lengthP)
 		*lengthP = 1;
 		free(*value);
 		*value = (char *)malloc(2 * sizeof(char));
-		itoa(Bool_v, *value, 10);
+		sprintf(*value, "%d", Bool_v);
 
 		validTypes[length] = Int_c;
 		length++;

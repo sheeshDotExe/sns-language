@@ -180,7 +180,7 @@ char* parseRequest(struct State* state, struct HttpRequest* request){
 	char* contentType = getValidContentType(state->fileExtension[0]);
 
 	char* length = (char*)malloc(100);
-	itoa(strlen(response), length, 10);
+	sprintf(length, "%d", strlen(response));
 
 	int responseLength = strlen(response) + strlen(ok) + strlen(contentLength) + strlen(length) + strlen(contentType) + 4 + 1;
 
