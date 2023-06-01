@@ -300,7 +300,10 @@ void sendData(struct Client* client, char* response, struct HeaderOptions* heade
 	if (headerOptions->tcpOptions->sslOptions->useSSL){
 		SSL_write(client->ssl, response, strlen(response));
 	} else {
-		send(client->id, response, strlen(response), 0);
+		int sr = send(client->id, response, strlen(response), 0);
+		if (sr < 0){
+			printf("Send error: %d\n", sr);
+		}
 	}
 }
 
