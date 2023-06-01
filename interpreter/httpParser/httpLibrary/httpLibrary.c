@@ -304,6 +304,7 @@ void sendData(struct Client* client, char* response, struct HeaderOptions* heade
 		if (sr < 0){
 			printf("Send error: %d\n", sr);
 		}
+		printf("sent over http\n");
 	}
 }
 
