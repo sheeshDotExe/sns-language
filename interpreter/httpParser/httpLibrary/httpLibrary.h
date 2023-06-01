@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
+#include <netinet/tcp.h>
 
 #else
 #include <winsock2.h>
