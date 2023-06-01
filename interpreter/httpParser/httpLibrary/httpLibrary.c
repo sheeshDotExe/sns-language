@@ -79,7 +79,7 @@ struct Server* createServer(struct HeaderOptions* headerOptions){
 
 	int flag = 1;
 
-	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 
 	struct sockaddr_in* server = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
 	if (!headerOptions->tcpOptions->localHost){
