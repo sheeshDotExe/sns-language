@@ -165,13 +165,13 @@ char* getValidContentType(char* extension){
 char* parseRequest(struct State* state, struct HttpRequest* request){
 
 	if (request->method == INVALID_METHOD){
-		return strdup("HTTP/1.1 400 Bad Request");
+		return strdup("HTTP/1.1 400 Bad Request\r\n\r\n");
 	}
 
 	struct PathInfo* pathInfo = getValidRoute(state, request);
 	if (!pathInfo->valid){
 		free(pathInfo);
-		return strdup("HTTP/1.1 404 Not Found");
+		return strdup("HTTP/1.1 404 Not Found\r\n\r\n");
 	}
 
 	struct Var* returnValue = parseRoute(state, pathInfo->route, request);

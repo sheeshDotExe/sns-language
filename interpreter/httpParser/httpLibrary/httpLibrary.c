@@ -72,6 +72,9 @@ struct Server* createServer(struct HeaderOptions* headerOptions){
 	#ifndef __unix__
 	unsigned int timeout = 1;
 	setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+	#else
+	int flags =1;
+	setsockopt(s, SOL_TCP, TCP_NODELAY, (void *)&flags, sizeof(flags));
 	#endif
 
 	struct sockaddr_in* server = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
