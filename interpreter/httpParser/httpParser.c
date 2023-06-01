@@ -32,6 +32,8 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 
 			sendData(client, response, headerOptions);
 
+			printf("sent response\n");
+
 			free(response);
 
 			free(httpRequest->path);
