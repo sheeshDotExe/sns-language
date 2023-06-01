@@ -40,7 +40,7 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 			#ifndef __unix__
 			printf("error %d\n", WSAGetLastError());
 			#else
-			printf("error error\n");
+			printf("error %d\n", errno);
 			#endif
 		}
 		freeSocket(client, headerOptions);

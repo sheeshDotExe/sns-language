@@ -8,6 +8,10 @@
 #include "../builtins/builtins.h"
 #include "httpLibrary/httpLibrary.h"
 
+#ifdef __unix__
+#include <errno.h>
+#endif
+
 struct PathInfo {
 	int valid;
 	struct Route* route;
