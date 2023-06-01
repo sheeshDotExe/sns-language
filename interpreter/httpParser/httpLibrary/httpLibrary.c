@@ -69,9 +69,15 @@ struct Server* createServer(struct HeaderOptions* headerOptions){
 	}
 	#endif
 
+	#ifndef __unix__
 	unsigned int timeout = 1;
+	#else
+	struct timeval timeout;
+	timeout.tv_sec = 1;
+	timeout.tv_usec = 0;
+	#endif
 
-	setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(unsigned int));
+	setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
 	struct sockaddr_in* server = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
 	if (!headerOptions->tcpOptions->localHost){
