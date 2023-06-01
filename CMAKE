@@ -1,0 +1,27 @@
+cmake_minimum_required(VERSION 3.0)
+set(CMAKE_CXX_STANDARD 11)
+project(sns)
+
+set(SOURCE_FILES
+        sns.c
+        interpreter/errorHandler/errorHandler.c
+        interpreter/fileReader/fileReader.c
+        interpreter/types/types.c
+        interpreter/types/interpretType.c
+        interpreter/filePatterns/patternReader.c
+        interpreter/body/functionLogic/functionLogic.c
+        interpreter/body/eval/eval.c
+        interpreter/builtins/route/route.c
+        interpreter/builtins/if/if.c
+        interpreter/builtins/html/html.c
+        interpreter/builtins/builtins.c
+        interpreter/body/interpretBody.c
+        interpreter/header/headerFunctions.c
+        interpreter/header/findHeader.c
+        interpreter/httpParser/httpLibrary/httpLibrary.c
+        interpreter/httpParser/httpParser.c
+        interpreter/interpreter.c
+)
+
+add_executable(sns ${SOURCE_FILES})
+target_link_libraries(sns PRIVATE ssl crypto)

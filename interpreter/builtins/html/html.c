@@ -136,7 +136,7 @@ struct Var *html(struct Param *params, struct State *state){
 	#ifndef __unix__
 	char* fullPath = _fullpath(NULL, relPath, 0);
 	#else
-	char* fullPath = realpath(relPath, NULL);
+	char* fullPath = realpath(utf8Url, NULL);
 	#endif
 
 	free(state->fileExtension[0]);
