@@ -264,6 +264,7 @@ struct HttpRequest* recive(struct Client* client, struct HeaderOptions* headerOp
 	int read = 1;
 	int total = 0;
 
+	#ifndef __unix__
 	while (read > 0){
 		if (headerOptions->tcpOptions->sslOptions->useSSL){
 			read = SSL_read(client->ssl, buf + total, (MAX_PACKET_SIZE - total)*sizeof(unsigned char));
@@ -274,6 +275,14 @@ struct HttpRequest* recive(struct Client* client, struct HeaderOptions* headerOp
 			total += read;
 		}
 	}
+	#else 
+	if (headerOptions->tcpOptions->sslOptions->useSSL){
+		read = SSL_read(client->ssl, buf, (MAX_PACKET_SIZE)*sizeof(unsigned char));
+	} else {
+		read = recv(client->id, buf, (MAX_PACKET_SIZE)*sizeof(unsigned char), 0);
+	}
+	total += read;
+	#endif
 
 	buf[total] = '\0';
 
