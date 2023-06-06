@@ -6,6 +6,7 @@
 #include "../../body/bodyTypes.h"
 #include "../../fileReader/fileReader.h"
 #include "../builtins.h"
+#include <unistd.h>
 
 struct Var *html(struct Param *params, struct State *state);
 

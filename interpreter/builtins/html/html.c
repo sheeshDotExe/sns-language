@@ -124,6 +124,49 @@ char* getExtension(char* path){
 	}
 }
 
+char* cutExcess(char* path){
+	int size = strlen(path)+1;
+	int newSize = 0;
+
+	for (int i = 0; i < size-1; i++){
+		if ((path[i] == '/' || path[i] == '\\')&&(path[i+1] == '/' || path[i+1] == '\\')) continue;
+		if ((path[i] == '.' && (path[i+1] == '.' || path[i+1] == '/' || path[i+1] == '\\'))||(i && path[i]=='.'&&path[i-1]=='.')) continue;
+		newSize++;
+	}
+
+	char* newPath = (char*)malloc(newSize*sizeof(char));
+
+	int newPathIndex = 0;
+	for (int i = 0; i < size-1; i++){
+		if ((path[i] == '/' || path[i] == '\\')&&(path[i+1] == '/' || path[i+1] == '\\')) continue;
+		if ((path[i] == '.' && (path[i+1] == '.' || path[i+1] == '/' || path[i+1] == '\\'))||(i && path[i]=='.'&&path[i-1]=='.')) continue;
+		#ifdef __unix__
+		if (path[i] == '\\') newPath[newPathIndex] = '/';
+		else newPath[newPathIndex] = path[i];
+		#else
+		newPath[newPathIndex] = path[i];
+		#endif
+		newPathIndex++;
+	}
+
+	return newPath;
+}
+
+char* getFullPath(char* relPath){
+	char* currentDir = getcwd(NULL, 0);
+	char* rel = cutExcess(relPath);
+
+	char* newPath = (char*)malloc((strlen(currentDir)+strlen(rel)+1));
+	strcpy(newPath, currentDir);
+	strcat(newPath, rel);
+	newPath[strlen(currentDir)+strlen(rel)] = '\0';
+	printf("final path: %s\n", newPath);
+
+	free(currentDir);
+	free(rel);
+	return newPath;
+}
+
 struct Var *html(struct Param *params, struct State *state){
 	struct Var* rawPath = params->inputVars[0];
 	struct String* string = (struct String*)(getType(String_c, rawPath)->type);
@@ -131,13 +174,17 @@ struct Var *html(struct Param *params, struct State *state){
 
 	char* utf8Url = urlEncodingToUtf8(path);
 
-	char* relPath = safePath(utf8Url);
+	//char* relPath = safePath(utf8Url);
 
+
+	char* fullPath = getFullPath(utf8Url);
+	/*
 	#ifndef __unix__
 	char* fullPath = _fullpath(NULL, relPath, 0);
 	#else
 	char* fullPath = realpath(utf8Url, NULL);
 	#endif
+	*/
 
 	free(state->fileExtension[0]);
 	state->fileExtension[0] = getExtension(fullPath);
@@ -153,7 +200,7 @@ struct Var *html(struct Param *params, struct State *state){
 	addUserFile(state, file);
 
 	free(utf8Url);
-	free(relPath);
+	//free(relPath);
 	free(fullPath);
 
 	struct Var* retVal = generateVarFromString(file->data, file->length);
