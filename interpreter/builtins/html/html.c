@@ -160,7 +160,6 @@ char* getFullPath(char* relPath){
 	strcpy(newPath, currentDir);
 	strcat(newPath, rel);
 	newPath[strlen(currentDir)+strlen(rel)] = '\0';
-	printf("final path: %s\n", newPath);
 
 	free(currentDir);
 	free(rel);

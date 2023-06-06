@@ -26,13 +26,9 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 
 			struct HttpRequest* httpRequest = recive(client, headerOptions);
 
-			printf("recived request\n");
-
 			char* response = parseRequest(state, httpRequest);
 
 			sendData(client, response, headerOptions);
-
-			printf("sent response %s\n", response);
 
 			free(response);
 
@@ -179,7 +175,7 @@ char* parseRequest(struct State* state, struct HttpRequest* request){
 	char* response = responseString->cString;
 
 	char* ok = "HTTP/1.1 200 OK\r\nContent-Type: ";
-	char* contentLength = ";charset=utf-8\r\nContent-Length:";
+	char* contentLength = ";charset=utf-8\r\nContent-Length: ";
 
 	char* contentType = getValidContentType(state->fileExtension[0]);
 
