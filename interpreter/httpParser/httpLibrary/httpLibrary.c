@@ -287,7 +287,7 @@ struct HttpRequest* recive(struct Client* client, struct HeaderOptions* headerOp
 	} else {
 		read = recv(client->id, buf, (MAX_PACKET_SIZE)*sizeof(unsigned char), 0);
 	}
-	total += read;
+	if (read > 0) total += read;
 	#endif
 
 	buf[total] = '\0';
