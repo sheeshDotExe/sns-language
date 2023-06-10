@@ -427,6 +427,7 @@ struct State* hardcopyState(struct State* state, struct ProcessState* processSta
 	newState->files = state->files;
 	newState->globalScope = copyVarScope(state->globalScope, processState);
 	newState->fileExtension = (char**)malloc(sizeof(char*));
+	newState->fileExtension[0] = strdup("");
 
 	newState->inheritedVarscopes = copyInheritedVarscope(state->inheritedVarscopes, processState);
 
