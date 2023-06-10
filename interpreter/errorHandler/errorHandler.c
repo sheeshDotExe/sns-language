@@ -10,8 +10,3 @@ void raiseError(char*errorMessage, int stopCompiling, struct ProcessState* proce
 		pthread_exit((void*)&exit);
 	}
 }
-
-void pause(struct ProcessState* processState){
-	char buff[100];
-	gets(buff);
-}
