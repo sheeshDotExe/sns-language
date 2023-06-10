@@ -44,35 +44,43 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 	}
 
 	struct CrashHandlerInfo* crashHandlerInfo = (struct CrashHandlerInfo*)malloc(sizeof(struct CrashHandlerInfo));
+	
 	crashHandlerInfo->numberOfThreads = numberOfThreads;
 	crashHandlerInfo->ids = ids;
 	crashHandlerInfo->threadInfos = threadInfos;
+
 	crashHandlerInfo->state = state;
 	crashHandlerInfo->headerOptions = headerOptions;
 	crashHandlerInfo->server = server;
+
 	crashHandlerInfo->processState = (struct ProcessState*)malloc(sizeof(struct ProcessState));
 	crashHandlerInfo->processState->running = 1;
 
 	crashHandlerId = pthread_create(&crashHandlerId, NULL, crashHandler, (void*)crashHandlerInfo);
 
-	if (crashHandlerId == 0){
+	if (crashHandlerId != 0){
 		printf("failed to create thread, %d\n", errno);
 		return;
 	}
 
-	pthread_join(crashHandlerId, NULL);
+	void* status
+
+	pthread_join(crashHandlerId, &status);
 }
 
 void* crashHandler(void* threadData){
 	struct CrashHandlerInfo* crashHandlerInfo = (struct CrashHandlerInfo*)threadData;
 
 	int numberOfThreads = crashHandlerInfo->numberOfThreads;
+	pthread_t* ids = crashHandlerInfo->ids;
 	struct ThreadInfo** threadInfos = crashHandlerInfo->threadInfos;
+
 	struct State* state = crashHandlerInfo->state;
 	struct HeaderOptions* headerOptions = crashHandlerInfo->headerOptions;
-	struct ProcessState* processState = crashHandlerInfo->processState;
 	struct Server* server = crashHandlerInfo->server;
-	pthread_t* ids = crashHandlerInfo->ids;
+
+	struct ProcessState* processState = crashHandlerInfo->processState;
+
 
 	while (1){
 		// handle thread crash [500]
@@ -97,6 +105,8 @@ void* crashHandler(void* threadData){
 		}
 		Sleep(1);
 	}
+
+	pthread_exit(NULL);
 }
 
 void* requestHandler(void* threadData){
