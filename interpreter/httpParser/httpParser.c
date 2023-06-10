@@ -63,9 +63,9 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 		return;
 	}
 
-	void* status;
-
-	pthread_join(crashHandlerId, &status);
+	while (crashHandlerInfo->processState->running) Sleep(1);
+	printf("Crashhandler crashed ;(\n");
+	return;
 }
 
 void* crashHandler(void* threadData){
