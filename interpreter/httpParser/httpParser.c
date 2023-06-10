@@ -166,7 +166,6 @@ void* requestHandler(void* threadData){
 			}
 			hasRequest = 1;
 		}
-		pthread_mutex_unlock(lock);
 
 		// we now have a private request for this thread
 		if (hasRequest){
@@ -174,6 +173,7 @@ void* requestHandler(void* threadData){
 			handleRequest(request->client, state, headerOptions, processState);
 			free(request);
 		}
+		pthread_mutex_unlock(lock);
 
 		Sleep(1);
 	}
