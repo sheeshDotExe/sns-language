@@ -6,6 +6,8 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include <netinet/tcp.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #else
 #include <winsock2.h>

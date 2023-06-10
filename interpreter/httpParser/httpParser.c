@@ -186,7 +186,7 @@ int handleRequest(struct Client* client, struct State* state, struct HeaderOptio
 	char* timeFormatted = strtok(localTime, "\n");
 	printf("\n\n[%s] IP: %s\n",timeFormatted, getClientIP(client, processState));
 	//free(localTime);
-
+	
 	struct HttpRequest* httpRequest = recive(client, headerOptions, processState);
 
 	char* response = parseRequest(state, httpRequest, processState);

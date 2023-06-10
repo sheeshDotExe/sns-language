@@ -137,6 +137,10 @@ struct Client* getClient(struct Server* server, struct HeaderOptions* headerOpti
 	#else
 	int c = accept(server->id, (struct sockaddr *)addr, &size);
 
+	int flags = fcntl(c, F_GETFL, 0);
+	flags |= O_NONBLOCK;
+	fcntl(c, F_SETFL, flags);
+
 	client->id = c;
 	if (c < 0)
 	{
