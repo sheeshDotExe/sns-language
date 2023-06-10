@@ -419,7 +419,22 @@ struct Function* getFunction(struct Var* var, struct State* state, struct KeyPos
 	return function;
 }
 
-struct State* hardcopyState(struct State* state, struct ProcessState* processState);
+struct State* hardcopyState(struct State* state, struct ProcessState* processState){
+	struct State* newState = (struct State*)malloc(sizeof(struct State));
+	newState->keyChars = state->keyChars;
+	newState->builtins = state->builtins;
+	newState->routes = state->routes;
+	newState->files = state->files;
+	newState->globalScope = copyVarScope(state->globalScope, processState);
+	newState->fileExtension = (char**)malloc(sizeof(char*));
+
+	newState->inheritedVarscopes = copyInheritedVarscope(state->inheritedVarscopes, processState);
+
+	newState->useInheritence = state->useInheritence;
+	newState->localScope = copyVarScope(state->localScope, processState);
+
+	return newState;
+};
 
 struct State* copyState(struct State* state, struct ProcessState* processState){
 	struct State* newState = (struct State*)malloc(sizeof(struct State));

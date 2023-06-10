@@ -9,6 +9,7 @@
 #include "httpLibrary/httpLibrary.h"
 #include <time.h>
 #include <pthread.h>
+#include "../body/functionLogic/functionLogic.h"
 
 #include "../processState.h"
 

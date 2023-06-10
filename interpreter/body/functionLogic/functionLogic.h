@@ -44,4 +44,5 @@ struct Var* callFunction(struct Var* var, struct State* state, struct ProcessSta
 struct Function* getFunction(struct Var* var, struct State* state, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index, struct ProcessState* processState);
 
 struct State* copyState(struct State* state, struct ProcessState* processState);
+struct State* hardcopyState(struct State* state, struct ProcessState* processState);
 #endif

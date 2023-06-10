@@ -38,7 +38,8 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
  	struct ThreadInfo** threadInfos = (struct ThreadInfo**)malloc(numberOfThreads*sizeof(struct ThreadInfo*));
 
 	for (int i = 0; i < numberOfThreads; i++){
-		struct ThreadInfo* threadInfo = createThreadInfo(state, headerOptions, server);
+		struct State* copiedState = hardcopyState(state, processState);
+		struct ThreadInfo* threadInfo = createThreadInfo(copiedState, headerOptions, server);
 		threadInfos[i] = threadInfo;
 		ids[i] = pthread_create(&ids[i], NULL, requestHandler, (void*)threadInfo);
 	}
@@ -89,6 +90,9 @@ void* crashHandler(void* threadData){
 			if (!threadInfo->processState->running){
 				printf("Thread %d crashed, restarting thread\n", i+1);
 
+				processState->running = 0;
+				pthread_exit(NULL);
+
 				struct Request* request = threadInfo->currentRequest;
 
 				sendData(request->client, "HTTP/1.1 500\r\nContent-Type: text/plain\r\n\r\nThread crashed", headerOptions, processState);
@@ -106,6 +110,7 @@ void* crashHandler(void* threadData){
 		Sleep(1);
 	}
 
+	processState->running = 0;
 	pthread_exit(NULL);
 }
 
