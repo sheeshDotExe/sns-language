@@ -21,6 +21,7 @@ struct ThreadInfo {
 	struct State* state;
 	struct ProcessState* processState;
 	struct RequestQueue* requestQueue;
+<<<<<<< HEAD
 	struct Request* currentRequest;
 	pthread_mutex_t* lock;
 };
@@ -34,6 +35,9 @@ struct CrashHandlerInfo {
 	struct State* state;
 	struct ProcessState* processState;
 	struct ThreadInfo** threadInfos;
+=======
+	struct pthread_mutex_t* lock;
+>>>>>>> fe74c180a9d7a8f412efacb4f992f2648b4dd664
 };
 
 struct Request {
@@ -59,6 +63,9 @@ struct Path* generatePath(char* rawPath, unsigned int length, struct ProcessStat
 void freePath(struct Path* path, struct ProcessState* processState);
 int handleRequest(struct Client* client, struct State* state, struct HeaderOptions* headerOptions, struct ProcessState* processState);
 void* requestHandler(void* threadData);
+<<<<<<< HEAD
 void* crashHandler(void* threadData);
+=======
+>>>>>>> fe74c180a9d7a8f412efacb4f992f2648b4dd664
 
 #endif
