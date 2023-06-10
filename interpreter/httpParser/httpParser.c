@@ -63,7 +63,7 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 		return;
 	}
 
-	void* status
+	void* status;
 
 	pthread_join(crashHandlerId, &status);
 }
