@@ -3,8 +3,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
+#include "../processState.h"
 
-void raiseError(char*errorMessage, int stopCompiling);
-void pause();
+void raiseError(char*errorMessage, int stopCompiling, struct ProcessState* processState);
+void pause(struct ProcessState* processState);
 
 #endif

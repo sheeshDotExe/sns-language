@@ -1,6 +1,6 @@
 #include "if.h"
 
-struct Var *if_implementation(struct Param *params, struct State *state){
+struct Var *if_implementation(struct Param *params, struct State *state, struct ProcessState* processState){
 	struct Var* condition = params->inputVars[0];
 
 	struct Param* param = (struct Param*)malloc(sizeof(struct Param));
@@ -8,13 +8,13 @@ struct Var *if_implementation(struct Param *params, struct State *state){
 	param->inputVars = (struct Var**)malloc(0);
 	int codes[1] = {String_c};
 
-	param->returnValue = generateVar(&codes, 1, "return", "", (struct Param*)NULL);
+	param->returnValue = generateVar(&codes, 1, "return", "", (struct Param*)NULL, processState);
 
 	codes[1] = Function_c;
 
-	struct Var* response = generateVar(&codes, 1, "if", "", param);
+	struct Var* response = generateVar(&codes, 1, "if", "", param, processState);
 
-	response->shouldExecute = isTrue(condition);
+	response->shouldExecute = isTrue(condition, processState);
 	response->assignable = 1;
 	response->inheritScopes = 1;
 	response->isBuiltin = 1;
@@ -22,18 +22,18 @@ struct Var *if_implementation(struct Param *params, struct State *state){
 	return response;
 }
 
-struct Var *else_implementation(struct Param *params, struct State *state){
+struct Var *else_implementation(struct Param *params, struct State *state, struct ProcessState* processState){
 
 	struct Param* param = (struct Param*)malloc(sizeof(struct Param));
 	param->inputCount = 0;
 	param->inputVars = (struct Var**)malloc(0);
 	int codes[1] = {String_c};
 
-	param->returnValue = generateVar(&codes, 1, "return", "", (struct Param*)NULL);
+	param->returnValue = generateVar(&codes, 1, "return", "", (struct Param*)NULL, processState);
 
 	codes[1] = Function_c;
 
-	struct Var* response = generateVar(&codes, 1, "if", "", param);
+	struct Var* response = generateVar(&codes, 1, "if", "", param, processState);
 
 	response->shouldExecute = 2;
 	response->assignable = 1;

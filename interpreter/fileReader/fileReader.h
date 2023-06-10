@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
+#include "../processState.h"
 
 struct File
 {
@@ -11,6 +12,6 @@ struct File
 	long unsigned int length;
 };
 
-struct File readFile(FILE*fileHandle);
+struct File readFile(FILE*fileHandle, struct ProcessState* processState);
 
 #endif

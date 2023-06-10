@@ -7,11 +7,11 @@
 #include "../../fileReader/fileReader.h"
 #include "../builtins.h"
 
-void addRoute(struct State* state, struct Var* function, struct Path* path);
-void addStaticRoute(struct State* state, struct Var* function, struct Path* path);
-struct SplitPath* getSplitPath(char* path, unsigned int length);
-struct Path * interpretPath(struct State* state, char* path, unsigned int length);
-struct Var *route(struct Param *params, struct State *state);
-struct Var *route_static(struct Param *params, struct State *state);
+void addRoute(struct State* state, struct Var* function, struct Path* path, struct ProcessState* processState);
+void addStaticRoute(struct State* state, struct Var* function, struct Path* path, struct ProcessState* processState);
+struct SplitPath* getSplitPath(char* path, unsigned int length, struct ProcessState* processState);
+struct Path * interpretPath(struct State* state, char* path, unsigned int length, struct ProcessState* processState);
+struct Var *route(struct Param *params, struct State *state, struct ProcessState* processState);
+struct Var *route_static(struct Param *params, struct State *state, struct ProcessState* processState);
 
 #endif

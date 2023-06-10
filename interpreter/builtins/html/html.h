@@ -7,7 +7,8 @@
 #include "../../fileReader/fileReader.h"
 #include "../builtins.h"
 #include <unistd.h>
+#include "../../processState.h"
 
-struct Var *html(struct Param *params, struct State *state);
+struct Var *html(struct Param *params, struct State *state, struct ProcessState* processState);
 
 #endif

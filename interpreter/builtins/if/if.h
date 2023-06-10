@@ -7,7 +7,7 @@
 #include "../../fileReader/fileReader.h"
 #include "../builtins.h"
 
-struct Var* if_implementation(struct Param* params, struct State* state);
-struct Var* else_implementation(struct Param* params, struct State* state);
+struct Var* if_implementation(struct Param* params, struct State* state, struct ProcessState* processState);
+struct Var* else_implementation(struct Param* params, struct State* state, struct ProcessState* processState);
 
 #endif

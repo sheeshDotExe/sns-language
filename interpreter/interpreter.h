@@ -11,6 +11,6 @@
 #include "builtins/builtins.h"
 #include "httpParser/httpParser.h"
 
-int interpret(FILE *file);
+int interpret(FILE *file, struct ProcessState* processState);
 
 #endif

@@ -2,11 +2,11 @@
 
 // load html document/ data
 
-void addUserFile(struct State* state, struct UserFile* userFile){
+void addUserFile(struct State* state, struct UserFile* userFile, struct ProcessState* processState){
 	struct UserFile** newUserFiles = (struct Route**)realloc(state->files->files, (state->files->numberOfFiles+1)*sizeof(struct UserFile*));
 
 	if (newUserFiles == NULL){
-		raiseError("memory error on files\n", 1);
+		raiseError("memory error on files\n", 1, processState);
 	}
 
 	state->files->files = newUserFiles;
@@ -14,17 +14,17 @@ void addUserFile(struct State* state, struct UserFile* userFile){
 	state->files->numberOfFiles++;
 }
 
-struct UserFile* createUserFile(struct State* state, char* path){
+struct UserFile* createUserFile(struct State* state, char* path, struct ProcessState* processState){
 		
 	//wchar_t* unicodePath = utf8ToUtf16(path); "C:\\Users\\Viktor\\Documents\\cpp\\sns-language\\public\\ååå.txt"
 
 	FILE* fileH = fopen(path, "r");
 	if (fileH == NULL){
 		printf("found no file: %s\n", path);
-		raiseError("", 1);
+		raiseError("", 1, processState);
 	}
 
-	struct File file = readFile(fileH);
+	struct File file = readFile(fileH, processState);
 
 	fclose(fileH);
 
@@ -37,7 +37,7 @@ struct UserFile* createUserFile(struct State* state, char* path){
 	return userFile;
 }
 
-struct UserFile* getUserFile(struct State* state, char* path){
+struct UserFile* getUserFile(struct State* state, char* path, struct ProcessState* processState){
 	struct Files* files = state->files;
 
 	for (int i = 0; i < files->numberOfFiles; i++){
@@ -49,7 +49,7 @@ struct UserFile* getUserFile(struct State* state, char* path){
 	return NULL;
 }
 
-char* safePath(char* path){
+char* safePath(char* path, struct ProcessState* processState){
 	char* newPath = (char*)malloc((strlen(path)+1)*sizeof(char));
 	int i = 0;
 	for (i; i < strlen(path); i++){
@@ -61,20 +61,20 @@ char* safePath(char* path){
 	return newPath;
 }
 
-int validHex(char hex){
+int validHex(char hex, struct ProcessState* processState){
 	int hexVal = (int)hex;
 
 	return ((hexVal > 64 && hexVal < 71) || (hexVal > 47 && hexVal < 58));
 }
 
-int validateHexChar(char* hex){
+int validateHexChar(char* hex, struct ProcessState* processState){
 	for (int i = 0; i < strlen(hex); i++){
-		if (!validHex(hex[i])) return 0;
+		if (!validHex(hex[i], processState)) return 0;
 	}
 	return 1;
 }
 
-char* urlEncodingToUtf8(char* url){
+char* urlEncodingToUtf8(char* url, struct ProcessState* processState){
 	int numberOfSpecialChars = 0;
 
 	for (int i = 0; i < strlen(url); i++){
@@ -94,7 +94,7 @@ char* urlEncodingToUtf8(char* url){
 			memcpy(hexChar, url+i+1, 2*sizeof(char));
 			hexChar[2] = '\0';
 
-			if (!validateHexChar(hexChar)) {
+			if (!validateHexChar(hexChar, processState)) {
 				free(newUrl);
 				free(hexChar);
 				printf("invalid hex\n");
@@ -116,15 +116,16 @@ char* urlEncodingToUtf8(char* url){
 	return newUrl;
 }
 
-char* getExtension(char* path){
+char* getExtension(char* path, struct ProcessState* processState){
 	for (int i = strlen(path); i > 0; i--){
 		if (path[i] == '.'){
 			return strdup(path+i);
 		}
 	}
+	return strdup("");
 }
 
-char* cutExcess(char* path){
+char* cutExcess(char* path, struct ProcessState* processState){
 	int size = strlen(path)+1;
 	int newSize = 0;
 
@@ -134,7 +135,7 @@ char* cutExcess(char* path){
 		newSize++;
 	}
 
-	char* newPath = (char*)malloc(newSize*sizeof(char));
+	char* newPath = (char*)malloc((newSize+1)*sizeof(char));
 
 	int newPathIndex = 0;
 	for (int i = 0; i < size-1; i++){
@@ -149,12 +150,14 @@ char* cutExcess(char* path){
 		newPathIndex++;
 	}
 
+	newPath[newSize] = '\0';
+
 	return newPath;
 }
 
-char* getFullPath(char* relPath){
+char* getFullPath(char* relPath, struct ProcessState* processState){
 	char* currentDir = getcwd(NULL, 0);
-	char* rel = cutExcess(relPath);
+	char* rel = cutExcess(relPath, processState);
 
 	char* newPath = (char*)malloc((strlen(currentDir)+strlen(rel)+1));
 	strcpy(newPath, currentDir);
@@ -166,17 +169,17 @@ char* getFullPath(char* relPath){
 	return newPath;
 }
 
-struct Var *html(struct Param *params, struct State *state){
+struct Var *html(struct Param *params, struct State *state, struct ProcessState* processState){
 	struct Var* rawPath = params->inputVars[0];
-	struct String* string = (struct String*)(getType(String_c, rawPath)->type);
+	struct String* string = (struct String*)(getType(String_c, rawPath, processState)->type);
 	char* path = string->cString;
 
-	char* utf8Url = urlEncodingToUtf8(path);
+	char* utf8Url = urlEncodingToUtf8(path, processState);
 
-	//char* relPath = safePath(utf8Url);
+	//char* relPath = safePath(utf8Url, processState);
 
 
-	char* fullPath = getFullPath(utf8Url);
+	char* fullPath = getFullPath(utf8Url, processState);
 	/*
 	#ifndef __unix__
 	char* fullPath = _fullpath(NULL, relPath, 0);
@@ -186,23 +189,23 @@ struct Var *html(struct Param *params, struct State *state){
 	*/
 
 	free(state->fileExtension[0]);
-	state->fileExtension[0] = getExtension(fullPath);
+	state->fileExtension[0] = getExtension(fullPath, processState);
 
-	struct UserFile* file = getUserFile(state, fullPath);
+	struct UserFile* file = getUserFile(state, fullPath, processState);
 
 	if (file != NULL){
-		return generateVarFromString(file->data, file->length);
+		return generateVarFromString(file->data, file->length, processState);
 	}
 
-	file = createUserFile(state, fullPath);
+	file = createUserFile(state, fullPath, processState);
 
-	addUserFile(state, file);
+	addUserFile(state, file, processState);
 
 	free(utf8Url);
 	//free(relPath);
 	free(fullPath);
 
-	struct Var* retVal = generateVarFromString(file->data, file->length);
+	struct Var* retVal = generateVarFromString(file->data, file->length, processState);
 	retVal->assignable = 0;
 
 	return retVal;

@@ -22,6 +22,7 @@
 #include "../../types/types.h"
 #include "../../body/interpretBody.h"
 #include "../../body/bodyTypes.h"
+#include "../../processState.h"
 
 enum METHODS {
 	GET_METHOD,
@@ -89,14 +90,14 @@ struct Client {
 #endif
 
 #ifndef __unix__
-int initWinsock();
+int initWinsock(struct ProcessState* processState);
 #endif
-int initSSL();
-struct Server* createServer(struct HeaderOptions* headerOptions);
-struct Client* getClient(struct Server* server, struct HeaderOptions* headerOptions);
-void freeSocket(struct Client* sock, struct HeaderOptions* headerOptions);
-char* getClientIP(struct Client* client);
-struct HttpRequest* recive(struct Client* client, struct HeaderOptions* headerOptions);
-void sendData(struct Client* client, char* response, struct HeaderOptions* headerOptions);
+int initSSL(struct ProcessState* processState);
+struct Server* createServer(struct HeaderOptions* headerOptions, struct ProcessState* processState);
+struct Client* getClient(struct Server* server, struct HeaderOptions* headerOptions, struct ProcessState* processState);
+void freeSocket(struct Client* sock, struct HeaderOptions* headerOptions, struct ProcessState* processState);
+char* getClientIP(struct Client* client, struct ProcessState* processState);
+struct HttpRequest* recive(struct Client* client, struct HeaderOptions* headerOptions, struct ProcessState* processState);
+void sendData(struct Client* client, char* response, struct HeaderOptions* headerOptions, struct ProcessState* processState);
 
 #endif

@@ -1,6 +1,6 @@
 #include "interpretType.h"
 
-void fillTypes(struct CommonTypes *cTypes, int *types, unsigned int length)
+void fillTypes(struct CommonTypes *cTypes, int *types, unsigned int length, struct ProcessState* processState)
 {
 	cTypes->length = length;
 	cTypes->codes = (int *)malloc(length * sizeof(int));
@@ -10,7 +10,7 @@ void fillTypes(struct CommonTypes *cTypes, int *types, unsigned int length)
 	}
 }
 
-struct CommonTypes getValidTypes(char **value, unsigned int *lengthP)
+struct CommonTypes getValidTypes(char **value, unsigned int *lengthP, struct ProcessState* processState)
 {
 	struct CommonTypes types;
 
@@ -25,18 +25,18 @@ struct CommonTypes getValidTypes(char **value, unsigned int *lengthP)
 
 	validTypes[length] = String_c;
 	length++;
-	if (isString(*value, *lengthP))
+	if (isString(*value, *lengthP, processState))
 	{
 		if (*lengthP == 3)
 		{
 			validTypes[length] = Char_c;
 			length++;
 		}
-		fillTypes(&types, validTypes, length);
+		fillTypes(&types, validTypes, length, processState);
 		return types;
 	}
 
-	int Bool_v = stringToBool(*value);
+	int Bool_v = stringToBool(*value, processState);
 	if (Bool_v != -1)
 	{
 		*lengthP = 1;
@@ -49,34 +49,34 @@ struct CommonTypes getValidTypes(char **value, unsigned int *lengthP)
 		validTypes[length] = Float_c;
 		length++;
 
-		fillTypes(&types, validTypes, length);
+		fillTypes(&types, validTypes, length, processState);
 		return types;
 	}
 
-	if (!isNum(*value, *lengthP))
+	if (!isNum(*value, *lengthP, processState))
 	{
 		validTypes[length] = Int_c;
 		length++;
 	}
 
-	if (!isFloat(*value, *lengthP))
+	if (!isFloat(*value, *lengthP, processState))
 	{
 		validTypes[length] = Float_c;
 		length++;
 	}
 
-	fillTypes(&types, validTypes, length);
+	fillTypes(&types, validTypes, length, processState);
 	return types;
 }
 
-struct Var *generateVarFromString(char *value, unsigned int length)
+struct Var *generateVarFromString(char *value, unsigned int length, struct ProcessState* processState)
 {
 
 	char **valueP = &value;
 
-	struct CommonTypes types = getValidTypes(valueP, &length);
+	struct CommonTypes types = getValidTypes(valueP, &length, processState);
 
-	struct Var *ret = generateVar(types.codes, types.length, "unnamed", *valueP, (struct Param *)NULL);
+	struct Var *ret = generateVar(types.codes, types.length, "unnamed", *valueP, (struct Param *)NULL, processState);
 
 	free(types.codes);
 

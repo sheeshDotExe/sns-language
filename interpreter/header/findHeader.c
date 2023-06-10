@@ -1,6 +1,6 @@
 #include "findHeader.h"
 
-struct HeaderLines readHeaderData(struct File file, unsigned long int start, unsigned long int end){
+struct HeaderLines readHeaderData(struct File file, unsigned long int start, unsigned long int end, struct ProcessState* processState){
 
 	struct HeaderLines headerLines;
 
@@ -8,7 +8,7 @@ struct HeaderLines readHeaderData(struct File file, unsigned long int start, uns
 	unsigned long int readLines = 0;
 
 	while (1){
-		unsigned int lineLength = findNextLine(file, start + readLines);
+		unsigned int lineLength = findNextLine(file, start + readLines, processState);
 		readLines += lineLength+1;
 
 		if (lineLength){
@@ -27,7 +27,7 @@ struct HeaderLines readHeaderData(struct File file, unsigned long int start, uns
 	readLines = 0;
 
 	while (1){
-		unsigned int lineLength = findNextLine(file, start + readLines);
+		unsigned int lineLength = findNextLine(file, start + readLines, processState);
 		readLines += lineLength+1;
 
 		if (lineLength){
@@ -50,11 +50,11 @@ struct HeaderLines readHeaderData(struct File file, unsigned long int start, uns
 	return headerLines;
 }
 
-struct Arguments getArgs(char*string, unsigned long int start, unsigned long int stop){
+struct Arguments getArgs(char*string, unsigned long int start, unsigned long int stop, struct ProcessState* processState){
 	struct Arguments arguments;
 
-	unsigned long int whiteSpace = countCharInRange(string, start, stop, ' ');
-	unsigned long int numberOfArguments = countCharInRange(string, start, stop, ',') + 1;
+	unsigned long int whiteSpace = countCharInRange(string, start, stop, ' ', processState);
+	unsigned long int numberOfArguments = countCharInRange(string, start, stop, ',', processState) + 1;
 
 	arguments.argc = numberOfArguments;
 	arguments.argv = (char**)malloc(numberOfArguments*sizeof(char*));
@@ -76,7 +76,7 @@ struct Arguments getArgs(char*string, unsigned long int start, unsigned long int
 	unsigned long int newStop = stop-start-whiteSpace;
 
 	for (int i=0; i < numberOfArguments; i++){
-		unsigned long int newArgStart = lastArgStart + findNextChar(string + lastArgStart, ",", newStop, 1);
+		unsigned long int newArgStart = lastArgStart + findNextChar(string + lastArgStart, ",", newStop, 1, processState);
 
 		unsigned long int length = 0;
 
@@ -101,10 +101,10 @@ struct Arguments getArgs(char*string, unsigned long int start, unsigned long int
 	return arguments;
 }
 
-void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtlas* headerAtlas, char*command, unsigned int length){
+void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtlas* headerAtlas, char*command, unsigned int length, struct ProcessState* processState){
 	// get type
-	if (contains(command, '(', length)){
-		unsigned long int keywordEnd = findNextChar(command, " (", length, 2);
+	if (contains(command, '(', length, processState)){
+		unsigned long int keywordEnd = findNextChar(command, " (", length, 2, processState);
 		char*keyword = (char*)malloc((keywordEnd+1)*sizeof(char));
 		
 		for (int i = 0; i < keywordEnd; i++){
@@ -113,12 +113,12 @@ void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtla
 
 		keyword[keywordEnd]= '\0';
 
-		unsigned long int argumentStart = findNextChar(command, "(", length, 1);
-		unsigned long int agrumentEnd = findNextChar(command, ")", length, 1);
+		unsigned long int argumentStart = findNextChar(command, "(", length, 1, processState);
+		unsigned long int agrumentEnd = findNextChar(command, ")", length, 1, processState);
 		
-		struct Arguments args = getArgs(command, argumentStart, agrumentEnd);
+		struct Arguments args = getArgs(command, argumentStart, agrumentEnd, processState);
 
-		interpreteHeaderFunction(headerOptions, headerAtlas, keyword, args.argv, keywordEnd, args.argc);
+		interpreteHeaderFunction(headerOptions, headerAtlas, keyword, args.argv, keywordEnd, args.argc, processState);
 
 		for (int i=0; i < args.argc; i++){
 			free(args.argv[i]);
@@ -127,7 +127,7 @@ void interpreteHeaderLine(struct HeaderOptions* headerOptions, struct HeaderAtla
 	} //....
 }
 
-void setDefaultHeaderOptions(struct HeaderOptions* headerOptions){
+void setDefaultHeaderOptions(struct HeaderOptions* headerOptions, struct ProcessState* processState){
 	headerOptions->headerStart = 0;
 	headerOptions->headerEnd = 0;
 	headerOptions->formattedFiles = 0;
@@ -149,23 +149,23 @@ void setDefaultHeaderOptions(struct HeaderOptions* headerOptions){
 	headerOptions->tcpOptions->sslOptions->hasCertificate = 0;
 }
 
-struct HeaderOptions* getHeaderOptions(struct File file){
+struct HeaderOptions* getHeaderOptions(struct File file, struct ProcessState* processState){
 	struct HeaderOptions* headerOptions = (struct HeaderOptions*)malloc(sizeof(struct HeaderOptions));
 
-	setDefaultHeaderOptions(headerOptions);
+	setDefaultHeaderOptions(headerOptions, processState);
 
-	struct PatternRange headerLocation = getPatternByKey(file, 0, "***");
+	struct PatternRange headerLocation = getPatternByKey(file, 0, "***", processState);
 
 	headerOptions->headerStart = headerLocation.start;
 	headerOptions->headerEnd = headerLocation.end;
 
-	struct HeaderLines headerLines = readHeaderData(file, headerLocation.start + 3, headerLocation.end - 3);
+	struct HeaderLines headerLines = readHeaderData(file, headerLocation.start + 3, headerLocation.end - 3, processState);
 
-	struct HeaderAtlas headerAtlas = getFunctionMap();
+	struct HeaderAtlas headerAtlas = getFunctionMap(processState);
 
 	for (int i = 0; i < headerLines.numberOfLines; i++){
 		unsigned int length = strlen(headerLines.lines[i]);
-		interpreteHeaderLine(headerOptions, &headerAtlas, headerLines.lines[i], length);
+		interpreteHeaderLine(headerOptions, &headerAtlas, headerLines.lines[i], length, processState);
 
 		free(headerLines.lines[i]);
 	}

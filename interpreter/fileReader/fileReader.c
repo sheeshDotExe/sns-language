@@ -2,7 +2,7 @@
 
 #define CHUNK_SIZE 200
 
-int _readChunk(FILE*fileHandle, unsigned char*buffer, long unsigned int*readBytes){
+int _readChunk(FILE*fileHandle, unsigned char*buffer, long unsigned int*readBytes, struct ProcessState* processState){
 	unsigned int read = fread(buffer + *readBytes, sizeof(unsigned char), CHUNK_SIZE, fileHandle);
 	if (read){
 		*readBytes += read;
@@ -12,7 +12,7 @@ int _readChunk(FILE*fileHandle, unsigned char*buffer, long unsigned int*readByte
 	}
 }
 
-struct File readFile(FILE*fileHandle){
+struct File readFile(FILE*fileHandle, struct ProcessState* processState){
 	struct File file;
 
 	fseek(fileHandle, 0, SEEK_END);
@@ -24,7 +24,7 @@ struct File readFile(FILE*fileHandle){
 
 	long unsigned int readBytes = 0;
 
-	while(_readChunk(fileHandle, fileData, &readBytes)){
+	while(_readChunk(fileHandle, fileData, &readBytes, processState)){
 	}
 
 	fileData[readBytes] = '\0';

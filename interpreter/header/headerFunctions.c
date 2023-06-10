@@ -2,7 +2,7 @@
 
 
 
-void addFunction(struct FunctionMap* functionMap, int index, char*name, int(*function)(struct HeaderOptions* headerOptions, char*name, char**args, int argc)){
+void addFunction(struct FunctionMap* functionMap, int index, char*name, int(*function)(struct HeaderOptions* headerOptions, char*name, char**args, int argc, struct ProcessState* processState), struct ProcessState* processState){
 	unsigned int nameLength = strlen(name);
 	functionMap[index].name = (char*)malloc((nameLength+1)*sizeof(char));
 	functionMap[index].nameLength = nameLength;
@@ -13,7 +13,7 @@ void addFunction(struct FunctionMap* functionMap, int index, char*name, int(*fun
 	functionMap[index].function = function;
 }
 
-int checkArgsCount(char*name, int expected, int given){
+int checkArgsCount(char*name, int expected, int given, struct ProcessState* processState){
 	if (given != expected){
 		printf("Function %s expected %d arguments, but %d were given!\n", name, expected, given);
 		return 1;
@@ -23,12 +23,12 @@ int checkArgsCount(char*name, int expected, int given){
 
 
 
-int _UseLocalHost(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
-	if (checkArgsCount(name, 1, argc)){
+int _UseLocalHost(struct HeaderOptions* headerOptions, char*name, char**args, int argc, struct ProcessState* processState){
+	if (checkArgsCount(name, 1, argc, processState)){
 		return 1;
 	}
 
-	int Bool = stringToBool(args[0]);
+	int Bool = stringToBool(args[0], processState);
 	if (Bool == -1){
 		printf("invalid parameter\n");
 	}
@@ -41,12 +41,12 @@ int _UseLocalHost(struct HeaderOptions* headerOptions, char*name, char**args, in
 	return 0;
 }
 
-int _UsePort(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
-	if (checkArgsCount(name, 1, argc)){
+int _UsePort(struct HeaderOptions* headerOptions, char*name, char**args, int argc, struct ProcessState* processState){
+	if (checkArgsCount(name, 1, argc, processState)){
 		return 1;
 	}
 
-	if (isNum(args[0], strlen(args[0]))){
+	if (isNum(args[0], strlen(args[0]), processState)){
 		printf("argument must be number\n");
 		return 1;
 	}
@@ -56,12 +56,12 @@ int _UsePort(struct HeaderOptions* headerOptions, char*name, char**args, int arg
 	return 0;
 }
 
-int _DebugMode(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
-	if (checkArgsCount(name, 1, argc)){
+int _DebugMode(struct HeaderOptions* headerOptions, char*name, char**args, int argc, struct ProcessState* processState){
+	if (checkArgsCount(name, 1, argc, processState)){
 		return 1;
 	}
 
-	int Bool = stringToBool(args[0]);
+	int Bool = stringToBool(args[0], processState);
 	if (Bool == -1){
 		printf("invalid parameter\n");
 	}
@@ -74,12 +74,12 @@ int _DebugMode(struct HeaderOptions* headerOptions, char*name, char**args, int a
 	return 0;
 }
 
-int _ForceSSL(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
-	if (checkArgsCount(name, 1, argc)){
+int _ForceSSL(struct HeaderOptions* headerOptions, char*name, char**args, int argc, struct ProcessState* processState){
+	if (checkArgsCount(name, 1, argc, processState)){
 		return 1;
 	}
 
-	int Bool = stringToBool(args[0]);
+	int Bool = stringToBool(args[0], processState);
 	if (Bool == -1){
 		printf("invalid parameter\n");
 	}
@@ -93,8 +93,8 @@ int _ForceSSL(struct HeaderOptions* headerOptions, char*name, char**args, int ar
 	return 0;
 }
 
-int _UseSSL(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
-	if (checkArgsCount(name, 2, argc)){
+int _UseSSL(struct HeaderOptions* headerOptions, char*name, char**args, int argc, struct ProcessState* processState){
+	if (checkArgsCount(name, 2, argc, processState)){
 		return 1;
 	}
 
@@ -106,12 +106,12 @@ int _UseSSL(struct HeaderOptions* headerOptions, char*name, char**args, int argc
 	return 0;
 }
 
-int _MaxConnections(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
-	if (checkArgsCount(name, 1, argc)){
+int _MaxConnections(struct HeaderOptions* headerOptions, char*name, char**args, int argc, struct ProcessState* processState){
+	if (checkArgsCount(name, 1, argc, processState)){
 		return 1;
 	}
 
-	if (isNum(args[0], strlen(args[0]))){
+	if (isNum(args[0], strlen(args[0]), processState)){
 		printf("argument must be number\n");
 		return 1;
 	}
@@ -122,21 +122,21 @@ int _MaxConnections(struct HeaderOptions* headerOptions, char*name, char**args, 
 	return 0;
 }
 
-int _HTMLPath(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
-	if (checkArgsCount(name, 1, argc)){
+int _HTMLPath(struct HeaderOptions* headerOptions, char*name, char**args, int argc, struct ProcessState* processState){
+	if (checkArgsCount(name, 1, argc, processState)){
 		return 1;
 	}
 	return 0;
 }
 
-int _JSPath(struct HeaderOptions* headerOptions, char*name, char**args, int argc){
-	if (checkArgsCount(name, 1, argc)){
+int _JSPath(struct HeaderOptions* headerOptions, char*name, char**args, int argc, struct ProcessState* processState){
+	if (checkArgsCount(name, 1, argc, processState)){
 		return 1;
 	}
 	return 0;
 }
 
-struct HeaderAtlas getFunctionMap(){
+struct HeaderAtlas getFunctionMap(struct ProcessState* processState){
 	struct HeaderAtlas headerAtlas;
 
 	headerAtlas.functions = (struct FunctionMap*)malloc(NUMBER_OF_FUNCTIONS*sizeof(struct FunctionMap));
@@ -145,20 +145,20 @@ struct HeaderAtlas getFunctionMap(){
 		headerAtlas.functions[i].nameLength = 0;
 	}
 
-	addFunction(headerAtlas.functions, 0, "USE_LOCAL_HOST", &_UseLocalHost);
-	addFunction(headerAtlas.functions, 1, "USE_PORT", &_UsePort);
-	addFunction(headerAtlas.functions, 2, "DEBUG_MODE", &_DebugMode);
-	addFunction(headerAtlas.functions, 3, "FORCE_SSL", &_ForceSSL);
-	addFunction(headerAtlas.functions, 4, "USE_SSL", &_UseSSL);
-	addFunction(headerAtlas.functions, 5, "MAX_CONNECTIONS", &_MaxConnections);
-	addFunction(headerAtlas.functions, 6, "HTML_PATH", &_HTMLPath);
-	addFunction(headerAtlas.functions, 7, "JS_PATH", &_JSPath);
+	addFunction(headerAtlas.functions, 0, "USE_LOCAL_HOST", &_UseLocalHost, processState);
+	addFunction(headerAtlas.functions, 1, "USE_PORT", &_UsePort, processState);
+	addFunction(headerAtlas.functions, 2, "DEBUG_MODE", &_DebugMode, processState);
+	addFunction(headerAtlas.functions, 3, "FORCE_SSL", &_ForceSSL, processState);
+	addFunction(headerAtlas.functions, 4, "USE_SSL", &_UseSSL, processState);
+	addFunction(headerAtlas.functions, 5, "MAX_CONNECTIONS", &_MaxConnections, processState);
+	addFunction(headerAtlas.functions, 6, "HTML_PATH", &_HTMLPath, processState);
+	addFunction(headerAtlas.functions, 7, "JS_PATH", &_JSPath, processState);
 
 	return headerAtlas;
 }
 
 
-void interpreteHeaderFunction(struct HeaderOptions* headerOptions, struct HeaderAtlas* headerAtlas, char*keyword, char**arguments, unsigned int kwLength, unsigned int argc){
+void interpreteHeaderFunction(struct HeaderOptions* headerOptions, struct HeaderAtlas* headerAtlas, char*keyword, char**arguments, unsigned int kwLength, unsigned int argc, struct ProcessState* processState){
 	for (int i = 0; i < NUMBER_OF_FUNCTIONS; i++){
 		unsigned int length = headerAtlas->functions[i].nameLength;
 		if (length == kwLength){
@@ -169,7 +169,7 @@ void interpreteHeaderFunction(struct HeaderOptions* headerOptions, struct Header
 				}
 			}
 			if (shouldCall){
-				headerAtlas->functions[i].function(headerOptions, headerAtlas->functions[i].name, arguments, argc);
+				headerAtlas->functions[i].function(headerOptions, headerAtlas->functions[i].name, arguments, argc, processState);
 				return;
 			}
 		}
