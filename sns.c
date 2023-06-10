@@ -3,7 +3,7 @@
 #include <wchar.h>
 #include <locale.h>
 
-FILE* getFile(char*path){
+FILE* getFile(char*path, struct ProcessState* processState){
 	return fopen(path, "r");
 }
 
@@ -20,9 +20,12 @@ int main(int argc, char **argv)
 
 	//char* path = argv[1];
 
-	FILE* file = getFile("./demo.sns");
+	struct ProcessState* processState = (struct ProcessState*)malloc(sizeof(struct ProcessState));
+	processState->running = 1;
 
-	if (interpret(file)){
+	FILE* file = getFile("./demo.sns", processState);
+
+	if (interpret(file, processState)){
 		printf("error error\n");
 		return 1;
 	}

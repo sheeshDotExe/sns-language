@@ -1,16 +1,17 @@
 #include "errorHandler.h"
 
-void raiseError(char*errorMessage, int stopCompiling){
+void raiseError(char*errorMessage, int stopCompiling, struct ProcessState* processState){
 	printf(errorMessage);
 
+	int exit = 1;
+
 	if (stopCompiling){
-		char temp[50];
-		gets(temp);
-		exit(1);
+		processState->running = 0;
+		pthread_exit((void*)&exit);
 	}
 }
 
-void pause(){
+void pause(struct ProcessState* processState){
 	char buff[100];
 	gets(buff);
 }

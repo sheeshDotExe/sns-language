@@ -35,13 +35,13 @@ struct Operator {
 	struct Operator* rightOperator;
 };
 
-struct Var* evaluateExpression(struct State* state, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index);
+struct Var* evaluateExpression(struct State* state, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index, struct ProcessState* processState);
 
-void getSetParams(struct Param* param, struct State* state, struct KeyPos** keyPositions, struct KeyWord** keyWords, unsigned int stop, unsigned int index);
-struct VarScope* createVarScope(struct Var* var);
-void freeVarScope(struct VarScope* varScope);
-struct Var* callFunction(struct Var* var, struct State* state);
-struct Function* getFunction(struct Var* var, struct State* state, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index);
+void getSetParams(struct Param* param, struct State* state, struct KeyPos** keyPositions, struct KeyWord** keyWords, unsigned int stop, unsigned int index, struct ProcessState* processState);
+struct VarScope* createVarScope(struct Var* var, struct ProcessState* processState);
+void freeVarScope(struct VarScope* varScope, struct ProcessState* processState);
+struct Var* callFunction(struct Var* var, struct State* state, struct ProcessState* processState);
+struct Function* getFunction(struct Var* var, struct State* state, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index, struct ProcessState* processState);
 
-struct State* copyState(struct State* state);
+struct State* copyState(struct State* state, struct ProcessState* processState);
 #endif

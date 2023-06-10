@@ -18,20 +18,9 @@ main: function [int] -> {
 		return html("./" + path);
 	}
 
-	route("/api/{test: int ? string}") -> {
+	route("/api/{test: int ? float ? string}") -> {
 
-		test2: int ? string = 0
-
-		if (test < 20) -> {
-			test2 = test2 + 5
-			if (test < 10) -> {
-				test2 = test2 + 5
-				return 2
-			}
-		}
-		else() -> {
-			return 200
-		}
+		test2: int ? float ? string = 15.5555
 
 		variable: string = "Welcome to my test website " + add(test2, test)
 		return variable
