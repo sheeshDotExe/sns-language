@@ -20,18 +20,16 @@ struct ThreadInfo {
 	struct HeaderOptions* headerOptions;
 	struct State* state;
 	struct ProcessState* processState;
-	struct RequestQueue* requestQueue;
 	struct Request* currentRequest;
-	pthread_mutex_t* lock;
+	struct Server* server;
 };
 
 struct CrashHandlerInfo {
 	int numberOfThreads;
-	struct RequestQueue* requestQueue;
-	pthread_mutex_t* lock;
 	pthread_t* ids;
 	struct HeaderOptions* headerOptions;
 	struct State* state;
+	struct Server* server;
 	struct ProcessState* processState;
 	struct ThreadInfo** threadInfos;
 };
@@ -40,12 +38,6 @@ struct Request {
 	struct Client* client;
 	struct Request* nextRequest;
 	int nextExists;
-};
-
-struct RequestQueue {
-	struct Request* current;
-	struct Request* last;
-	int hasClient;
 };
 
 struct PathInfo {

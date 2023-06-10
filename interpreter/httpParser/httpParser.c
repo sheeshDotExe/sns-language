@@ -7,14 +7,13 @@
 #define Sleep(x) usleep(x*1000)
 #endif
 
-struct ThreadInfo* createThreadInfo(struct State* state, struct HeaderOptions* headerOptions, struct RequestQueue* requestQueue, pthread_mutex_t* lock){
+struct ThreadInfo* createThreadInfo(struct State* state, struct HeaderOptions* headerOptions, struct Server* server){
 	struct ThreadInfo* threadInfo = (struct ThreadInfo*)malloc(sizeof(struct ThreadInfo));
 	threadInfo->headerOptions = headerOptions;
 	threadInfo->state = state;
 	threadInfo->processState = (struct ProcessState*)malloc(sizeof(struct ProcessState));
 	threadInfo->processState->running = 1;
-	threadInfo->requestQueue = requestQueue;
-	threadInfo->lock = lock;
+	threadInfo->server = server;
 	return threadInfo;
 }
 
@@ -34,28 +33,18 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 	int numberOfThreads = 3;
 
 	pthread_t* ids = (pthread_t*)malloc(numberOfThreads*sizeof(pthread_t));
-	pthread_mutex_t* lock = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
 	pthread_t crashHandlerId;
-
-	if (pthread_mutex_init(lock, NULL) != 0){
-		printf("mutex failed\n");
-		return;
-	}
  	
  	struct ThreadInfo** threadInfos = (struct ThreadInfo**)malloc(numberOfThreads*sizeof(struct ThreadInfo*));
-	struct RequestQueue* requestQueue = (struct RequestQueue*)malloc(sizeof(struct RequestQueue));
-	requestQueue->hasClient = 0;
 
 	for (int i = 0; i < numberOfThreads; i++){
-		struct ThreadInfo* threadInfo = createThreadInfo(state, headerOptions, requestQueue, lock);
+		struct ThreadInfo* threadInfo = createThreadInfo(state, headerOptions, server);
 		threadInfos[i] = threadInfo;
 		ids[i] = pthread_create(&ids[i], NULL, requestHandler, (void*)threadInfo);
 	}
 
 	struct CrashHandlerInfo* crashHandlerInfo = (struct CrashHandlerInfo*)malloc(sizeof(struct CrashHandlerInfo));
 	crashHandlerInfo->numberOfThreads = numberOfThreads;
-	crashHandlerInfo->requestQueue = requestQueue;
-	crashHandlerInfo->lock = lock;
 	crashHandlerInfo->ids = ids;
 	crashHandlerInfo->threadInfos = threadInfos;
 	crashHandlerInfo->state = state;
@@ -64,6 +53,53 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 	crashHandlerInfo->processState->running = 1;
 
 	crashHandlerId = pthread_create(&crashHandlerId, NULL, crashHandler, (void*)crashHandlerInfo);
+
+	pthread_join(crashHandlerId, NULL);
+}
+
+void* crashHandler(void* threadData){
+	struct CrashHandlerInfo* crashHandlerInfo = (struct CrashHandlerInfo*)threadData;
+
+	int numberOfThreads = crashHandlerInfo->numberOfThreads;
+	struct ThreadInfo** threadInfos = crashHandlerInfo->threadInfos;
+	struct State* state = crashHandlerInfo->state;
+	struct HeaderOptions* headerOptions = crashHandlerInfo->headerOptions;
+	struct ProcessState* processState = crashHandlerInfo->processState;
+	struct Server* server = crashHandlerInfo->server;
+	pthread_t* ids = crashHandlerInfo->ids;
+
+	while (1){
+		// handle thread crash [500]
+		for (int i = 0; i < numberOfThreads; i++){
+			struct ThreadInfo* threadInfo = threadInfos[i];
+			if (!threadInfo->processState->running){
+				printf("Thread %d crashed, restarting thread\n", i+1);
+
+				struct Request* request = threadInfo->currentRequest;
+
+				sendData(request->client, "HTTP/1.1 500\r\nContent-Type: text/plain\r\n\r\nThread crashed", headerOptions, processState);
+				freeSocket(request->client, headerOptions, processState);
+				free(request);
+
+				free(threadInfo->processState);
+				free(threadInfo);
+
+				struct ThreadInfo* newThreadInfo = createThreadInfo(state, headerOptions, server);
+				threadInfos[i] = newThreadInfo;
+				ids[i] = pthread_create(&ids[i], NULL, requestHandler, (void*)newThreadInfo);
+			}
+		}
+		Sleep(1);
+	}
+}
+
+void* requestHandler(void* threadData){
+	struct ThreadInfo* threadInfo = (struct ThreadInfo*)threadData;
+
+	struct HeaderOptions* headerOptions = threadInfo->headerOptions;
+	struct State* state = threadInfo->state;
+	struct ProcessState* processState = threadInfo->processState;
+	struct Server* server = threadInfo->server;
 
 	while (1){
 		struct Client* client = getClient(server, headerOptions, processState);
@@ -81,99 +117,15 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 			#endif
 			continue;
 		}
-		
+
 		struct Request* request = (struct Request*)malloc(sizeof(struct Request));
 		request->client = client;
 		request->nextExists = 0;
 
-		pthread_mutex_lock(lock);
-		if (requestQueue->hasClient){
-			struct Request* last = requestQueue->last;
-			last->nextExists = 1;
-			last->nextRequest = request;
-			requestQueue->last = request;
-		} else {
-			requestQueue->current = request;
-			requestQueue->last = request;
-			requestQueue->hasClient = 1;
-		}
-		pthread_mutex_unlock(lock);
-	}
-
-	pthread_mutex_destroy(&lock);
-}
-
-void* crashHandler(void* threadData){
-	struct CrashHandlerInfo* crashHandlerInfo = (struct CrashHandlerInfo*)threadData;
-
-	int numberOfThreads = crashHandlerInfo->numberOfThreads;
-	struct ThreadInfo** threadInfos = crashHandlerInfo->threadInfos;
-	pthread_mutex_t* lock = crashHandlerInfo->lock;
-	struct State* state = crashHandlerInfo->state;
-	struct HeaderOptions* headerOptions = crashHandlerInfo->headerOptions;
-	struct RequestQueue* requestQueue = crashHandlerInfo->requestQueue;
-	struct ProcessState* processState = crashHandlerInfo->processState;
-	pthread_t* ids = crashHandlerInfo->ids;
-
-	while (1){
-		// handle thread crash [500]
-		for (int i = 0; i < numberOfThreads; i++){
-			struct ThreadInfo* threadInfo = threadInfos[i];
-			if (!threadInfo->processState->running){
-				pthread_mutex_lock(lock);
-				printf("Thread %d crashed, restarting thread\n", i+1);
-
-				struct Request* request = threadInfo->currentRequest;
-
-				sendData(request->client, "HTTP/1.1 500\r\nContent-Type: text/plain\r\n\r\nThread crashed", headerOptions, processState);
-				freeSocket(request->client, headerOptions, processState);
-				free(request);
-
-				free(threadInfo->processState);
-				free(threadInfo);
-
-				struct ThreadInfo* newThreadInfo = createThreadInfo(state, headerOptions, requestQueue, lock);
-				threadInfos[i] = newThreadInfo;
-				ids[i] = pthread_create(&ids[i], NULL, requestHandler, (void*)newThreadInfo);
-
-				pthread_mutex_unlock(lock);
-			}
-		}
-	}
-	Sleep(1);
-}
-
-void* requestHandler(void* threadData){
-	struct ThreadInfo* threadInfo = (struct ThreadInfo*)threadData;
-
-	struct HeaderOptions* headerOptions = threadInfo->headerOptions;
-	struct State* state = threadInfo->state;
-	struct ProcessState* processState = threadInfo->processState;
-	struct RequestQueue* requestQueue = threadInfo->requestQueue;
-	pthread_mutex_t* lock = threadInfo->lock;
-
-	while (1){
-		int hasRequest = 0;
-
-		pthread_mutex_lock(lock);
-		struct Request* request;
-		if (requestQueue->hasClient){
-			request = requestQueue->current;
-			if (request->nextExists){
-				requestQueue->current = request->nextRequest;
-			} else {
-				requestQueue->hasClient = 0;
-			}
-			hasRequest = 1;
-		}
-
 		// we now have a private request for this thread
-		if (hasRequest){
-			threadInfo->currentRequest = request;
-			handleRequest(request->client, state, headerOptions, processState);
-			free(request);
-		}
-		pthread_mutex_unlock(lock);
+		threadInfo->currentRequest = request;
+		handleRequest(request->client, state, headerOptions, processState);
+		free(request);
 
 		Sleep(1);
 	}
@@ -186,7 +138,7 @@ int handleRequest(struct Client* client, struct State* state, struct HeaderOptio
 	char* timeFormatted = strtok(localTime, "\n");
 	printf("\n\n[%s] IP: %s\n",timeFormatted, getClientIP(client, processState));
 	//free(localTime);
-	
+
 	struct HttpRequest* httpRequest = recive(client, headerOptions, processState);
 
 	char* response = parseRequest(state, httpRequest, processState);
