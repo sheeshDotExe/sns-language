@@ -56,7 +56,7 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 	crashHandlerId = pthread_create(&crashHandlerId, NULL, crashHandler, (void*)crashHandlerInfo);
 
 	if (crashHandlerId == 0){
-		printf("fialed to create thread");
+		printf("failed to create thread, %d\n", errno);
 		return;
 	}
 
