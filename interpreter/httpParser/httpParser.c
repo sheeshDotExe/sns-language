@@ -39,7 +39,6 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 
 	if (pthread_mutex_init(lock, NULL) != 0){
 		printf("mutex failed\n");
-		pause(processState);
 		return;
 	}
  	
