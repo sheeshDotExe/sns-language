@@ -419,6 +419,7 @@ struct Function* getFunction(struct Var* var, struct State* state, struct KeyPos
 	return function;
 }
 
+struct State* hardcopyState(struct State* state, struct ProcessState* processState);
 
 struct State* copyState(struct State* state, struct ProcessState* processState){
 	struct State* newState = (struct State*)malloc(sizeof(struct State));

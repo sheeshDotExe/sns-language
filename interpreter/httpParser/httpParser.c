@@ -49,6 +49,7 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 	crashHandlerInfo->threadInfos = threadInfos;
 	crashHandlerInfo->state = state;
 	crashHandlerInfo->headerOptions = headerOptions;
+	crashHandlerInfo->server = server;
 	crashHandlerInfo->processState = (struct ProcessState*)malloc(sizeof(struct ProcessState));
 	crashHandlerInfo->processState->running = 1;
 
