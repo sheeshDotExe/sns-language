@@ -125,7 +125,7 @@ void* crashHandler(void* threadData){
 
 				struct Request* request = threadInfo->currentRequest;
 
-				sendData(request->client, "HTTP/1.1 500\r\nContent-Type: text/plain\r\nThread crashed\r\n\r\n", headerOptions, processState);
+				sendData(request->client, "HTTP/1.1 500\r\nContent-Type: text/plain\r\n\r\nThread crashed", headerOptions, processState);
 				freeSocket(request->client, headerOptions, processState);
 				free(request);
 
