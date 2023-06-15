@@ -166,6 +166,7 @@ struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char
 struct Var* copyVar(struct Var* instance, struct ProcessState* processState);
 struct Param* copyParam(struct Param* param, struct ProcessState* processState);
 struct VarScope* copyVarScope(struct VarScope* varScope, struct ProcessState* processState);
+struct InheritedVarscopes* hardcopyInheritedVarscope(struct InheritedVarscopes* inheritedVarscopes, struct ProcessState* processState);
 struct InheritedVarscopes* copyInheritedVarscope(struct InheritedVarscopes* inheritedVarscopes, struct ProcessState* processState);
 void addVarScope(struct InheritedVarscopes* scopes, struct VarScope* varScope, struct ProcessState* processState);
 

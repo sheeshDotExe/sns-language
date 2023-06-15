@@ -698,6 +698,19 @@ struct VarScope* copyVarScope(struct VarScope* varScope, struct ProcessState* pr
 	return newVarScope;
 }
 
+struct InheritedVarscopes* hardcopyInheritedVarscope(struct InheritedVarscopes* inheritedVarscopes, struct ProcessState* processState){
+	struct InheritedVarscopes* newScopes = (struct InheritedVarscopes*)malloc(sizeof(struct InheritedVarscopes));
+
+	newScopes->numberOfScopes = inheritedVarscopes->numberOfScopes;
+	newScopes->scopes = (struct InheritedVarscopes**)malloc(newScopes->numberOfScopes*sizeof(struct InheritedVarscopes*));
+
+	for (int i = 0; i < inheritedVarscopes->numberOfScopes; i++){
+		newScopes->scopes[i] = copyVarScope(inheritedVarscopes->scopes[i], processState);
+	}
+
+	return newScopes;
+}
+
 struct InheritedVarscopes* copyInheritedVarscope(struct InheritedVarscopes* inheritedVarscopes, struct ProcessState* processState){
 	struct InheritedVarscopes* newScopes = (struct InheritedVarscopes*)malloc(sizeof(struct InheritedVarscopes));
 

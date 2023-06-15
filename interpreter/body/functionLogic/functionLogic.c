@@ -429,7 +429,7 @@ struct State* hardcopyState(struct State* state, struct ProcessState* processSta
 	newState->fileExtension = (char**)malloc(sizeof(char*));
 	newState->fileExtension[0] = strdup("");
 
-	newState->inheritedVarscopes = copyInheritedVarscope(state->inheritedVarscopes, processState);
+	newState->inheritedVarscopes = hardcopyInheritedVarscope(state->inheritedVarscopes, processState);
 
 	newState->useInheritence = state->useInheritence;
 	newState->localScope = copyVarScope(state->localScope, processState);

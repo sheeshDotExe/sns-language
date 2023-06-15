@@ -30,7 +30,7 @@ void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, s
 	struct Server* server = createServer(headerOptions, processState);
 	printf("server started\n");
 
-	int numberOfThreads = 1;
+	int numberOfThreads = 10;
 
 	pthread_t* ids = (pthread_t*)malloc(numberOfThreads*sizeof(pthread_t));
 	pthread_t crashHandlerId;
