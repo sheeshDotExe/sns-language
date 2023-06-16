@@ -90,21 +90,18 @@ void* crash_handler(void* threadData){
 			if (!threadInfo->processState->running){
 				printf("Thread %d crashed, restarting thread\n", i+1);
 
-				processState->running = 0;
-				pthread_exit(NULL);
-
 				struct Request* request = threadInfo->currentRequest;
 
 				send_data(request->client, "HTTP/1.1 500\r\nContent-Type: text/plain\r\n\r\nThread crashed", headerOptions, processState);
 				free_socket(request->client, headerOptions, processState);
 				free(request);
 
-				free(threadInfo->processState);
-				free(threadInfo);
-
-				struct ThreadInfo* newThreadInfo = create_thread_info(state, headerOptions, server);
+				struct ThreadInfo* newThreadInfo = create_thread_info(threadInfo->state, headerOptions, server);
 				threadInfos[i] = newThreadInfo;
 				ids[i] = pthread_create(&ids[i], NULL, request_handler, (void*)newThreadInfo);
+
+				free(threadInfo->processState);
+				free(threadInfo);
 			}
 		}
 		Sleep(1);
