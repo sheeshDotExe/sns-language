@@ -46,12 +46,12 @@ struct PathInfo {
 	struct Route* route;
 };
 
-void startHTTPServer(struct State* state, struct HeaderOptions* headerOptions, struct Body* body, struct ProcessState* processState);
-char* parseRequest(struct State* state, struct HttpRequest* request, struct ProcessState* processState);
-struct Path* generatePath(char* rawPath, unsigned int length, struct ProcessState* processState);
-void freePath(struct Path* path, struct ProcessState* processState);
-int handleRequest(struct Client* client, struct State* state, struct HeaderOptions* headerOptions, struct ProcessState* processState);
-void* requestHandler(void* threadData);
-void* crashHandler(void* threadData);
+void start_HTTP_server(struct State* state, struct HeaderOptions* headerOptions, struct Body* body, struct ProcessState* processState);
+char* parse_request(struct State* state, struct HttpRequest* request, struct ProcessState* processState);
+struct Path* generate_path(char* rawPath, unsigned int length, struct ProcessState* processState);
+void free_path(struct Path* path, struct ProcessState* processState);
+int handle_request(struct Client* client, struct State* state, struct HeaderOptions* headerOptions, struct ProcessState* processState);
+void* request_handler(void* threadData);
+void* crash_handler(void* threadData);
 
 #endif

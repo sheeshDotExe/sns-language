@@ -65,8 +65,8 @@ struct Builtins{
 	unsigned int numberOfFunctions;
 };
 
-void addBuiltin(struct Builtins* builtins, unsigned int index, char* name, unsigned int inputs, struct Var** inputVars, struct Var* returnValue, struct Var*(*function)(struct Param* params, struct State* state), struct ProcessState* processState);
-struct Builtins* createBuiltins(struct ProcessState* processState);
-int isBuiltin(struct Builtins* builtins, char* name, struct ProcessState* processState);
-struct BuiltinFunction* getBuiltin(struct Builtins* builtins, int index, struct ProcessState* processState);
+void add_builtin(struct Builtins* builtins, unsigned int index, char* name, unsigned int inputs, struct Var** inputVars, struct Var* returnValue, struct Var*(*function)(struct Param* params, struct State* state), struct ProcessState* processState);
+struct Builtins* create_builtins(struct ProcessState* processState);
+int is_builtin(struct Builtins* builtins, char* name, struct ProcessState* processState);
+struct BuiltinFunction* get_builtin(struct Builtins* builtins, int index, struct ProcessState* processState);
 #endif

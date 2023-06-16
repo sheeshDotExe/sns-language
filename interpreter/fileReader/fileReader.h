@@ -12,6 +12,6 @@ struct File
 	long unsigned int length;
 };
 
-struct File readFile(FILE*fileHandle, struct ProcessState* processState);
+struct File read_file(FILE*fileHandle, struct ProcessState* processState);
 
 #endif

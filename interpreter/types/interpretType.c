@@ -1,6 +1,6 @@
 #include "interpretType.h"
 
-void fillTypes(struct CommonTypes *cTypes, int *types, unsigned int length, struct ProcessState* processState)
+void fill_types(struct CommonTypes *cTypes, int *types, unsigned int length, struct ProcessState* processState)
 {
 	cTypes->length = length;
 	cTypes->codes = (int *)malloc(length * sizeof(int));
@@ -10,7 +10,7 @@ void fillTypes(struct CommonTypes *cTypes, int *types, unsigned int length, stru
 	}
 }
 
-struct CommonTypes getValidTypes(char **value, unsigned int *lengthP, struct ProcessState* processState)
+struct CommonTypes get_valid_types(char **value, unsigned int *lengthP, struct ProcessState* processState)
 {
 	struct CommonTypes types;
 
@@ -25,18 +25,18 @@ struct CommonTypes getValidTypes(char **value, unsigned int *lengthP, struct Pro
 
 	validTypes[length] = String_c;
 	length++;
-	if (isString(*value, *lengthP, processState))
+	if (is_string(*value, *lengthP, processState))
 	{
 		if (*lengthP == 3)
 		{
 			validTypes[length] = Char_c;
 			length++;
 		}
-		fillTypes(&types, validTypes, length, processState);
+		fill_types(&types, validTypes, length, processState);
 		return types;
 	}
 
-	int Bool_v = stringToBool(*value, processState);
+	int Bool_v = string_to_bool(*value, processState);
 	if (Bool_v != -1)
 	{
 		*lengthP = 1;
@@ -49,34 +49,34 @@ struct CommonTypes getValidTypes(char **value, unsigned int *lengthP, struct Pro
 		validTypes[length] = Float_c;
 		length++;
 
-		fillTypes(&types, validTypes, length, processState);
+		fill_types(&types, validTypes, length, processState);
 		return types;
 	}
 
-	if (!isNum(*value, *lengthP, processState))
+	if (!is_num(*value, *lengthP, processState))
 	{
 		validTypes[length] = Int_c;
 		length++;
 	}
 
-	if (!isFloat(*value, *lengthP, processState))
+	if (!is_float(*value, *lengthP, processState))
 	{
 		validTypes[length] = Float_c;
 		length++;
 	}
 
-	fillTypes(&types, validTypes, length, processState);
+	fill_types(&types, validTypes, length, processState);
 	return types;
 }
 
-struct Var *generateVarFromString(char *value, unsigned int length, struct ProcessState* processState)
+struct Var *generate_var_from_string(char *value, unsigned int length, struct ProcessState* processState)
 {
 
 	char **valueP = &value;
 
-	struct CommonTypes types = getValidTypes(valueP, &length, processState);
+	struct CommonTypes types = get_valid_types(valueP, &length, processState);
 
-	struct Var *ret = generateVar(types.codes, types.length, "unnamed", *valueP, (struct Param *)NULL, processState);
+	struct Var *ret = generate_var(types.codes, types.length, "unnamed", *valueP, (struct Param *)NULL, processState);
 
 	free(types.codes);
 

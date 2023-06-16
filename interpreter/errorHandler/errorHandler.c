@@ -1,6 +1,6 @@
 #include "errorHandler.h"
 
-void raiseError(char*errorMessage, int stopCompiling, struct ProcessState* processState){
+void raise_error(char*errorMessage, int stopCompiling, struct ProcessState* processState){
 	printf(errorMessage);
 
 	int exit = 1;

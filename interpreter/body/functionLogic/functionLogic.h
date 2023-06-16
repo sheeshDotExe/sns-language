@@ -35,14 +35,14 @@ struct Operator {
 	struct Operator* rightOperator;
 };
 
-struct Var* evaluateExpression(struct State* state, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index, struct ProcessState* processState);
+struct Var* evaluate_expression(struct State* state, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index, struct ProcessState* processState);
 
-void getSetParams(struct Param* param, struct State* state, struct KeyPos** keyPositions, struct KeyWord** keyWords, unsigned int stop, unsigned int index, struct ProcessState* processState);
-struct VarScope* createVarScope(struct Var* var, struct ProcessState* processState);
-void freeVarScope(struct VarScope* varScope, struct ProcessState* processState);
-struct Var* callFunction(struct Var* var, struct State* state, struct ProcessState* processState);
-struct Function* getFunction(struct Var* var, struct State* state, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index, struct ProcessState* processState);
+void get_set_params(struct Param* param, struct State* state, struct KeyPos** keyPositions, struct KeyWord** keyWords, unsigned int stop, unsigned int index, struct ProcessState* processState);
+struct VarScope* create_var_scope(struct Var* var, struct ProcessState* processState);
+void free_var_scope(struct VarScope* varScope, struct ProcessState* processState);
+struct Var* call_function(struct Var* var, struct State* state, struct ProcessState* processState);
+struct Function* get_function(struct Var* var, struct State* state, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int stop, unsigned int index, struct ProcessState* processState);
 
-struct State* copyState(struct State* state, struct ProcessState* processState);
-struct State* hardcopyState(struct State* state, struct ProcessState* processState);
+struct State* copy_state(struct State* state, struct ProcessState* processState);
+struct State* hardcopy_state(struct State* state, struct ProcessState* processState);
 #endif

@@ -1,7 +1,7 @@
 #include "httpLibrary.h"
 
 #ifndef __unix__
-int initWinsock(struct ProcessState* processState){
+int init_winsock(struct ProcessState* processState){
 	WSADATA wsaData;
 	int iResult;
 
@@ -15,12 +15,12 @@ int initWinsock(struct ProcessState* processState){
 }
 #endif
 
-int initSSL(struct ProcessState* processState){
+int init_SSL(struct ProcessState* processState){
 	SSL_library_init();
 	return 0;
 }
 
-SSL_CTX* createServerContext(struct ProcessState* processState){
+SSL_CTX* create_server_context(struct ProcessState* processState){
 	SSL_CTX* ctx;
 	SSL_METHOD* method;
 
@@ -30,24 +30,24 @@ SSL_CTX* createServerContext(struct ProcessState* processState){
 	ctx = SSL_CTX_new(method);
 
 	if (ctx == NULL){
-		raiseError("Failed to create context\n", 1, processState);
+		raise_error("Failed to create context\n", 1, processState);
 	}
 
 	return ctx;
 }
 
-struct Server* createServer(struct HeaderOptions* headerOptions, struct ProcessState* processState){
+struct Server* create_server(struct HeaderOptions* headerOptions, struct ProcessState* processState){
 	struct Server* socket_s = (struct Server*)malloc(sizeof(struct Server));
 
 	if (headerOptions->tcpOptions->sslOptions->useSSL){
 		SSL_CTX *ctx;
 
-	    ctx = createServerContext(processState);
+	    ctx = create_server_context(processState);
 	    SSL_CTX_use_certificate_file(ctx, headerOptions->tcpOptions->sslOptions->sslCertificate, SSL_FILETYPE_PEM);
 	    SSL_CTX_use_PrivateKey_file(ctx, headerOptions->tcpOptions->sslOptions->keyPath, SSL_FILETYPE_PEM);
 
 	    if (!SSL_CTX_check_private_key(ctx)){
-	    	raiseError("Private key doesn't match public certificate\n", 1, processState);
+	    	raise_error("Private key doesn't match public certificate\n", 1, processState);
 	    }
 
 	    socket_s->serverCtx = ctx;
@@ -59,13 +59,13 @@ struct Server* createServer(struct HeaderOptions* headerOptions, struct ProcessS
 	SOCKET s;
 	if((s = socket(AF_INET , SOCK_STREAM , 0 )) == INVALID_SOCKET)
 	{
-		raiseError("Could not create socket", 1, processState);
+		raise_error("Could not create socket", 1, processState);
 	}
 	#else
 	int s;
 	if((s = socket(AF_INET , SOCK_STREAM , 0 )) == 0)
 	{
-		raiseError("Could not create socket", 1, processState);
+		raise_error("Could not create socket", 1, processState);
 	}
 	#endif
 
@@ -98,14 +98,14 @@ struct Server* createServer(struct HeaderOptions* headerOptions, struct ProcessS
 
 	if( bind(s ,(struct sockaddr *)server , sizeof(struct sockaddr_in)) == SOCKET_ERROR)
 	{
-		raiseError("connect error\n", 1, processState);
+		raise_error("connect error\n", 1, processState);
 	}
 
 	#else
 
 	if( bind(s ,(struct sockaddr *)server , sizeof(struct sockaddr_in)) < 0)
 	{
-		raiseError("connect error\n", 1, processState);
+		raise_error("connect error\n", 1, processState);
 	}
 
 	#endif
@@ -117,7 +117,7 @@ struct Server* createServer(struct HeaderOptions* headerOptions, struct ProcessS
 	return socket_s;
 }
 
-struct Client* getClient(struct Server* server, struct HeaderOptions* headerOptions, struct ProcessState* processState){
+struct Client* get_client(struct Server* server, struct HeaderOptions* headerOptions, struct ProcessState* processState){
 	struct Client* client = (struct Client*)malloc(sizeof(struct Client));
 	struct sockaddr_in* addr = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
 
@@ -168,7 +168,7 @@ struct Client* getClient(struct Server* server, struct HeaderOptions* headerOpti
 	return client;
 }
 
-struct RequestLines* getRequestLines(char* request, unsigned int length, char key, struct ProcessState* processState){
+struct RequestLines* get_request_lines(char* request, unsigned int length, char key, struct ProcessState* processState){
 	struct RequestLines* requestLines = (struct RequestLines*)malloc(sizeof(struct RequestLines));
 
 	int numberOfLines = 1;
@@ -206,7 +206,7 @@ struct RequestLines* getRequestLines(char* request, unsigned int length, char ke
 	return requestLines;
 }
 
-int getMethod(char* method, struct ProcessState* processState){
+int get_method(char* method, struct ProcessState* processState){
 	if (!strcmp(method, "GET")) return GET_METHOD;
 	if (!strcmp(method, "POST")) return POST_METHOD;
 	if (!strcmp(method, "PUT")) return PUT_METHOD;
@@ -217,12 +217,12 @@ int getMethod(char* method, struct ProcessState* processState){
 	return INVALID_METHOD;
 }
 
-struct HttpRequest* parseRequestFields(char* request, unsigned int length, struct ProcessState* processState){
+struct HttpRequest* parse_request_fields(char* request, unsigned int length, struct ProcessState* processState){
 	struct HttpRequest* httpRequest = (struct HttpRequest*)malloc(sizeof(struct HttpRequest));
 
 	httpRequest->path = strdup("INVALID");
 
-	struct RequestLines* requestLines = getRequestLines(request, length, '\n', processState);
+	struct RequestLines* requestLines = get_request_lines(request, length, '\n', processState);
 
 	if (requestLines->length == 0){
 		httpRequest->method = INVALID_METHOD;
@@ -233,13 +233,13 @@ struct HttpRequest* parseRequestFields(char* request, unsigned int length, struc
 
 	printf("%s\n", requestLine);
 
-	struct RequestLines* keys = getRequestLines(requestLine, strlen(requestLine), ' ', processState);
+	struct RequestLines* keys = get_request_lines(requestLine, strlen(requestLine), ' ', processState);
 	if (keys->length < 3){
 		httpRequest->method = INVALID_METHOD;
 		return httpRequest;
 	}
 
-	int method = getMethod(keys->lines[0], processState);
+	int method = get_method(keys->lines[0], processState);
 	httpRequest->method = method;
 
 	if (method == INVALID_METHOD){
@@ -297,7 +297,7 @@ struct HttpRequest* recive(struct Client* client, struct HeaderOptions* headerOp
 	if (total) memcpy(message, buf, total*sizeof(char));
 	message[total] = '\0';
 	
-	struct HttpRequest* httpRequest = parseRequestFields(message, total, processState);
+	struct HttpRequest* httpRequest = parse_request_fields(message, total, processState);
 
 	free(message);
 	free(buf);
@@ -305,7 +305,7 @@ struct HttpRequest* recive(struct Client* client, struct HeaderOptions* headerOp
 	return httpRequest;
 }
 
-void sendData(struct Client* client, char* response, struct HeaderOptions* headerOptions, struct ProcessState* processState){
+void send_data(struct Client* client, char* response, struct HeaderOptions* headerOptions, struct ProcessState* processState){
 	if (headerOptions->tcpOptions->sslOptions->useSSL){
 		SSL_write(client->ssl, response, strlen(response));
 	} else {
@@ -316,12 +316,12 @@ void sendData(struct Client* client, char* response, struct HeaderOptions* heade
 	}
 }
 
-char* getClientIP(struct Client* client, struct ProcessState* processState){
+char* get_client_ip(struct Client* client, struct ProcessState* processState){
 	char* ip = inet_ntoa(client->addr->sin_addr);
 	return ip;
 }
 
-void freeSocket(struct Client* sock, struct HeaderOptions* headerOptions, struct ProcessState* processState){
+void free_socket(struct Client* sock, struct HeaderOptions* headerOptions, struct ProcessState* processState){
 	if (headerOptions->tcpOptions->sslOptions->useSSL){
 		SSL_free(sock->ssl);
 	}

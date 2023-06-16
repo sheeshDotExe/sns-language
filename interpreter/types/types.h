@@ -78,8 +78,8 @@ struct KeyChars {
 	struct Key* keys;
 	unsigned int length;
 };
-void addKey(struct Key* keyP, char* name, unsigned int length, int key, struct ProcessState* processState);
-struct KeyChars createKeyChars(struct ProcessState* processState);
+void add_key(struct Key* keyP, char* name, unsigned int length, int key, struct ProcessState* processState);
+struct KeyChars create_key_chars(struct ProcessState* processState);
 
 struct CustomType {
 	char* name;
@@ -120,7 +120,7 @@ struct Type {
 	int hasValue;
 	void* type;
 };
-struct Type generateType(int code, char* value, unsigned int length, struct ProcessState* processState);
+struct Type generate_type(int code, char* value, unsigned int length, struct ProcessState* processState);
 
 struct Var {
 	int creationFlag;
@@ -162,15 +162,15 @@ struct InheritedVarscopes{
 	unsigned int numberOfScopes;
 };
 
-struct Var* generateVar(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param, struct ProcessState* processState);
-struct Var* copyVar(struct Var* instance, struct ProcessState* processState);
-struct Param* copyParam(struct Param* param, struct ProcessState* processState);
-struct VarScope* copyVarScope(struct VarScope* varScope, struct ProcessState* processState);
-struct InheritedVarscopes* hardcopyInheritedVarscope(struct InheritedVarscopes* inheritedVarscopes, struct ProcessState* processState);
-struct InheritedVarscopes* copyInheritedVarscope(struct InheritedVarscopes* inheritedVarscopes, struct ProcessState* processState);
-void addVarScope(struct InheritedVarscopes* scopes, struct VarScope* varScope, struct ProcessState* processState);
+struct Var* generate_var(int* codes, unsigned int numberOfTypes, char* name, char* value, struct Param* param, struct ProcessState* processState);
+struct Var* copy_var(struct Var* instance, struct ProcessState* processState);
+struct Param* copy_param(struct Param* param, struct ProcessState* processState);
+struct VarScope* copy_var_scope(struct VarScope* varScope, struct ProcessState* processState);
+struct InheritedVarscopes* hardcopy_inherited_varscope(struct InheritedVarscopes* inheritedVarscopes, struct ProcessState* processState);
+struct InheritedVarscopes* copy_inherited_varscope(struct InheritedVarscopes* inheritedVarscopes, struct ProcessState* processState);
+void add_var_scope(struct InheritedVarscopes* scopes, struct VarScope* varScope, struct ProcessState* processState);
 
-void freeParam(struct Param* param, struct ProcessState* processState);
+void free_param(struct Param* param, struct ProcessState* processState);
 
 struct Instruction {
 	void* function;
@@ -194,53 +194,53 @@ struct Function {
 	struct DefinitionLines* lines;
 };
 
-struct Var* getVarFromInheritedScopes(struct InheritedVarscopes* inheritedVarscopes, char* varName, struct ProcessState* processState);
-struct Var* getVarFromScopes(struct VarScope* localScope, struct VarScope* globalScope, char* varName, struct ProcessState* processState);
-struct Var* getVarFromScope(struct VarScope* scope, char* varName, struct ProcessState* processState);
-void addVarToScope(struct VarScope* scope, struct Var* var, struct ProcessState* processState);
+struct Var* get_var_from_inherited_scopes(struct InheritedVarscopes* inheritedVarscopes, char* varName, struct ProcessState* processState);
+struct Var* get_var_from_scopes(struct VarScope* localScope, struct VarScope* globalScope, char* varName, struct ProcessState* processState);
+struct Var* get_var_from_scope(struct VarScope* scope, char* varName, struct ProcessState* processState);
+void add_var_to_scope(struct VarScope* scope, struct Var* var, struct ProcessState* processState);
 
 struct Array {
 	struct Var* vars;
 	unsigned int size;
 	unsigned int length;
 };
-struct Array createArray(struct ProcessState* processState);
-void addToArray(struct Array* array, struct Var* var, struct ProcessState* processState);
+struct Array create_array(struct ProcessState* processState);
+void add_to_array(struct Array* array, struct Var* var, struct ProcessState* processState);
 
-struct CustomType generateCustomType(char*name, int* codes, struct ProcessState* processState);
+struct CustomType generate_custom_type(char*name, int* codes, struct ProcessState* processState);
 
 struct CommonTypes {
 	unsigned int length;
 	int* codes;
 };
 
-void freeVar(struct Var* var, struct ProcessState* processState);
-void assignString(struct String* string, char* value, unsigned int length, struct ProcessState* processState);
-void assignInt(struct Int* int_s, char* value, unsigned int length, struct ProcessState* processState);
-void assignFloat(struct Float* float_s, char* value, unsigned int length, struct ProcessState* processState);
-void assignFunction(struct Function* function, char* value, unsigned int length, struct ProcessState* processState);
+void free_var(struct Var* var, struct ProcessState* processState);
+void assign_string(struct String* string, char* value, unsigned int length, struct ProcessState* processState);
+void assign_int(struct Int* int_s, char* value, unsigned int length, struct ProcessState* processState);
+void assign_float(struct Float* float_s, char* value, unsigned int length, struct ProcessState* processState);
+void assign_function(struct Function* function, char* value, unsigned int length, struct ProcessState* processState);
 
-struct Type* getType(int code, struct Var* var, struct ProcessState* processState);
-int getSignificantType(struct CommonTypes* commonTypes, struct ProcessState* processState);
-struct CommonTypes getCommonTypes(struct Var* first, struct Var* second, struct ProcessState* processState);
+struct Type* get_type(int code, struct Var* var, struct ProcessState* processState);
+int get_significant_type(struct CommonTypes* commonTypes, struct ProcessState* processState);
+struct CommonTypes get_common_types(struct Var* first, struct Var* second, struct ProcessState* processState);
 
-void assignValue(struct Var* var, struct Var* other, struct ProcessState* processState); // assign others value to var
-struct Var* addVars(struct Var* first, struct Var* second, struct ProcessState* processState); // add vars and return new var with merged types
-struct Var* subVars(struct Var* first, struct Var* second, struct ProcessState* processState);
-struct Var* divVars(struct Var* first, struct Var* second, struct ProcessState* processState);
-struct Var* mulVars(struct Var* first, struct Var* second, struct ProcessState* processState);
-struct Var* lessThan(struct Var* first, struct Var* second, struct ProcessState* processState);
-struct Var* greaterThan(struct Var* first, struct Var* second, struct ProcessState* processState);
-struct Var* equalTo(struct Var* first, struct Var* second, struct ProcessState* processState);
+void assign_value(struct Var* var, struct Var* other, struct ProcessState* processState); // assign others value to var
+struct Var* add_vars(struct Var* first, struct Var* second, struct ProcessState* processState); // add vars and return new var with merged types
+struct Var* sub_vars(struct Var* first, struct Var* second, struct ProcessState* processState);
+struct Var* div_vars(struct Var* first, struct Var* second, struct ProcessState* processState);
+struct Var* mul_vars(struct Var* first, struct Var* second, struct ProcessState* processState);
+struct Var* less_than(struct Var* first, struct Var* second, struct ProcessState* processState);
+struct Var* greater_than(struct Var* first, struct Var* second, struct ProcessState* processState);
+struct Var* equal_to(struct Var* first, struct Var* second, struct ProcessState* processState);
 
-int isTrue(struct Var* var, struct ProcessState* processState);
+int is_true(struct Var* var, struct ProcessState* processState);
 
-int stringToBool(char*string, struct ProcessState* processState);
-int isFloat(char*string, unsigned int length, struct ProcessState* processState);
-int isNum(char*string, unsigned int length, struct ProcessState* processState);
+int string_to_bool(char*string, struct ProcessState* processState);
+int is_float(char*string, unsigned int length, struct ProcessState* processState);
+int is_num(char*string, unsigned int length, struct ProcessState* processState);
 
-int isString(char*value, unsigned int length, struct ProcessState* processState);
-//struct CommonTypes getValidTypes(char*value, unsigned int length, struct ProcessState* processState);
-//struct Var* generateVarFromString(char*value, unsigned int length, struct ProcessState* processState);
+int is_string(char*value, unsigned int length, struct ProcessState* processState);
+//struct CommonTypes get_valid_types(char*value, unsigned int length, struct ProcessState* processState);
+//struct Var* generate_var_from_string(char*value, unsigned int length, struct ProcessState* processState);
 
 #endif

@@ -6,5 +6,5 @@
 #include <pthread.h>
 #include "../processState.h"
 
-void raiseError(char*errorMessage, int stopCompiling, struct ProcessState* processState);
+void raise_error(char*errorMessage, int stopCompiling, struct ProcessState* processState);
 #endif

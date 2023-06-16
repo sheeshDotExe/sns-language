@@ -92,14 +92,14 @@ struct Client {
 #endif
 
 #ifndef __unix__
-int initWinsock(struct ProcessState* processState);
+int init_winsock(struct ProcessState* processState);
 #endif
-int initSSL(struct ProcessState* processState);
-struct Server* createServer(struct HeaderOptions* headerOptions, struct ProcessState* processState);
-struct Client* getClient(struct Server* server, struct HeaderOptions* headerOptions, struct ProcessState* processState);
-void freeSocket(struct Client* sock, struct HeaderOptions* headerOptions, struct ProcessState* processState);
-char* getClientIP(struct Client* client, struct ProcessState* processState);
+int init_SSL(struct ProcessState* processState);
+struct Server* create_server(struct HeaderOptions* headerOptions, struct ProcessState* processState);
+struct Client* get_client(struct Server* server, struct HeaderOptions* headerOptions, struct ProcessState* processState);
+void free_socket(struct Client* sock, struct HeaderOptions* headerOptions, struct ProcessState* processState);
+char* get_client_ip(struct Client* client, struct ProcessState* processState);
 struct HttpRequest* recive(struct Client* client, struct HeaderOptions* headerOptions, struct ProcessState* processState);
-void sendData(struct Client* client, char* response, struct HeaderOptions* headerOptions, struct ProcessState* processState);
+void send_data(struct Client* client, char* response, struct HeaderOptions* headerOptions, struct ProcessState* processState);
 
 #endif

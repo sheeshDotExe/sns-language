@@ -15,11 +15,11 @@ struct Body {
 };
 
 
-struct DefinitionLines* getLines(char* mem, unsigned long int start, unsigned long int end, struct ProcessState* processState);
-struct Body* interpretBody(struct State* state, struct File file, unsigned long int start, unsigned long int end, struct ProcessState* processState);
-int interpretLine(struct State* state, char* line, unsigned int length, struct ProcessState* processState);
-struct KeyWord** getKeyWords(unsigned int keysCount, struct KeyPos** keyPositions, struct State* state, char* line, unsigned int length, struct ProcessState* processState);
-struct KeyPos** getKeyPositions(unsigned int keysCount, struct State* state, char* line, unsigned int length, unsigned int start, struct ProcessState* processState);
-unsigned int getKeysCount(struct State* state, char* line, unsigned int length, unsigned int start, struct ProcessState* processState);
-struct Var* getVarTypes(char* varName, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int length, unsigned int index, unsigned int* increment, struct ProcessState* processState);
+struct DefinitionLines* get_lines(char* mem, unsigned long int start, unsigned long int end, struct ProcessState* processState);
+struct Body* interpret_body(struct State* state, struct File file, unsigned long int start, unsigned long int end, struct ProcessState* processState);
+int interpret_line(struct State* state, char* line, unsigned int length, struct ProcessState* processState);
+struct KeyWord** get_key_words(unsigned int keysCount, struct KeyPos** keyPositions, struct State* state, char* line, unsigned int length, struct ProcessState* processState);
+struct KeyPos** get_key_positions(unsigned int keysCount, struct State* state, char* line, unsigned int length, unsigned int start, struct ProcessState* processState);
+unsigned int get_keys_count(struct State* state, char* line, unsigned int length, unsigned int start, struct ProcessState* processState);
+struct Var* get_var_types(char* varName, struct KeyPos** keyPosition, struct KeyWord** keyWords, unsigned int length, unsigned int index, unsigned int* increment, struct ProcessState* processState);
 #endif

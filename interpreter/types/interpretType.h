@@ -5,7 +5,7 @@
 #include "../filePatterns/patternReader.h"
 #include "../processState.h"
 
-struct CommonTypes getValidTypes(char**value, unsigned int* length, struct ProcessState* processState);
-struct Var* generateVarFromString(char*value, unsigned int length, struct ProcessState* processState);
+struct CommonTypes get_valid_types(char**value, unsigned int* length, struct ProcessState* processState);
+struct Var* generate_var_from_string(char*value, unsigned int length, struct ProcessState* processState);
 
 #endif

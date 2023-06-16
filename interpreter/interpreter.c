@@ -3,21 +3,21 @@
 int interpret(FILE *file, struct ProcessState* processState)
 {
 
-	struct File data = readFile(file, processState);
+	struct File data = read_file(file, processState);
 
 	fclose(file);
 
 	printf("compiling...\n");
 
-	struct HeaderOptions* headerOptions = getHeaderOptions(data, processState);
+	struct HeaderOptions* headerOptions = get_header_options(data, processState);
 
-	struct KeyChars keyChars = createKeyChars(processState);
+	struct KeyChars keyChars = create_key_chars(processState);
 
 	printf("header compiled...\n");
 
 	struct State* state = (struct State*)malloc(sizeof(struct State));
 	state->keyChars = keyChars;
-	state->builtins = createBuiltins(processState);
+	state->builtins = create_builtins(processState);
 
 	state->routes = (struct Routes*)malloc(sizeof(struct Routes));
 	state->routes->routes = (struct Route**)malloc(0);
@@ -34,25 +34,25 @@ int interpret(FILE *file, struct ProcessState* processState)
 	state->fileExtension = (char**)malloc(sizeof(char*));
 	state->fileExtension[0] = strdup("\0");
 
-	struct Body* body = interpretBody(state, data, headerOptions->headerEnd, data.length, processState);
+	struct Body* body = interpret_body(state, data, headerOptions->headerEnd, data.length, processState);
 
 	if (!body->hasMain) {
-		raiseError("No entry point found (missing main function)", 1, processState);
+		raise_error("No entry point found (missing main function)", 1, processState);
 	}
 
-	struct Var* mainFunction = getVarFromScope(state->globalScope, "main", processState);
+	struct Var* mainFunction = get_var_from_scope(state->globalScope, "main", processState);
 
-	mainFunction->function->varScope = createVarScope(mainFunction, processState);
-	struct State* copiedState = copyState(state, processState);
-	struct Var* statusCode = callFunction(mainFunction, copiedState, processState);
+	mainFunction->function->varScope = create_var_scope(mainFunction, processState);
+	struct State* copiedState = copy_state(state, processState);
+	struct Var* statusCode = call_function(mainFunction, copiedState, processState);
 
 	if (!strcmp(statusCode->value, "1")){
-		raiseError("Main function returned with error code 1", 1, processState);
+		raise_error("Main function returned with error code 1", 1, processState);
 	}
 
 	printf("body compiled...\n");
 
-	startHTTPServer(state, headerOptions, &body, processState);
+	start_HTTP_server(state, headerOptions, &body, processState);
 
 	printf("server started...\n");
 
