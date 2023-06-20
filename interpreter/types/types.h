@@ -193,6 +193,7 @@ struct Function {
 	struct VarScope* varScope;
 	struct DefinitionLines* lines;
 };
+struct Function* copy_function(struct Function* function, struct ProcessState* processState);
 
 struct Var* get_var_from_inherited_scopes(struct InheritedVarscopes* inheritedVarscopes, char* varName, struct ProcessState* processState);
 struct Var* get_var_from_scopes(struct VarScope* localScope, struct VarScope* globalScope, char* varName, struct ProcessState* processState);

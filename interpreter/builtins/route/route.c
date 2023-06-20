@@ -202,4 +202,25 @@ void add_static_route(struct State* state, struct Var* function, struct Path* pa
 	state->routes->routes[state->routes->numberOfRoutes] = newRoute;
 	state->routes->numberOfRoutes++;
 }
+
+struct Route* copy_route(struct Route* route, struct ProcessState* processState) {
+
+	struct Route* newRoute = (struct Route*)malloc(sizeof(struct Route));
+
+	newRoute->isStatic = route->isStatic;
+	newRoute->path = route->path;
+
+	newRoute->function = copy_var(route->function, processState);
+
+	newRoute->function->hasParam = 1;
+	newRoute->function->assignable = 1;
+	newRoute->function->inheritScopes = 1;
+
+	newRoute->function->param = copy_param(route->function->param, processState);
+	newRoute->function->originalParam = copy_param(route->function->param, processState);
+
+	newRoute->function->function = copy_function(route->function->function, processState);
+
+	return newRoute;
+}
 // --------------

@@ -8,7 +8,9 @@
 #include "../builtins/builtins.h"
 #include "httpLibrary/httpLibrary.h"
 #include <time.h>
+#ifdef __unix__
 #include <pthread.h>
+#endif
 #include "../body/functionLogic/functionLogic.h"
 
 #include "../processState.h"
@@ -25,6 +27,7 @@ struct ThreadInfo {
 	struct Server* server;
 };
 
+#ifdef __unix__
 struct CrashHandlerInfo {
 	int numberOfThreads;
 	pthread_t* ids;
@@ -34,6 +37,17 @@ struct CrashHandlerInfo {
 	struct ProcessState* processState;
 	struct ThreadInfo** threadInfos;
 };
+#else
+struct CrashHandlerInfo {
+	int numberOfThreads;
+	HANDLE* ids;
+	struct HeaderOptions* headerOptions;
+	struct State* state;
+	struct Server* server;
+	struct ProcessState* processState;
+	struct ThreadInfo** threadInfos;
+};
+#endif
 
 struct Request {
 	struct Client* client;

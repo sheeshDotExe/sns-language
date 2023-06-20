@@ -69,4 +69,6 @@ void add_builtin(struct Builtins* builtins, unsigned int index, char* name, unsi
 struct Builtins* create_builtins(struct ProcessState* processState);
 int is_builtin(struct Builtins* builtins, char* name, struct ProcessState* processState);
 struct BuiltinFunction* get_builtin(struct Builtins* builtins, int index, struct ProcessState* processState);
+struct Builtins* copy_builtins(struct Builtins* builtins, struct ProcessState* processState);
+struct BuiltinFunction* copy_builtinFunction(struct BuiltinFunction* builtinFunction, struct ProcessState* processState);
 #endif

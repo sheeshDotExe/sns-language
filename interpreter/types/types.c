@@ -117,6 +117,7 @@ struct Var* generate_var(int* codes, unsigned int numberOfTypes, char* name, cha
 	var->inheritScopes = 0;
 	var->returned = 0;
 	var->isBuiltin = 0;
+	var->hasFunction = 0;
 
 	unsigned int nameLength = strlen(name);
 	var->name = (char*)malloc((nameLength+1)*sizeof(char));
@@ -150,6 +151,17 @@ struct Var* copy_var(struct Var* instance, struct ProcessState* processState){
 	var->inheritScopes = instance->inheritScopes;
 	var->returned = instance->returned;
 	var->isBuiltin = instance->isBuiltin;
+
+	if (instance->hasFunction && !instance->isBuiltin){
+		if (instance->hasParam){
+			var->param = copy_param(instance->param, processState);
+			var->originalParam = copy_param(instance->param, processState);
+		}
+		var->function = copy_function(instance->function, processState);
+		var->hasFunction = 1;
+	}else {
+		var->hasFunction = 0;
+	}
 
 	unsigned int nameLength = strlen(instance->name);
 	var->name = (char*)malloc((nameLength+1)*sizeof(char));
@@ -685,6 +697,15 @@ struct Param* copy_param(struct Param* param, struct ProcessState* processState)
 	newParam->returnValue = copy_var(param->returnValue, processState);
 
 	return newParam;
+}
+
+struct Function* copy_function(struct Function* function, struct ProcessState* processState) {
+	struct Function* newFunction = (struct Function*)malloc(sizeof(struct Function));
+
+	newFunction->varScope = (struct VarScope*)malloc(sizeof(struct VarScope));
+	newFunction->lines = function->lines;
+
+	return newFunction;
 }
 
 struct VarScope* copy_var_scope(struct VarScope* varScope, struct ProcessState* processState){

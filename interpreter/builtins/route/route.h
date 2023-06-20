@@ -13,5 +13,5 @@ struct SplitPath* get_split_path(char* path, unsigned int length, struct Process
 struct Path * interpret_path(struct State* state, char* path, unsigned int length, struct ProcessState* processState);
 struct Var *route(struct Param *params, struct State *state, struct ProcessState* processState);
 struct Var *route_static(struct Param *params, struct State *state, struct ProcessState* processState);
-
+struct Route* copy_route(struct Route* route, struct ProcessState* processState);
 #endif

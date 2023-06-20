@@ -74,3 +74,29 @@ struct Builtins* create_builtins(struct ProcessState* processState)
 
 	return builtins;
 }
+
+struct BuiltinFunction* copy_builtinFunction(struct BuiltinFunction* builtinFunction, struct ProcessState* processState) {
+	struct BuiltinFunction* newBuiltinFunction = (struct BuiltinFunction*)malloc(sizeof(struct BuiltinFunction));
+
+	newBuiltinFunction->name = builtinFunction->name;
+	newBuiltinFunction->nameLength = builtinFunction->nameLength;
+	newBuiltinFunction->params = copy_param(builtinFunction->params, processState);
+	newBuiltinFunction->originalParams = copy_param(builtinFunction->params, processState);
+	newBuiltinFunction->function = builtinFunction->function;
+
+	return newBuiltinFunction;
+}
+
+struct Builtins* copy_builtins(struct Builtins* builtins, struct ProcessState* processState) {
+	struct Builtins* newBuiltins = (struct Builtins*)malloc(sizeof(struct Builtins));
+
+	newBuiltins->numberOfFunctions = builtins->numberOfFunctions;
+	newBuiltins->functions = (struct BuiltinFunction*)malloc(sizeof(struct BuiltinFunction) * builtins->numberOfFunctions);
+
+	for (int i = 0; i < builtins->numberOfFunctions; i++) {
+		struct BuiltinFunction builtinFunction = *(copy_builtinFunction(&builtins->functions[i], processState));
+		newBuiltins->functions[i] = builtinFunction;
+	}
+
+	return newBuiltins;
+}

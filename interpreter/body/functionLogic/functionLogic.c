@@ -422,8 +422,8 @@ struct Function* get_function(struct Var* var, struct State* state, struct KeyPo
 struct State* hardcopy_state(struct State* state, struct ProcessState* processState){
 	struct State* newState = (struct State*)malloc(sizeof(struct State));
 	newState->keyChars = state->keyChars;
-	newState->builtins = state->builtins;
-	newState->routes = state->routes;
+	newState->builtins = copy_builtins(state->builtins, processState);
+	newState->routes = copy_routes(state->routes, processState);
 	newState->files = state->files;
 	newState->globalScope = copy_var_scope(state->globalScope, processState);
 	newState->fileExtension = (char**)malloc(sizeof(char*));

@@ -26,5 +26,6 @@ struct State {
 	char** fileExtension;
 };
 
+struct Routes* copy_routes(struct Routes* routes, struct ProcessState* processState);
 
 #endif

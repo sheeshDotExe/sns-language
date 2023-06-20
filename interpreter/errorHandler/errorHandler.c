@@ -7,6 +7,10 @@ void raise_error(char*errorMessage, int stopCompiling, struct ProcessState* proc
 
 	if (stopCompiling){
 		processState->running = 0;
+		#ifdef __unix__
 		pthread_exit((void*)&exit);
+		#else
+		ExitThread((DWORD)exit);
+		#endif
 	}
 }
