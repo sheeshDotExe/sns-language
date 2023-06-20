@@ -21,6 +21,9 @@ set(SOURCE_FILES
         interpreter/httpParser/httpLibrary/httpLibrary.c
         interpreter/httpParser/httpParser.c
         interpreter/interpreter.c
+        interpreter/body/eval/eval.c
+        interpreter/body/functionLogic/functionLogic.c
+        interpreter/body/bodyTypes.c
 )
 
 add_executable(sns ${SOURCE_FILES})

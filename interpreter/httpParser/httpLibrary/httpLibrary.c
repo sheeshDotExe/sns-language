@@ -296,6 +296,8 @@ struct HttpRequest* recive(struct Client* client, struct HeaderOptions* headerOp
 
 	if (total) memcpy(message, buf, total*sizeof(char));
 	message[total] = '\0';
+
+	printf("debug: %s\n", message);
 	
 	struct HttpRequest* httpRequest = parse_request_fields(message, total, processState);
 
