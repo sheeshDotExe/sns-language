@@ -74,7 +74,7 @@ struct Server* create_server(struct HeaderOptions* headerOptions, struct Process
 	setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 	#else
 	int flags =1;
-	//setsockopt(s, SOL_TCP, TCP_NODELAY, (void *)&flags, sizeof(flags));
+	setsockopt(s, SOL_TCP, TCP_NODELAY, (void *)&flags, sizeof(flags));
 	#endif
 
 	int flag = 1;
