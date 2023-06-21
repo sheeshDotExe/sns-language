@@ -15,8 +15,6 @@ void add_user_file(struct State* state, struct UserFile* userFile, struct Proces
 }
 
 struct UserFile* create_user_file(struct State* state, char* path, struct ProcessState* processState){
-		
-	//wchar_t* unicodePath = utf8ToUtf16(path); "C:\\Users\\Viktor\\Documents\\cpp\\sns-language\\public\\ååå.txt"
 
 	FILE* fileH = fopen(path, "r");
 	if (fileH == NULL){
